@@ -1,16 +1,18 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 
+OBJECTES_COMUNS = utils.o config.o
+
 all: odysseus ithaca island
 
-odysseus: odysseus.o utils.o
-	$(CC) $(CFLAGS) -o odysseus odysseus.o utils.o
+odysseus: odysseus.o $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o odysseus odysseus.o $(OBJECTES_COMUNS)
 
-ithaca: ithaca.o utils.o
-	$(CC) $(CFLAGS) -o ithaca ithaca.o utils.o
+ithaca: ithaca.o $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o ithaca ithaca.o $(OBJECTES_COMUNS)
 
-island: island.o utils.o
-	$(CC) $(CFLAGS) -o island island.o utils.o
+island: island.o $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o island island.o $(OBJECTES_COMUNS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<

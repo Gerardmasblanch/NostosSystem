@@ -1,0 +1,7 @@
+Ogygia
+./ogygia_files
+172.16.214.24 9006
+2
+--- ROUTES ---
+Aeolia 172.16.214.21 9003
+Scheria 172.16.214.23 9005

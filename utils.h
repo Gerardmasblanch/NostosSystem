@@ -12,11 +12,6 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-//Macros de compilacio: han d'estar definides abans de cap llibreria.
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
-#define _POSIX_C_SOURCE 1
-
 //Llibreries del sistema
 #include <stdio.h>
 #include <stdlib.h>

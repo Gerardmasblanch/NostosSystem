@@ -1,17 +1,24 @@
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
-#define _POSIX_C_SOURCE 1
+/***********************************************
+*
+* @Proposit: Proces Island: representa una illa de l'arxipelag amb el seu
+*            port, el seu mercat i les seves connexions maritimes.
+* @Autor/s: Arnau Ricart i Gerard Mas
+* @Data creacio: 24/09/2026
+* @Data ultima modificacio: 24/09/2026
+*
+************************************************/
 
-#include <stdlib.h>
-
+//Llibreries propies
 #include "utils.h"
 #include "types.h"
+#include "config.h"
 
-int main(int argc, char *argv[]) {
-    
-    
+//Procediment principal
+int main (int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
 
-    printF(1, "island: pendent d'implementar\n");
+    printF(1, "Island: pendent d implementar\n");
 
     return 0;
 }

@@ -1,5 +1,9 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+
+# _GNU_SOURCE ha d'estar definida abans de qualsevol capcalera del sistema.
+# Definir-la aqui evita que depengui de l'ordre dels includes de cada fitxer.
+# Inclou ja _XOPEN_SOURCE i _POSIX_C_SOURCE, no cal definir-les a part.
+CFLAGS = -Wall -Wextra -D_GNU_SOURCE
 
 OBJECTES_COMUNS = utils.o config.o
 

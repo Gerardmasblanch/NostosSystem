@@ -1,0 +1,23 @@
+# Objectes i binaris
+*.o
+*.exe
+*.out
+odysseus
+ithaca
+island
+
+# Fitxers generats en execucio
+*_files/
+objects/
+
+# Editor
+.vscode/
+*.swp
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Empaquetat d'entrega
+*.tar

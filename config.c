@@ -229,3 +229,49 @@ int filterIslandRoutes (IslandConfig *config) {
 
     return n_valides;
 }
+
+int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config) {
+    
+    int fd = 0;
+    char *aux = NULL;
+    int i = 0;
+
+    fd = open(nom_fitxer, O_RDONLY);
+
+    if (fd < 0) {
+        return -1;
+    }
+
+    config->folder = readUntil(fd, '\n');
+    config->name = readUntil(fd, ' ');
+    config->ithaca_ip = readUntil(fd, ' ');
+    aux = readUntil(fd, '\n');
+    config->ithaca_port = parseInt(aux);
+    free(aux);
+
+    config->aeaea_ip = readUntil(fd, ' ');
+    aux = readUntil(fd, '\n');
+    config->aeaea_port = parseInt(aux);
+    free(aux);
+
+    aux = readUntil(fd, '\n');
+    config->gold = parseInt(aux);
+    free(aux);
+
+    aux = readUntil(fd, '\n');
+    config->n_foods = parseInt(aux);
+    free(aux);
+    config->foods = malloc(sizeof(Food) * config->n_foods);
+
+    for (i = 0; i < config->n_foods; i++) {
+
+        config->foods[i].name = readUntil(fd, ' ');
+        aux = readUntil(fd, '\n');
+        config->foods[i].amount = parseInt(aux);
+        free(aux);
+    }
+
+    close(fd);
+
+    return 0;
+}

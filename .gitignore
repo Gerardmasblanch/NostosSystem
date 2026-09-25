@@ -6,6 +6,9 @@ odysseus
 ithaca
 island
 
+# Excepcio: sphragis.o ve compilat de l'eStudy i no es pot regenerar
+!sphragis.o
+
 # Fitxers generats en execucio
 *_files/
 objects/

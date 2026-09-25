@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
     //Espera passiva: el proces dorm sense consumir CPU fins que arriba SIGINT.
     pause();
 
-    printF(1, "\nIthaca closes the harbor.\n");
+    printF(1, "\nIthaca closes the harbor.");
 
     freeVoyages(viatges, n_viatges);
     freeIthacaConfig(&ithaca_config);

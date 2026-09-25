@@ -15,6 +15,7 @@
 //Llibreries propies
 #include "utils.h"
 #include "types.h"
+#include "sphragis.h"
 
 //Procediments i funcions
 
@@ -59,5 +60,59 @@ int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges);
 *
 ************************************************/
 void freeVoyages(Voyage *viatges, int n_viatges);
+
+/***
+*
+* @Finalitat: Llegeix el fitxer de configuracio de les rutes d'una il·lota i omple
+*             l'estructura corresponent.
+* @Parametres:  in: nom_fitxer = ruta del fitxer de configuracio.
+*               out: config = estructura on es guarda la configuracio llegida.
+* @Retorn: 0 si s'ha llegit correctament, -1 si no s'ha pogut obrir el fitxer.
+*
+************************************************/
+int readIslandConfig (char *nom_fitxer, IslandConfig *config);
+
+/***********************************************
+* 
+* @Finalitat: Allibera l'espai de memòria ocupat per la configuració d'una il·lota.
+* @Parametres:  in/out: config = estructura de configuració de l'il·lota.
+* @Retorn: ----.
+*
+************************************************/
+
+void freeIslandConfig (IslandConfig *config);
+
+/***********************************************
+*
+* @Finalitat: Allibera l'espai de memòria ocupat per l'array de productes.
+* @Parametres:  in/out: productes = array d'estructures de productes.
+*               in: n_productes = nombre de productes.
+* @Retorn: ----.
+*
+************************************************/
+
+int readStock(char *nom_fitxer, Product **productes, int *n_productes);
+
+/***********************************************
+* @Finalitat: Allibera l'espai de memòria ocupat per l'array de productes.
+* @Parametres:  in/out: productes = array d'estructures de productes.
+*               in: n_productes = nombre de productes.
+* @Retorn: ----.
+*
+************************************************/
+void freeStock(Product *productes);
+
+/***********************************************
+*
+* @Finalitat: Validar les rutes carregades d'una illa amb la llibreria
+*             SPHRAGIS, eliminant de la configuracio les destinacions que no
+*             hi estiguin realment connectades.
+* @Parametres:  in/out: config = configuracio de l'illa. A la sortida nomes
+*               conte les rutes que han superat el filtratge.
+* @Retorn: El nombre de rutes valides, o un codi d'error negatiu de SPHRAGIS
+*          (SPHRAGIS_ERROR_INVALID_ISLAND o SPHRAGIS_ERROR_INVALID_CONNECTION).
+*
+************************************************/
+int filterIslandRoutes (IslandConfig *config);
 
 #endif

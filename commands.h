@@ -38,6 +38,30 @@
 
 /***********************************************
 *
+* @Finalitat: Valida una comanda que no admet cap argument.
+* @Parametres:  in: n_trossos = nombre de paraules introduides.
+*               in: us = nom de la comanda, per al missatge de sintaxi.
+*               in: codi_valid = identificador a retornar si es correcta.
+* @Retorn: codi_valid si la sintaxi es correcta, CMD_ERROR_SINTAXI si no.
+*
+************************************************/
+
+int parseSenseArguments(int n_trossos, char *us, int codi_valid);
+
+/***********************************************
+*
+* @Finalitat: Valida una comanda de producte i quantitat (BUY i SELL).
+* @Parametres:  in: trossos = paraules introduides.
+*               in: n_trossos = nombre de paraules introduides.
+*               in: us = nom de la comanda, per al missatge de sintaxi.
+*               in: codi_valid = identificador a retornar si es correcta.
+* @Retorn: codi_valid si la sintaxi es correcta, CMD_ERROR_SINTAXI si no.
+*
+************************************************/
+int parseAmbQuantitat(char **trossos, int n_trossos, char *us, int codi_valid);
+
+/***********************************************
+*
 * @Finalitat: Reconeix una comanda introduida pel terminal i en valida la
 *             sintaxi i els arguments, sense executar-ne la funcionalitat.
 * @Parametres:  in: linia = text introduit per l'usuari.

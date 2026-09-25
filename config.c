@@ -275,3 +275,19 @@ int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config) {
 
     return 0;
 }
+
+void freeOdysseusConfig (OdysseusConfig *config) {
+    int i = 0;
+
+    free(config->folder);
+    free(config->name);
+    free(config->ithaca_ip);
+    free(config->aeaea_ip);
+
+    for (i = 0; i < config->n_foods; i++) {
+        free(config->foods[i].name);
+    }
+
+    free(config->foods);
+    
+}

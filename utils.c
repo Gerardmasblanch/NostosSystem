@@ -13,7 +13,7 @@
 
 //Procediments i funcions
 
-void printF (int fd, const char *text) {
+void printF (int fd, char *text) {
     write(fd, text, strlen(text));
 }
 
@@ -44,7 +44,7 @@ char *readUntil (int fd, char delimitador) {
     return buffer;
 }
 
-char **splitString (const char *text, char delimitador, int *n_trossos) {
+char **splitString (char *text, char delimitador, int *n_trossos) {
     char **trossos = NULL;
     char *tros_actual = NULL;
     int n_actuals = 0;

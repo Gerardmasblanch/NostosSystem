@@ -32,7 +32,7 @@
 * @Retorn: ----.
 *
 ************************************************/
-void printF (int fd, const char *text);
+void printF (int fd, char *text);
 
 /***********************************************
 *
@@ -58,7 +58,7 @@ char *readUntil (int fd, char delimitador);
 *          tros. Cal alliberar-lo amb freeTokens().
 *
 ************************************************/
-char **splitString (const char *text, char delimitador, int *n_trossos);
+char **splitString ( char *text, char delimitador, int *n_trossos);
 
 /***********************************************
 *

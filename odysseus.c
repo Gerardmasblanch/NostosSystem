@@ -17,24 +17,37 @@
 #include "config.h"
 #include "commands.h"
 
+//Variables globals
+//El handler de SIGINT no pot rebre parametres, i el terminal es queda
+//bloquejat dins d'un read() que signal() reinicia automaticament, de manera
+//que la unica forma d'acabar es alliberar i morir des del propi handler.
+//L'Annex III de l'enunciat permet variables globals als processos principals.
+OdysseusConfig config;
+
 //Procediments i funcions
 
 /***********************************************
 *
-* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop. En
-*             rebre-la, el read() que espera el teclat s'interromp i retorna
-*             error, cosa que fa sortir del bucle del terminal.
+* @Finalitat: Atendre la senyal SIGINT alliberant els recursos del proces i
+*             finalitzant-lo amb el codi de sortida corresponent a la senyal.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
 ************************************************/
 void handleSignal (int senyal) {
-    (void)senyal;
+    printF(1, "\n");
+
+    //TODO: descomentar quan freeOdysseusConfig estigui implementada.
+    //freeOdysseusConfig(&config);
+
+    //Tornem el comportament per defecte de la senyal i ens la reenviem, de
+    //manera que el proces acabi amb el codi de sortida correcte (128 + senyal).
+    signal(senyal, SIG_DFL);
+    raise(senyal);
 }
 
 //Procediment principal
 int main (int argc, char *argv[]) {
-    OdysseusConfig config;
     char *missatge = NULL;
     char *linia = NULL;
 
@@ -59,8 +72,7 @@ int main (int argc, char *argv[]) {
 
         linia = readUntil(0, '\n');
 
-        //Amb SIGINT el read del teclat s'interromp i readUntil retorna NULL,
-        //de manera que sortim del bucle i podem alliberar els recursos.
+        //Final d'entrada (CTRL+D): sortim del bucle de forma controlada.
         if (linia == NULL) {
             break;
         }
@@ -72,11 +84,6 @@ int main (int argc, char *argv[]) {
 
     //TODO: descomentar quan freeOdysseusConfig estigui implementada.
     //freeOdysseusConfig(&config);
-
-    //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
-    //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT);
 
     return 0;
 }

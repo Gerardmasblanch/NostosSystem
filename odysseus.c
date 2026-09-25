@@ -50,9 +50,9 @@ int main (int argc, char *argv[]) {
         //parsejar i respondre
         codi = parseCommand(linea);
         if(codi == CMD_DESCONEGUDA) {
-            printF(1, "Unknown command\n");
+            printF(1, "Unknown command\n\n");
         } else if(codi != CMD_ERROR_SINTAXI) {
-            printF(1, "Command OK\n");
+            printF(1, "Command OK\n\n");
         }
         
         free(linea);    

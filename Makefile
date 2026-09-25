@@ -7,7 +7,7 @@ CFLAGS = -Wall -Wextra -D_GNU_SOURCE
 
 # sphragis.o ve compilat des de l'eStudy (objecte ELF de Linux: nomes enllaca
 # a Montserrat, no a Windows). Nomes depen de la libc, no cal cap -l extra.
-OBJECTES_COMUNS = utils.o config.o sphragis.o
+OBJECTES_COMUNS = utils.o config.o commands.o sphragis.o
 
 all: odysseus ithaca island
 
@@ -25,6 +25,6 @@ island: island.o $(OBJECTES_COMUNS)
 
 # sphragis.o no es compila: ja ve fet. Per aixo clean no l'esborra.
 clean:
-	rm -f utils.o config.o odysseus.o ithaca.o island.o odysseus ithaca island
+	rm -f utils.o config.o commands.o odysseus.o ithaca.o island.o odysseus ithaca island
 
 .PHONY: all clean

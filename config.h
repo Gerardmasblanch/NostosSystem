@@ -115,4 +115,25 @@ void freeStock(Product *productes);
 ************************************************/
 int filterIslandRoutes (IslandConfig *config);
 
+/***********************************************
+*
+* @Finalitat: Llegeix el fitxer de configuracio d'un proces Odysseus i omple
+*             l'estructura corresponent, incloent-hi la llista d'aliments.
+* @Parametres:  in: nom_fitxer = ruta del fitxer de configuracio.
+*               out: config = estructura on es guarda la configuracio llegida.
+* @Retorn: 0 si s'ha llegit correctament, -1 si no s'ha pogut obrir el fitxer.
+*
+************************************************/
+int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config);
+
+/***********************************************
+*
+* @Finalitat: Allibera la memoria dinamica de l'estructura de configuracio
+*             d'un proces Odysseus, incloent-hi la llista d'aliments.
+* @Parametres:  in/out: config = estructura que es vol alliberar.
+* @Retorn: ----.
+*
+************************************************/
+void freeOdysseusConfig (OdysseusConfig *config);
+
 #endif

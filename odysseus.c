@@ -16,13 +16,15 @@
 #include "types.h"
 #include "config.h"
 #include "commands.h"
+#include "unistd.h"
 
 //Variables globals
 int sortirPrograma = 0;
 
-void handleSignal (int senyal) {
+void handleSignal(int senyal) {
     if (senyal == SIGINT) {
         sortirPrograma = 1;
+        close(0);
     }
 }
 

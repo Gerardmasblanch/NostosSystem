@@ -8,6 +8,9 @@
 *
 ************************************************/
 
+//Llibreries del sistema
+#include <signal.h>
+
 //Llibreries propies
 #include "utils.h"
 #include "types.h"

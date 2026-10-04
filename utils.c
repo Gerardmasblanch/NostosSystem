@@ -19,24 +19,39 @@ void printF (int fd, char *text) {
 
 char *readUntil (int fd, char delimitador) {
     char *buffer = NULL;
+    char *nou = NULL;
     char lletra;
     int llargada = 0;
     int bytes_llegits = 0;
 
     while ((bytes_llegits = read(fd, &lletra, 1)) > 0 && lletra != delimitador) {
-        buffer = realloc(buffer, sizeof(char) * (llargada + 2));
+        nou = realloc(buffer, sizeof(char) * (llargada + 2));
+
+        if (nou == NULL) {
+            printF(2, MSG_SENSE_MEMORIA);
+            free(buffer);
+            return NULL;
+        }
+
+        buffer = nou;
         buffer[llargada] = lletra;
         llargada++;
     }
 
     //Final de fitxer sense haver llegit cap caracter.
     if (llargada == 0 && bytes_llegits <= 0) {
+        free(buffer);
         return NULL;
     }
 
     //el delimitador ha arribat sense cap caracter previ.
     if (buffer == NULL) {
         buffer = malloc(sizeof(char));
+
+        if (buffer == NULL) {
+            printF(2, MSG_SENSE_MEMORIA);
+            return NULL;
+        }
     }
 
     buffer[llargada] = '\0';
@@ -46,7 +61,9 @@ char *readUntil (int fd, char delimitador) {
 
 char **splitString (char *text, char delimitador, int *n_trossos) {
     char **trossos = NULL;
+    char **nous = NULL;
     char *tros_actual = NULL;
+    char *nou = NULL;
     int n_actuals = 0;
     int llargada = 0;
     int i = 0;
@@ -61,14 +78,32 @@ char **splitString (char *text, char delimitador, int *n_trossos) {
     while (final == 0) {
         //Acumulem caracters mentre no arribi el delimitador ni el final.
         if (text[i] != delimitador && text[i] != '\0') {
-            tros_actual = realloc(tros_actual, sizeof(char) * (llargada + 2));
+            nou = realloc(tros_actual, sizeof(char) * (llargada + 2));
+
+            if (nou == NULL) {
+                printF(2, MSG_SENSE_MEMORIA);
+                free(tros_actual);
+                freeTokens(trossos, n_actuals);
+                return NULL;
+            }
+
+            tros_actual = nou;
             tros_actual[llargada] = text[i];
             llargada++;
         } else {
             //Nomes guardem el tros si conte alguna cosa, aixi ens estalviem els trossos buits dels delimitadors repetits.
             if (llargada > 0) {
                 tros_actual[llargada] = '\0';
-                trossos = realloc(trossos, sizeof(char *) * (n_actuals + 1));
+                nous = realloc(trossos, sizeof(char *) * (n_actuals + 1));
+
+                if (nous == NULL) {
+                    printF(2, MSG_SENSE_MEMORIA);
+                    free(tros_actual);
+                    freeTokens(trossos, n_actuals);
+                    return NULL;
+                }
+
+                trossos = nous;
                 trossos[n_actuals] = tros_actual;
                 n_actuals++;
                 tros_actual = NULL;

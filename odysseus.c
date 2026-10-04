@@ -23,8 +23,7 @@ static OdysseusConfig config;
 
 /***********************************************
 *
-* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop, de
-*             manera que pause() retorni i el main pugui alliberar recursos.
+* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop i lliurar tota la memoria.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
@@ -48,7 +47,7 @@ int main (int argc, char *argv[]) {
     int codi = 0;
 
     if(argc != 2) {
-        printF(1, "Use: ./odysseus <config.dat>\n");
+        printF(1, "Us: ./odysseus <config.dat>\n");
         return -1;
     }
 

@@ -22,6 +22,8 @@
 #define TEXT_NO_NUMERIC 0
 #define TEXT_NUMERIC    1
 
+#define MSG_SENSE_MEMORIA "Error: no hi ha prou memoria disponible.\n"
+
 //Procediments i funcions
 
 /***********************************************

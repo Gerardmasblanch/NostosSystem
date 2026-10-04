@@ -1,7 +1,6 @@
 /***********************************************
 *
-* @Proposit: Proces Island: representa una illa de l'arxipelag amb el seu
-*            port, el seu mercat i les seves connexions maritimes.
+* @Proposit: Proces Island representa una illa amb el seu port i el seu comerç.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
 * @Data ultima modificacio: 25/09/2026
@@ -23,8 +22,7 @@ int sortirprogram = 0;
 
 /***********************************************
 *
-* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop, de
-*             manera que pause() retorni i el main pugui alliberar recursos.
+* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop i lliurar tota la memoria.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
@@ -55,7 +53,7 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    // FIltra amb SPHRAGIS les rutes i elimina les que no coneix
+    // Filtra amb SPHRAGIS les rutes i elimina les que no coneix
     if (filterIslandRoutes(&config) < 0) {
         printF(1, "Error: no s'han pogut validar les rutes de l'illa.\n");
         freeIslandConfig(&config);
@@ -75,8 +73,9 @@ int main (int argc, char *argv[]) {
 
     pause();
 
-    // SIGNT ctrl+c
+    // SIGINT ctrl+c
     if(sortirprogram) {
+
         asprintf(&missatge, "\n%s closes its port.\n", config.name);
         printF(1, missatge);
         free(missatge);

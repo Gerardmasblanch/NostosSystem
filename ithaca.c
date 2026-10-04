@@ -1,7 +1,6 @@
 /***********************************************
 *
-* @Proposit: Proces Ithaca: servidor central que gestiona els encarrecs
-*            disponibles i custodia els objectes a transportar.
+* @Proposit: Proces Ithaca, servidor de viatges, que gestiona els encarrecs dels Odysseus i els envia a les illes.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
 * @Data ultima modificacio: 24/09/2026
@@ -68,7 +67,7 @@ int main (int argc, char *argv[]) {
 
     //SIGNT ctrl+c
     if(sortirprogram) {
-        printF(1, "\nIthaca closes the harbor.");
+        printF(1, "\nIthaca closes the harbor.\n");
 
         freeVoyages(viatges, n_viatges);
         freeIthacaConfig(&ithaca_config);

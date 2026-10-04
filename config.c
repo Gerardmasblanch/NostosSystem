@@ -43,10 +43,10 @@ void freeIthacaConfig (IthacaConfig *config) {
 
 
 int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges) {
-    
-
+    Voyage *nous_viatges = NULL;
     int fd = 0;
     char *aux = NULL;
+
     *viatges = NULL;
     *n_viatges = 0;
 
@@ -58,7 +58,19 @@ int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges) {
 
     while((aux = readUntil(fd, ' ')) != NULL) {
 
-        (*viatges) = realloc((*viatges), sizeof(Voyage) * ((*n_viatges) + 1));
+        nous_viatges = realloc((*viatges), sizeof(Voyage) * ((*n_viatges) + 1));
+
+        if (nous_viatges == NULL) {
+            printF(2, MSG_SENSE_MEMORIA);
+            free(aux);
+            freeVoyages(*viatges, *n_viatges);
+            *viatges = NULL;
+            *n_viatges = 0;
+            close(fd);
+            return -1;
+        }
+
+        (*viatges) = nous_viatges;
         (*viatges)[*n_viatges].object = aux;
         (*viatges)[*n_viatges].id = (*n_viatges) + 1;
         (*viatges)[*n_viatges].file = readUntil(fd, ' ');
@@ -76,7 +88,9 @@ int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges) {
 }
 
 void freeVoyages(Voyage *viatges, int n_viatges) {
-    for (int i = 0; i < n_viatges; i++) {
+    int i = 0;
+    
+    for (i = 0; i < n_viatges; i++) {
         free(viatges[i].object);
         free(viatges[i].file);
         free(viatges[i].destination);
@@ -85,7 +99,7 @@ void freeVoyages(Voyage *viatges, int n_viatges) {
 }
 
 int readIslandConfig (char *nom_fitxer, IslandConfig *config) {
-    
+    Route *noves_rutes = NULL;
     int fd = 0;
     char *aux = NULL;
 
@@ -116,8 +130,16 @@ int readIslandConfig (char *nom_fitxer, IslandConfig *config) {
     
 
     while((aux = readUntil(fd, ' ')) != NULL) {
-        config->routes = realloc(config->routes, sizeof(Route) * (config->n_routes + 1));
-        
+        noves_rutes = realloc(config->routes, sizeof(Route) * (config->n_routes + 1));
+
+        if (noves_rutes == NULL) {
+            printF(2, MSG_SENSE_MEMORIA);
+            free(aux);
+            close(fd);
+            return -1;
+        }
+
+        config->routes = noves_rutes;
         config->routes[config->n_routes].name = aux;
         config->routes[config->n_routes].ip = readUntil(fd, ' ');
 
@@ -149,10 +171,12 @@ void freeIslandConfig (IslandConfig *config) {
 }
 
 int readStock(char *nom_fitxer, Product **productes, int *n_productes) {
+    Product *nous_productes = NULL;
+    Product producte;
     int fd = 0;
+
     *productes = NULL;
     *n_productes = 0;
-    Product producte;
 
     fd = open(nom_fitxer, O_RDONLY);
 
@@ -161,7 +185,18 @@ int readStock(char *nom_fitxer, Product **productes, int *n_productes) {
     }
 
     while(read(fd,&producte,sizeof(Product)) == sizeof(Product)) {
-        (*productes) = realloc((*productes), sizeof(Product) * ((*n_productes) + 1));
+        nous_productes = realloc((*productes), sizeof(Product) * ((*n_productes) + 1));
+
+        if (nous_productes == NULL) {
+            printF(2, MSG_SENSE_MEMORIA);
+            freeStock(*productes);
+            *productes = NULL;
+            *n_productes = 0;
+            close(fd);
+            return -1;
+        }
+
+        (*productes) = nous_productes;
         (*productes)[*n_productes] = producte;
         (*n_productes)++;
     }
@@ -188,6 +223,11 @@ int filterIslandRoutes (IslandConfig *config) {
     illa.known_island_count = config->n_routes;
     illa.known_islands = malloc(sizeof(char *) * config->n_routes);
 
+    if (illa.known_islands == NULL) {
+        printF(2, MSG_SENSE_MEMORIA);
+        return SPHRAGIS_ERROR;
+    }
+
     for (i = 0; i < config->n_routes; i++) {
         illa.known_islands[i] = config->routes[i].name;
     }
@@ -200,6 +240,13 @@ int filterIslandRoutes (IslandConfig *config) {
     }
 
     rutes_valides = malloc(sizeof(Route) * n_valides);
+
+    if (rutes_valides == NULL) {
+        printF(2, MSG_SENSE_MEMORIA);
+        free(illa.known_islands);
+        return SPHRAGIS_ERROR;
+    }
+
     j = 0;
 
     for (i = 0; i < config->n_routes; i++) {
@@ -260,6 +307,12 @@ int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config) {
     config->n_foods = atoi(aux);
     free(aux);
     config->foods = malloc(sizeof(Food) * config->n_foods);
+
+    if (config->foods == NULL) {
+        printF(2, MSG_SENSE_MEMORIA);
+        close(fd);
+        return -1;
+    }
 
     for (i = 0; i < config->n_foods; i++) {
 

@@ -24,7 +24,7 @@ int sortirPrograma = 0;
 void handleSignal(int senyal) {
     if (senyal == SIGINT) {
         sortirPrograma = 1;
-        close(0);
+        close(0);  // Aixo no es pot fer arreglar
     }
 }
 
@@ -58,9 +58,10 @@ int main (int argc, char *argv[]) {
         printF(1, "$ ");
         linea = readUntil(0, '\n');
 
-        //Final d'entrada (CTRL+D): sense aquesta comprovacio, readUntil retorna
+        //Final d'entrada (CTRL+D): sense aquesta comprovacio, readUntil retorna     <-- AIXO HO HE TRET PA QUE 
         //NULL indefinidament i el terminal entra en un bucle infinit.
-        if (sortirPrograma) {
+        
+        if (sortirPrograma) {   // <-- SIGINT pero amb el exit(0) no pasa pera aqui
             break;
         }
 

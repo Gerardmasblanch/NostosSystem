@@ -14,6 +14,16 @@
 #include "config.h"
 #include "commands.h"
 
+//Variables globals
+int sortirPrograma = 0;
+
+void handleSignal (int senyal) {
+    if (senyal == SIGINT) {
+        sortirprogram = 1;
+    }
+}
+
+
 //Procediment principal
 int main (int argc, char *argv[]) {
     
@@ -32,6 +42,8 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+     signal(SIGINT, handleSignal);
+
     asprintf(&missatge, "Odysseus %s is ready to sail.\n\n", config.name);
     printF(1, missatge);
     free(missatge);
@@ -43,7 +55,7 @@ int main (int argc, char *argv[]) {
 
         //Final d'entrada (CTRL+D): sense aquesta comprovacio, readUntil retorna
         //NULL indefinidament i el terminal entra en un bucle infinit.
-        if (linea == NULL) {
+        if (sortirPrograma) {
             break;
         }
 

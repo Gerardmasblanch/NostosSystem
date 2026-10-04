@@ -31,7 +31,9 @@
 int sortirprogram = 0;
 
 void handleSignal (int senyal) {
-    sortirprogram = 1;
+    if (senyal == SIGINT) {
+        sortirprogram = 1;
+    }
 }
 
 //Procediment principal

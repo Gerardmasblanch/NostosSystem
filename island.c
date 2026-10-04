@@ -26,8 +26,12 @@
 * @Retorn: ----.
 *
 ************************************************/
+
+//Variables globals
+int sortirprogram = 0;
+
 void handleSignal (int senyal) {
-    (void)senyal;
+    sortirprogram = 1;
 }
 
 //Procediment principal
@@ -63,26 +67,26 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    asprintf(&missatge,
-             "Island %s initialized.\nPort capacity: %d ship.\n%d sea routes loaded.\n%d products available.\n",
-             config.name, config.capacity, config.n_routes, n_productes);
+    asprintf(&missatge,"Island %s initialized.\nPort capacity: %d ship.\n%d sea routes loaded.\n%d products available.\n",config.name, config.capacity, config.n_routes, n_productes);
     printF(1, missatge);
     free(missatge);
 
     //Espera passiva: el proces dorm sense consumir CPU fins que arriba SIGINT.
     pause();
 
-    asprintf(&missatge, "\n%s closes its port.\n", config.name);
-    printF(1, missatge);
-    free(missatge);
+    if(sortirprogram) {
+        asprintf(&missatge, "\n%s closes its port.\n", config.name);
+        printF(1, missatge);
+        free(missatge);
 
-    freeStock(productes);
-    freeIslandConfig(&config);
+        freeStock(productes);
+        freeIslandConfig(&config);
 
-    //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
-    //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT);
+        //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
+        //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
+        signal(SIGINT, SIG_DFL);
+        raise(SIGINT);
+    }
 
     return 0;
 }

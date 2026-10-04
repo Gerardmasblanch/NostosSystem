@@ -26,8 +26,12 @@
 * @Retorn: ----.
 *
 ************************************************/
+
+//Variables globals
+int sortirprogram = 0;
+
 void handleSignal (int senyal) {
-    (void)senyal;
+    sortirprogram = 1;
 }
 
 //Procediment principal
@@ -62,15 +66,17 @@ int main (int argc, char *argv[]) {
     //Espera passiva: el proces dorm sense consumir CPU fins que arriba SIGINT.
     pause();
 
-    printF(1, "\nIthaca closes the harbor.");
+    if(sortirprogram) {
+        printF(1, "\nIthaca closes the harbor.");
 
-    freeVoyages(viatges, n_viatges);
-    freeIthacaConfig(&ithaca_config);
+        freeVoyages(viatges, n_viatges);
+        freeIthacaConfig(&ithaca_config);
 
-    //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
-    //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT);
+        //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
+        //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
+        signal(SIGINT, SIG_DFL);
+        raise(SIGINT);
+    }
 
     return 0;
 }

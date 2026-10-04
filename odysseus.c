@@ -22,7 +22,7 @@ int sortirPrograma = 0;
 
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
-        sortirprogram = 1;
+        sortirPrograma = 1;
     }
 }
 

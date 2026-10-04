@@ -34,7 +34,7 @@ char *readUntil (int fd, char delimitador) {
         return NULL;
     }
 
-    //Linia buida: el delimitador ha arribat sense cap caracter previ.
+    //el delimitador ha arribat sense cap caracter previ.
     if (buffer == NULL) {
         buffer = malloc(sizeof(char));
     }
@@ -65,8 +65,7 @@ char **splitString (char *text, char delimitador, int *n_trossos) {
             tros_actual[llargada] = text[i];
             llargada++;
         } else {
-            //Nomes guardem el tros si conte alguna cosa, aixi ens estalviem
-            //els trossos buits dels delimitadors repetits.
+            //Nomes guardem el tros si conte alguna cosa, aixi ens estalviem els trossos buits dels delimitadors repetits.
             if (llargada > 0) {
                 tros_actual[llargada] = '\0';
                 trossos = realloc(trossos, sizeof(char *) * (n_actuals + 1));

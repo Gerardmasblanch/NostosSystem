@@ -7,9 +7,10 @@
 *
 ************************************************/
 
+//Include del .h
 #include "config.h"
 
-
+//Procediments i funcions
 int readIthacaConfig (char *nom_fitxer, IthacaConfig *config) {
     
     int fd = 0;
@@ -33,11 +34,13 @@ int readIthacaConfig (char *nom_fitxer, IthacaConfig *config) {
     return 0;
 }
 
+
 void freeIthacaConfig (IthacaConfig *config) {
     free(config->name);
     free(config->folder);
     free(config->ip);
 }
+
 
 int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges) {
     
@@ -180,8 +183,7 @@ int filterIslandRoutes (IslandConfig *config) {
     int j;
     int k;
 
-    //Muntem l'estructura que espera SPHRAGIS a partir de la nostra: ell nomes
-    //vol el nom de l'illa i un array amb els noms de les destinacions.
+    // Us del SPHRAGIS 
     illa.name = config->name;
     illa.known_island_count = config->n_routes;
     illa.known_islands = malloc(sizeof(char *) * config->n_routes);
@@ -197,9 +199,6 @@ int filterIslandRoutes (IslandConfig *config) {
         return n_valides;
     }
 
-    //SPHRAGIS ja ha alliberat els noms de les rutes rebutjades, de manera que
-    //nomes podem comparar punters: llegir el contingut d'un nom rebutjat seria
-    //accedir a memoria alliberada.
     rutes_valides = malloc(sizeof(Route) * n_valides);
     j = 0;
 
@@ -216,7 +215,6 @@ int filterIslandRoutes (IslandConfig *config) {
             rutes_valides[j] = config->routes[i];
             j++;
         } else {
-            //El name ja l'ha alliberat SPHRAGIS; la ip es nostra.
             free(config->routes[i].ip);
         }
     }

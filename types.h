@@ -12,8 +12,6 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
-//Tipus propis
-
 //Aliment transportat per un Odysseus.
 typedef struct {
     char *name;
@@ -68,8 +66,7 @@ typedef struct {
     int    n_routes;
 } IslandConfig;
 
-//Registre del fitxer binari stock.db. Els tipus i l'ordre dels camps es
-//mapegen byte a byte sobre el fitxer i no es poden modificar.
+//Registre del fitxer binari stock.db.
 typedef struct {
     char name[100];
     int  amount;

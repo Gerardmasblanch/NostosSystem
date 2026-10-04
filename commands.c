@@ -8,12 +8,10 @@
 *
 ************************************************/
 
-//Include del fitxer .h del mateix modul
+//Include del .h
 #include "commands.h"
 
 //Procediments i funcions
-
-
 int parseSenseArguments (int n_trossos, char *us, int codi_valid) {
     char *missatge;
 
@@ -27,6 +25,7 @@ int parseSenseArguments (int n_trossos, char *us, int codi_valid) {
     return codi_valid;
 }
 
+
 int parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) {
     char *missatge;
 
@@ -39,7 +38,6 @@ int parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) 
 
     return codi_valid;
 }
-
 
 
 int parseCommand (char *linea) {

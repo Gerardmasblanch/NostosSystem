@@ -16,6 +16,9 @@
 #include "types.h"
 #include "config.h"
 
+//Variables globals
+int sortirprogram = 0;
+
 //Procediments i funcions
 
 /***********************************************
@@ -26,10 +29,6 @@
 * @Retorn: ----.
 *
 ************************************************/
-
-//Variables globals
-int sortirprogram = 0;
-
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
         sortirprogram = 1;
@@ -65,17 +64,15 @@ int main (int argc, char *argv[]) {
     printF(1, missatge);
     free(missatge);
 
-    //Espera passiva: el proces dorm sense consumir CPU fins que arriba SIGINT.
     pause();
 
+    //SIGNT ctrl+c
     if(sortirprogram) {
         printF(1, "\nIthaca closes the harbor.");
 
         freeVoyages(viatges, n_viatges);
         freeIthacaConfig(&ithaca_config);
 
-        //Tornem el comportament per defecte de SIGINT i ens la reenviem, de manera
-        //que el proces acabi amb el codi de sortida correcte (128 + SIGINT).
         signal(SIGINT, SIG_DFL);
         raise(SIGINT);
     }

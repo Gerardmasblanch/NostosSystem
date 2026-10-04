@@ -21,13 +21,19 @@
 //Variables globals
 int sortirPrograma = 0;
 
+/***********************************************
+*
+* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop, de
+*             manera que pause() retorni i el main pugui alliberar recursos.
+* @Parametres:  in: senyal = identificador de la senyal rebuda.
+* @Retorn: ----.
+*
+************************************************/
 void handleSignal(int senyal) {
     if (senyal == SIGINT) {
         sortirPrograma = 1;
-        close(0);  // Aixo no es pot fer arreglar
     }
 }
-
 
 //Procediment principal
 int main (int argc, char *argv[]) {
@@ -57,11 +63,8 @@ int main (int argc, char *argv[]) {
 
         printF(1, "$ ");
         linea = readUntil(0, '\n');
-
-        //Final d'entrada (CTRL+D): sense aquesta comprovacio, readUntil retorna     <-- AIXO HO HE TRET PA QUE 
-        //NULL indefinidament i el terminal entra en un bucle infinit.
         
-        if (sortirPrograma) {   // <-- SIGINT pero amb el exit(0) no pasa pera aqui
+        if (NULL == linea || sortirPrograma) {   // <-- SIGINT pero fins que no lo dones al enter no surt, he tret el ctrl D EOF segueix fent
             break;
         }
 

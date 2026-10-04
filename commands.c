@@ -1,7 +1,6 @@
 /***********************************************
 *
-* @Proposit: Implementacio del reconeixement i la validacio sintactica de les
-*            comandes del terminal interactiu del proces Odysseus.
+* @Proposit: Gestionar les comandes introduides per l'usuari a l'Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 25/09/2026
 * @Data ultima modificacio: 25/09/2026
@@ -29,7 +28,7 @@ int parseSenseArguments (int n_trossos, char *us, int codi_valid) {
 int parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) {
     char *missatge;
 
-    if (n_trossos != 3 || parseInt(trossos[2]) == VALOR_NO_NUMERIC) {
+    if (n_trossos != 3 || esNumeric(trossos[2]) == TEXT_NO_NUMERIC) {
         asprintf(&missatge, "Usage: %s <product> <amount>\n", us);
         printF(1, missatge);
         free(missatge);
@@ -82,7 +81,7 @@ int parseCommand (char *linea) {
             codi = CMD_ERROR_SINTAXI;
         }
     } else if(strcasecmp(trossos[0],"ACCEPT") == 0) {
-        if (n_trossos == 2 && parseInt(trossos[1]) != VALOR_NO_NUMERIC) {
+        if (n_trossos == 2 && esNumeric(trossos[1]) == TEXT_NUMERIC) {
             codi = CMD_ACCEPT;
         } else {
             printF(1, "Usage: ACCEPT <voyage_id>\n");

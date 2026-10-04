@@ -102,21 +102,18 @@ void freeTokens (char **trossos, int n_trossos) {
     free(trossos);
 }
 
-int parseInt (const char *text) {
-    int valor = 0;
+int esNumeric (char *text) {
     int i;
 
     if (text == NULL || text[0] == '\0') {
-        return VALOR_NO_NUMERIC;
+        return TEXT_NO_NUMERIC;
     }
 
     for (i = 0; text[i] != '\0'; i++) {
         if (text[i] < '0' || text[i] > '9') {
-            return VALOR_NO_NUMERIC;
+            return TEXT_NO_NUMERIC;
         }
-
-        valor = valor * 10 + (text[i] - '0');
     }
 
-    return valor;
+    return TEXT_NUMERIC;
 }

@@ -19,7 +19,7 @@
 #include "unistd.h"
 
 //Variables globals
-int sortirPrograma = 0;
+static OdysseusConfig config;
 
 /***********************************************
 *
@@ -31,14 +31,18 @@ int sortirPrograma = 0;
 ************************************************/
 void handleSignal(int senyal) {
     if (senyal == SIGINT) {
-        sortirPrograma = 1;
+        printF(1, "\n");
+
+        freeOdysseusConfig(&config);
+        signal(senyal, SIG_DFL);
+        raise(senyal);
     }
 }
 
 //Procediment principal
 int main (int argc, char *argv[]) {
     
-    OdysseusConfig config;
+    
     char *missatge = NULL;
     char *linea = NULL;
     int codi = 0;
@@ -53,21 +57,16 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-     signal(SIGINT, handleSignal);
+    signal(SIGINT, handleSignal);
 
     asprintf(&missatge, "Odysseus %s is ready to sail.\n\n", config.name);
     printF(1, missatge);
     free(missatge);
 
-    while(1){
+    while(1) {
 
         printF(1, "$ ");
         linea = readUntil(0, '\n');
-        
-        if (NULL == linea || sortirPrograma) {   // <-- SIGINT pero fins que no lo dones al enter no surt, he tret el ctrl D EOF segueix fent
-            break;
-        }
-
         //parsejar i respondre
         codi = parseCommand(linea);
         if(codi == CMD_DESCONEGUDA) {
@@ -79,7 +78,7 @@ int main (int argc, char *argv[]) {
         free(linea);    
     }
 
-    freeOdysseusConfig(&config);
+    
 
     return 0;
 }

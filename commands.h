@@ -1,14 +1,13 @@
 /***********************************************
 *
-* @Proposit: Reconeixement i validacio sintactica de les comandes del
-*            terminal interactiu del proces Odysseus.
+* @Proposit: gestió de les comandes introduides per l'usuari a l'Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 25/09/2026
 * @Data ultima modificacio: 25/09/2026
 *
 ************************************************/
 
-//Define Guards
+
 #ifndef _COMMANDS_H
 #define _COMMANDS_H
 
@@ -38,11 +37,11 @@
 
 /***********************************************
 *
-* @Finalitat: Valida una comanda que no admet cap argument.
+* @Finalitat: Valida una comanda que no admet arguments.
 * @Parametres:  in: n_trossos = nombre de paraules introduides.
 *               in: us = nom de la comanda, per al missatge de sintaxi.
 *               in: codi_valid = identificador a retornar si es correcta.
-* @Retorn: codi_valid si la sintaxi es correcta, CMD_ERROR_SINTAXI si no.
+* @Retorn: codi_valid, o CMD_ERROR_SINTAXI.
 *
 ************************************************/
 
@@ -55,19 +54,19 @@ int parseSenseArguments(int n_trossos, char *us, int codi_valid);
 *               in: n_trossos = nombre de paraules introduides.
 *               in: us = nom de la comanda, per al missatge de sintaxi.
 *               in: codi_valid = identificador a retornar si es correcta.
-* @Retorn: codi_valid si la sintaxi es correcta, CMD_ERROR_SINTAXI si no.
+*
+* @Retorn: codi_valid, o CMD_ERROR_SINTAXI.
 *
 ************************************************/
 int parseAmbQuantitat(char **trossos, int n_trossos, char *us, int codi_valid);
 
 /***********************************************
 *
-* @Finalitat: Reconeix una comanda introduida pel terminal i en valida la
-*             sintaxi i els arguments, sense executar-ne la funcionalitat.
+* @Finalitat: Reconeix una comanda del terminal i en valida la sintaxi,
+*             sense executar-ne la funcionalitat.
 * @Parametres:  in: linia = text introduit per l'usuari.
-* @Retorn: L'identificador de la comanda reconeguda, CMD_ERROR_SINTAXI si la
-*          comanda existeix pero els arguments no son correctes, o
-*          CMD_DESCONEGUDA si no correspon a cap comanda.
+* @Retorn: L'identificador de la comanda, CMD_ERROR_SINTAXI si els arguments
+*          no son correctes, o CMD_DESCONEGUDA si no existeix.
 *
 ************************************************/
 int parseCommand (char *linia);

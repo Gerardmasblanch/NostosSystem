@@ -1,7 +1,6 @@
 /***********************************************
 *
-* @Proposit: Definicio dels tipus propis compartits pels tres processos
-*            del sistema (Odysseus, Ithaca i Island).
+* @Proposit: Tipus propis compartits pels tres processos.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
 * @Data ultima modificacio: 24/09/2026
@@ -11,6 +10,8 @@
 //Define Guards
 #ifndef _TYPES_H
 #define _TYPES_H
+
+//Tipus propis
 
 //Aliment transportat per un Odysseus.
 typedef struct {
@@ -66,7 +67,7 @@ typedef struct {
     int    n_routes;
 } IslandConfig;
 
-//Registre del fitxer binari stock.db.
+//Registre del fitxer binari stock.db. Els tipus i l'ordre dels camps es
 typedef struct {
     char name[100];
     int  amount;

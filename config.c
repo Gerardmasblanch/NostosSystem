@@ -27,7 +27,7 @@ int readIthacaConfig (char *nom_fitxer, IthacaConfig *config) {
     config->ip = readUntil(fd, ' ');
 
     aux = readUntil(fd, '\n');
-    config->port = parseInt(aux);
+    config->port = atoi(aux);
     free(aux);
     close(fd);
 
@@ -65,7 +65,7 @@ int readVoyages(char *nom_fitxer, Voyage **viatges, int *n_viatges) {
         (*viatges)[*n_viatges].destination = readUntil(fd, ' ');
         
         aux = readUntil(fd, '\n');
-        (*viatges)[*n_viatges].reward = parseInt(aux);
+        (*viatges)[*n_viatges].reward = atoi(aux);
         free(aux);
         (*n_viatges)++;
         
@@ -101,11 +101,11 @@ int readIslandConfig (char *nom_fitxer, IslandConfig *config) {
 
    
     aux = readUntil(fd, '\n');
-    config->port = parseInt(aux);
+    config->port = atoi(aux);
     free(aux);
 
     aux = readUntil(fd, '\n');
-    config->capacity = parseInt(aux);
+    config->capacity = atoi(aux);
     free(aux);
     
     aux = readUntil(fd, '\n');
@@ -122,7 +122,7 @@ int readIslandConfig (char *nom_fitxer, IslandConfig *config) {
         config->routes[config->n_routes].ip = readUntil(fd, ' ');
 
         aux = readUntil(fd, '\n');
-        config->routes[config->n_routes].port = parseInt(aux);
+        config->routes[config->n_routes].port = atoi(aux);
         free(aux);
 
         config->n_routes++;
@@ -244,20 +244,20 @@ int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config) {
     config->name = readUntil(fd, ' ');
     config->ithaca_ip = readUntil(fd, ' ');
     aux = readUntil(fd, '\n');
-    config->ithaca_port = parseInt(aux);
+    config->ithaca_port = atoi(aux);
     free(aux);
 
     config->aeaea_ip = readUntil(fd, ' ');
     aux = readUntil(fd, '\n');
-    config->aeaea_port = parseInt(aux);
+    config->aeaea_port = atoi(aux);
     free(aux);
 
     aux = readUntil(fd, '\n');
-    config->gold = parseInt(aux);
+    config->gold = atoi(aux);
     free(aux);
 
     aux = readUntil(fd, '\n');
-    config->n_foods = parseInt(aux);
+    config->n_foods = atoi(aux);
     free(aux);
     config->foods = malloc(sizeof(Food) * config->n_foods);
 
@@ -265,7 +265,7 @@ int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config) {
 
         config->foods[i].name = readUntil(fd, ' ');
         aux = readUntil(fd, '\n');
-        config->foods[i].amount = parseInt(aux);
+        config->foods[i].amount = atoi(aux);
         free(aux);
     }
 

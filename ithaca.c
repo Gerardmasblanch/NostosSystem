@@ -14,7 +14,7 @@
 #include "utils.h"
 #include "types.h"
 #include "config.h"
-#include "trama.h"
+#include "voyages.h"
 
 //Define 
 #define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"  // això haura d'anar algun .h crec 
@@ -26,8 +26,7 @@ int sortirprogram = 0;
 
 /***********************************************
 *
-* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop, de
-*             manera que pause() retorni i el main pugui alliberar recursos.
+* @Finalitat: Activar la bandera de sortida en rebre SIGINT.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
@@ -40,6 +39,10 @@ void handleSignal (int senyal) {
 
 //Procediment principal
 int main (int argc, char *argv[]) {
+    
+    ServidorIthaca servidor;
+    int resultat;
+    
     IthacaConfig ithaca_config;
     Voyage *viatges = NULL;
     char *missatge = NULL;
@@ -52,6 +55,7 @@ int main (int argc, char *argv[]) {
     }
 
     signal(SIGINT, handleSignal);
+    signal(SIGPIPE, SIG_IGN); // que es axiò ara ho miro --------------------------------------------------------
 
     if (readIthacaConfig(argv[1], &ithaca_config) < 0) {
         printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
@@ -83,19 +87,24 @@ int main (int argc, char *argv[]) {
     printF(1, missatge);
     free(missatge);
 
-    pause();
+    inicialitzarServidorIthaca(&servidor);
 
-    //SIGNT ctrl+c
-    if(sortirprogram) {
+    resultat = executarServidorIthaca(fd_server, &servidor, &sortirprogram);
+
+    if (sortirprogram == 1) {
         printF(1, "\nIthaca closes the harbor.\n");
+    }
 
-        close(fd_server);
-        freeVoyages(viatges, n_viatges);
-        freeIthacaConfig(&ithaca_config);
+    alliberarServidorIthaca(&servidor);
+    close(fd_server);
+    freeVoyages(viatges, n_viatges);
+    freeIthacaConfig(&ithaca_config);
 
+    if (sortirprogram == 1) {
         signal(SIGINT, SIG_DFL);
         raise(SIGINT);
     }
 
-    return 0;
+    return resultat;
 }
+

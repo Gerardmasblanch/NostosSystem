@@ -92,4 +92,13 @@ int esNumeric (char *text);
 ************************************************/
 int esPortValid (int port);
 
+/***********************************************
+*
+* @Finalitat: Fa una copia d'una cadena en memoria dinamica.
+* @Parametres:  in: text = cadena a copiar.
+* @Retorn: Copia reservada amb malloc, o NULL si no hi ha memoria.
+*
+************************************************/
+char *copiarText (char *text);
+
 #endif

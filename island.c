@@ -52,7 +52,7 @@ int main (int argc, char *argv[]) {
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
-
+    
     if (readIslandConfig(argv[1], &config) < 0) {
         printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
         return -1;

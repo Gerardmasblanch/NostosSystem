@@ -162,3 +162,14 @@ int esPortValid (int port) {
 
     return valid;
 }
+
+char *copiarText (char *text) {
+    char *copia = NULL;
+
+    copia = malloc(sizeof(char) * (strlen(text) + 1));
+    if (copia != NULL) {
+        strcpy(copia, text);
+    }
+
+    return copia;
+}

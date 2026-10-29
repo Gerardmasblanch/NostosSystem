@@ -11,8 +11,8 @@ OBJECTES_COMUNS = utils.o config.o commands.o trama.o sphragis.o
 
 all: odysseus ithaca island
 
-odysseus: odysseus.o $(OBJECTES_COMUNS)
-	$(CC) $(CFLAGS) -o odysseus odysseus.o $(OBJECTES_COMUNS)
+odysseus: odysseus.o navegant.o travessia.o $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o odysseus odysseus.o navegant.o travessia.o $(OBJECTES_COMUNS)
 
 ithaca: ithaca.o voyages.o $(OBJECTES_COMUNS)
 	$(CC) $(CFLAGS) -o ithaca ithaca.o voyages.o $(OBJECTES_COMUNS)
@@ -22,13 +22,13 @@ island: island.o harbor.o market.o $(OBJECTES_COMUNS)
 
 # Cada .o depen de tots els .h: si es canvia una capcalera (un #define,
 # un struct...) es recompila tot el que la podria fer servir.
-CAPCALERES = types.h utils.h config.h commands.h trama.h harbor.h market.h sphragis.h voyages.h
+CAPCALERES = types.h utils.h config.h commands.h trama.h harbor.h market.h sphragis.h voyages.h navegant.h travessia.h
 
 %.o: %.c $(CAPCALERES)
 	$(CC) $(CFLAGS) -c $<
 
 # sphragis.o no es compila: ja ve fet. Per aixo clean no l'esborra.
 clean:
-	rm -f utils.o config.o commands.o trama.o harbor.o market.o voyages.o odysseus.o ithaca.o island.o odysseus ithaca island
+	rm -f utils.o config.o commands.o trama.o harbor.o market.o voyages.o navegant.o travessia.o odysseus.o ithaca.o island.o odysseus ithaca island
 
 .PHONY: all clean

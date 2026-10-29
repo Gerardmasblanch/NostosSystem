@@ -89,7 +89,7 @@ int main (int argc, char *argv[]) {
     if(sortirprogram) {
         printF(1, "\nIthaca closes the harbor.\n");
 
-        close(fd_servidor);
+        close(fd_server);
         freeVoyages(viatges, n_viatges);
         freeIthacaConfig(&ithaca_config);
 

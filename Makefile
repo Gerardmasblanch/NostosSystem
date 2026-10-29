@@ -17,14 +17,14 @@ odysseus: odysseus.o $(OBJECTES_COMUNS)
 ithaca: ithaca.o $(OBJECTES_COMUNS)
 	$(CC) $(CFLAGS) -o ithaca ithaca.o $(OBJECTES_COMUNS)
 
-island: island.o $(OBJECTES_COMUNS)
-	$(CC) $(CFLAGS) -o island island.o $(OBJECTES_COMUNS)
+island: island.o harbor.o $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o island island.o harbor.o $(OBJECTES_COMUNS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
 # sphragis.o no es compila: ja ve fet. Per aixo clean no l'esborra.
 clean:
-	rm -f utils.o config.o commands.o trama.o odysseus.o ithaca.o island.o odysseus ithaca island
+	rm -f utils.o config.o commands.o trama.o harbor.o odysseus.o ithaca.o island.o odysseus ithaca island
 
 .PHONY: all clean

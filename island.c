@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "types.h"
 #include "config.h"
+#include "harbor.h"
 
 //Variables globals
 int sortirprogram = 0;
@@ -40,6 +41,9 @@ int main (int argc, char *argv[]) {
     Product *productes = NULL;
     char *missatge = NULL;
     int n_productes = 0;
+    Harbor harbor;
+    int fd_servidor = ERR_CODI;
+
 
     if (argc != 3) {
         printF(1, "Us: ./island <config.dat> <stock.db>\n");
@@ -72,26 +76,32 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    asprintf(&missatge,"Island %s initialized.\nPort capacity: %d ship.\n%d sea routes loaded.\n%d products available.\n",config.name, config.capacity, config.n_routes, n_productes);
+    fd_servidor = obrirServidor(config.ip, config.port);
+    
+    if (fd_servidor == ERR_CODI) {
+        printF(1, "Error: no s'ha pogut obrir el servidor de l'illa.\n");
+        freeStock(productes);
+        freeIslandConfig(&config);
+        return -1;
+    }
+
+    mostrarInici(&config, n_productes);
+
+    inicialitzarHarbor(&harbor);
+    executarServidor(fd_servidor, &harbor, &config, &sortirprogram);
+
+    asprintf(&missatge, "\n%s closes its port.\n", config.name);
     printF(1, missatge);
     free(missatge);
 
+    alliberarHarbor(&harbor);
+    close(fd_servidor);
+    freeStock(productes);
+    freeIslandConfig(&config);
 
-    pause();
-
-    // SIGINT ctrl+c
-    if(sortirprogram) {
-
-        asprintf(&missatge, "\n%s closes its port.\n", config.name);
-        printF(1, missatge);
-        free(missatge);
-
-        freeStock(productes);
-        freeIslandConfig(&config);
-
-        signal(SIGINT, SIG_DFL);
-        raise(SIGINT);
-    }
+    signal(SIGINT, SIG_DFL);
+    raise(SIGINT);
 
     return 0;
+
 }

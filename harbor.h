@@ -33,7 +33,7 @@
 #define TEXT_VAIXELL  "ship"
 #define TEXT_VAIXELLS "ships"
 #define MSG_DOCKED_ENVIAT ">>> DOCKED sent to %s; he may enter the port.\n"
-#define MSG_APROXIMANT ">>> %s approaching %s.\n"
+#define MSG_APROXIMANT "\n>>> %s approaching %s.\n"
 #define MSG_ATRACAT    ">>> %s entered the port.\n"
 #define MSG_PORT_PLE   ">>> Port full. %s waiting offshore in the FIFO queue.\n"
 #define MSG_HA_MARXAT "\n>>> %s has left.\n"

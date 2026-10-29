@@ -53,6 +53,12 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    if (esPortValid(ithaca_config.port) == PORT_NO_VALID) {
+        printF(1, MSG_PORT_NO_VALID);
+        freeIthacaConfig(&ithaca_config);
+        return -1;
+    }
+    
     if (readVoyages(argv[2], &viatges, &n_viatges) < 0) {
         printF(1, "Error: no s'ha pogut obrir el fitxer de viatges.\n");
         freeIthacaConfig(&ithaca_config);

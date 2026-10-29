@@ -53,6 +53,12 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    if (esPortValid(config.port) == PORT_NO_VALID) {
+        printF(1, MSG_PORT_NO_VALID);
+        freeIslandConfig(&config);
+        return -1;
+    }
+
     // Filtra amb SPHRAGIS les rutes i elimina les que no coneix
     if (filterIslandRoutes(&config) < 0) {
         printF(1, "Error: no s'han pogut validar les rutes de l'illa.\n");

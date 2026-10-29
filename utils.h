@@ -24,6 +24,13 @@
 
 #define MSG_SENSE_MEMORIA "Error: no hi ha prou memoria disponible.\n"
 
+#define PORT_NO_VALID 0
+#define PORT_VALID    1
+#define PORT_MINIM    1024
+#define PORT_MAXIM    65535
+
+#define MSG_PORT_NO_VALID "Error: el port del fitxer de configuracio no es valid.\n"
+
 //Procediments i funcions
 
 /***********************************************
@@ -75,5 +82,14 @@ void freeTokens (char **trossos, int n_trossos);
 *
 ************************************************/
 int esNumeric (char *text);
+
+/***********************************************
+*
+* @Finalitat: Comprova si un port esta dins del rang de ports utilitzables.
+* @Parametres:  in: port = port a comprovar.
+* @Retorn: PORT_VALID o PORT_NO_VALID.
+*
+************************************************/
+int esPortValid (int port);
 
 #endif

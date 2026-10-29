@@ -56,6 +56,12 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    if (esPortValid(config.ithaca_port) == PORT_NO_VALID || esPortValid(config.aeaea_port) == PORT_NO_VALID) {
+        printF(1, MSG_PORT_NO_VALID);
+        freeOdysseusConfig(&config);
+        return -1;
+    }
+
     signal(SIGINT, handleSignal);
 
     asprintf(&missatge, "Odysseus %s is ready to sail.\n\n", config.name);

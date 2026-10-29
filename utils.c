@@ -152,3 +152,13 @@ int esNumeric (char *text) {
 
     return TEXT_NUMERIC;
 }
+
+int esPortValid (int port) {
+    int valid = PORT_NO_VALID;
+
+    if (port >= PORT_MINIM && port <= PORT_MAXIM) {
+        valid = PORT_VALID;
+    }
+
+    return valid;
+}

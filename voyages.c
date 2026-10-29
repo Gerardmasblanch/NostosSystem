@@ -7,28 +7,16 @@
 *
 ************************************************/
 
+//Include del fitxer .h del mateix modul
 #include "voyages.h"
 
-/***********************************************
-*
-* @Finalitat: Inicialitzar el servidor sense clients connectats.
-* @Parametres: out: servidor = estructura del servidor a inicialitzar.
-* @Retorn: ----.
-*
-************************************************/
+//Procediments i funcions
+
 void inicialitzarServidorIthaca (ServidorIthaca *servidor) {
     servidor->clients = NULL;
     servidor->n_clients = 0;
 }
 
-/***********************************************
-*
-* @Finalitat: Acceptar una connexio i afegir el client al servidor.
-* @Parametres: in/out: servidor = servidor que guardara el client.
-*              in: fd_server = socket que escolta connexions.
-* @Retorn: 0 si s'ha afegit el client, ERR_CODI si hi ha un error.
-*
-************************************************/
 int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
     ClientIthaca *nous_clients = NULL;
     int fd_client;
@@ -61,15 +49,6 @@ int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
     return 0;
 }
 
-/***********************************************
-*
-* @Finalitat: Preparar el conjunt de sockets que vigilara select.
-* @Parametres: out: conjunt = conjunt de descriptors a preparar.
-*              in: fd_server = socket que escolta connexions.
-*              in: servidor = servidor amb els clients connectats.
-* @Retorn: El descriptor mes gran del conjunt.
-*
-************************************************/
 int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor) {
     int i;
     int max_fd = fd_server;
@@ -88,14 +67,6 @@ int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor)
     return max_fd;
 }
 
-/***********************************************
-*
-* @Finalitat: Tancar la connexio d'un client i treure'l de la llista.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que s'ha de treure.
-* @Retorn: ----.
-*
-************************************************/
 void treureClientIthaca (ServidorIthaca *servidor, int index) {
     int i;
 
@@ -109,13 +80,6 @@ void treureClientIthaca (ServidorIthaca *servidor, int index) {
     servidor->n_clients--;
 }
 
-/***********************************************
-*
-* @Finalitat: Tancar les connexions dels clients i alliberar la seva llista.
-* @Parametres: in/out: servidor = servidor que s'ha d'alliberar.
-* @Retorn: ----.
-*
-************************************************/
 void alliberarServidorIthaca (ServidorIthaca *servidor) {
     
     while (servidor->n_clients > 0) {
@@ -126,15 +90,6 @@ void alliberarServidorIthaca (ServidorIthaca *servidor) {
     servidor->clients = NULL;
 }
 
-/***********************************************
-*
-* @Finalitat: Identificar un client amb el nom rebut i confirmar la connexio.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que s'identifica.
-*              in: dades = nom rebut al camp DATA de la trama.
-* @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
-*
-************************************************/
 int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
     ClientIthaca *client = NULL;
     char *missatge = NULL;
@@ -172,14 +127,6 @@ int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
     return resultat;
 }
 
-/***********************************************
-*
-* @Finalitat: Llegir una trama d'un client i atendre la peticio rebuda.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que te activitat.
-* @Retorn: ----.
-*
-************************************************/
 void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     char *dades = NULL;
     int tipus;
@@ -220,15 +167,6 @@ void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     }
 }
 
-/***********************************************
-*
-* @Finalitat: Esperar connexions i atendre els clients amb select.
-* @Parametres: in: fd_server = socket que escolta connexions.
-*              in/out: servidor = servidor amb els clients connectats.
-*              in: sortir = bandera activada pel handler de SIGINT.
-* @Retorn: 0 si es tanca per la bandera, ERR_CODI si falla.
-*
-************************************************/
 int executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir) {
     fd_set conjunt;
     int max_fd;

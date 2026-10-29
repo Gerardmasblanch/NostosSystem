@@ -8,14 +8,18 @@
 *
 ************************************************/
 
+//Define Guards
 #ifndef _VOYAGES_H
 #define _VOYAGES_H
 
+//Llibreries
 #include <sys/select.h>
 
+//Llibreries propies
 #include "trama.h"
 #include "types.h"
 
+//Constants
 #define MSG_ERROR_ACCEPT "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
 #define TEXT_ITHACA_OK "OK"
@@ -27,7 +31,9 @@
 #define TEXT_ITHACA_ERROR_FLAGS "INVALID_FLAGS"
 #define TEXT_ITHACA_ERROR_TIPUS "INVALID_TYPE"
 #define MSG_ERROR_SELECT "Error: ha fallat el select d'Ithaca.\n"
+#define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"
 
+//Structs
 typedef struct {
     int fd;
     char *nom;
@@ -37,6 +43,8 @@ typedef struct {
     ClientIthaca *clients;
     int n_clients;
 } ServidorIthaca;
+
+//Procediments i funcions
 
 /***********************************************
 *

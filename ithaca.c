@@ -16,9 +16,6 @@
 #include "config.h"
 #include "voyages.h"
 
-//Define 
-#define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"  // això haura d'anar algun .h crec 
-
 //Variables globals
 int sortirprogram = 0;
 

@@ -14,6 +14,10 @@
 #include "utils.h"
 #include "types.h"
 #include "config.h"
+#include "trama.h"
+
+//Define 
+#define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"  // això haura d'anar algun .h crec 
 
 //Variables globals
 int sortirprogram = 0;
@@ -40,6 +44,7 @@ int main (int argc, char *argv[]) {
     Voyage *viatges = NULL;
     char *missatge = NULL;
     int n_viatges = 0;
+    int fd_server = ERR_CODI;  // això fica un -1 per defecte que es error
 
     if (argc != 3) {
         printF(1, "Us: ./ithaca <config.dat> <voyages.dat>\n");
@@ -65,6 +70,15 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    fd_server = obrirServidor(ithaca_config.ip, ithaca_config.port);
+
+    if (fd_server == ERR_CODI) {
+        printF(1, MSG_ERROR_SERVIDOR);
+        freeVoyages(viatges, n_viatges);
+        freeIthacaConfig(&ithaca_config);
+        return -1;
+    }
+
     asprintf(&missatge, "Ithaca initialized. %d voyages loaded.\nWaiting for Odysseus...\n", n_viatges);
     printF(1, missatge);
     free(missatge);
@@ -75,6 +89,7 @@ int main (int argc, char *argv[]) {
     if(sortirprogram) {
         printF(1, "\nIthaca closes the harbor.\n");
 
+        close(fd_servidor);
         freeVoyages(viatges, n_viatges);
         freeIthacaConfig(&ithaca_config);
 

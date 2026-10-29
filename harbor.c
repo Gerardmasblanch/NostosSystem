@@ -216,7 +216,25 @@ int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor) {
     return max_fd;
 }
 
-void atendreTrama (Harbor *harbor, int index, IslandConfig *config) {
+void atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat) {
+    Vaixell *vaixell = NULL;
+
+    vaixell = &harbor->vaixells[index];
+
+    if (vaixell->estat != VAIXELL_ATRACAT) {
+        enviarTrama(vaixell->fd, tipus, FLAG_ERROR, TEXT_ERROR_ESTAT);
+    } else if (tipus == TIPUS_LIST_MARKET) {
+        atendreListMarket(vaixell->fd, mercat);
+    } else if (tipus == TIPUS_BUY) {
+        atendreBuy(vaixell->fd, vaixell->nom, dades, mercat);
+    } else if (tipus == TIPUS_SELL) {
+        atendreSell(vaixell->fd, vaixell->nom, dades, mercat);
+    } else {
+        atendreBuyMap(vaixell->fd, vaixell->nom, dades, config);
+    }
+}
+
+void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat) {
     char *dades = NULL;
     int fd;
     int tipus;
@@ -233,6 +251,9 @@ void atendreTrama (Harbor *harbor, int index, IslandConfig *config) {
         atendreArribada(harbor, index, dades, config);
     } else if (tipus == TIPUS_SORTIR_ILLA) {
         atendreSortida(harbor, index, config);
+    } else if (tipus == TIPUS_LIST_MARKET || tipus == TIPUS_BUY || tipus == TIPUS_SELL || tipus == TIPUS_BUY_MAP) {
+        atendreMercat(harbor, index, tipus, dades, config, mercat);
+
     } else {
         enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_NACK_TIPUS);
     }
@@ -240,12 +261,12 @@ void atendreTrama (Harbor *harbor, int index, IslandConfig *config) {
     free(dades);
 }
 
-void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config) {
+void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat) {
     int i;
 
     for (i = harbor->n_vaixells - 1; i >= 0; i--) {
         if (FD_ISSET(harbor->vaixells[i].fd, set)) {
-            atendreTrama(harbor, i, config);
+            atendreTrama(harbor, i, config, mercat);
         }
     }
 }
@@ -272,7 +293,7 @@ void mostrarInici (IslandConfig *config, int n_productes) {
     free(missatge);
 }
 
-void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, int *sortir) {
+void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir) {
     fd_set set;
     int max_fd;
     int fd_vaixell;
@@ -287,7 +308,7 @@ void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, in
                     afegirVaixell(harbor, fd_vaixell);
                 }
             }
-            atendreVaixells(harbor, &set, config);
+            atendreVaixells(harbor, &set, config, mercat);
         }
     }
 }

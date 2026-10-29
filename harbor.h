@@ -17,6 +17,7 @@
 //Llibreries propies
 #include "trama.h"
 #include "config.h"
+#include "market.h"
 
 //Constants
 #define VAIXELL_CONNECTAT 0
@@ -177,6 +178,22 @@ int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
 
 /***********************************************
 *
+* @Finalitat: Atén una peticio del mercat (LIST MARKET, BUY, SELL o BUY MAP)
+*             si el vaixell esta atracat.
+* @Parametres:  in: harbor = port de l'illa.
+*               in: index = posicio del vaixell a la llista.
+*               in: tipus = tipus de la trama rebuda.
+*               in: dades = text de la peticio.
+*               in: config = configuracio de l'illa.
+*               in/out: mercat = mercat de l'illa.
+* @Retorn: ----.
+*
+************************************************/
+void atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat);
+
+
+/***********************************************
+*
 * @Finalitat: Llegeix una trama d'un vaixell i l'atén segons el seu tipus.
 *             Si la lectura falla, considera que el vaixell ha marxat.
 * @Parametres:  in/out: harbor = port de l'illa.
@@ -185,7 +202,7 @@ int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreTrama (Harbor *harbor, int index, IslandConfig *config);
+void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat);
 
 /***********************************************
 *
@@ -193,15 +210,17 @@ void atendreTrama (Harbor *harbor, int index, IslandConfig *config);
 * @Parametres:  in/out: harbor = port de l'illa.
 *               in: set = conjunt retornat pel select.
 *               in: config = configuracio de l'illa.
+*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
-void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config);
+void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat);
 
 /***********************************************
 *
 * @Finalitat: Tanca els sockets de tots els vaixells i allibera la memoria del port.
 * @Parametres:  in/out: harbor = port a alliberar.
+*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
@@ -225,9 +244,10 @@ void mostrarInici (IslandConfig *config, int n_productes);
 *               in/out: harbor = port de l'illa.
 *               in: config = configuracio de l'illa.
 *               in: sortir = bandera que posa a 1 el handler de SIGINT.
+*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
-void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, int *sortir);
+void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir);
 
 #endif

@@ -37,10 +37,10 @@ void handleSignal (int senyal) {
 
 //Procediment principal
 int main (int argc, char *argv[]) {
+
     IslandConfig config;
-    Product *productes = NULL;
+    Mercat mercat;
     char *missatge = NULL;
-    int n_productes = 0;
     Harbor harbor;
     int fd_servidor = ERR_CODI;
 
@@ -70,25 +70,26 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    if (readStock(argv[2], &productes, &n_productes) < 0) {
+    if (readStock(argv[2], &mercat.productes, &mercat.n_productes) < 0) {
         printF(1, "Error: no s'ha pogut obrir el fitxer de productes.\n");
         freeIslandConfig(&config);
         return -1;
     }
 
+    mercat.fitxer = argv[2];
     fd_servidor = obrirServidor(config.ip, config.port);
-    
+
     if (fd_servidor == ERR_CODI) {
         printF(1, "Error: no s'ha pogut obrir el servidor de l'illa.\n");
-        freeStock(productes);
+        freeStock(mercat.productes);
         freeIslandConfig(&config);
         return -1;
     }
 
-    mostrarInici(&config, n_productes);
+    mostrarInici(&config, mercat.n_productes);
 
     inicialitzarHarbor(&harbor);
-    executarServidor(fd_servidor, &harbor, &config, &sortirprogram);
+    executarServidor(fd_servidor, &harbor, &config, &mercat, &sortirprogram);
 
     asprintf(&missatge, "\n%s closes its port.\n", config.name);
     printF(1, missatge);
@@ -96,7 +97,7 @@ int main (int argc, char *argv[]) {
 
     alliberarHarbor(&harbor);
     close(fd_servidor);
-    freeStock(productes);
+    freeStock(mercat.productes);
     freeIslandConfig(&config);
 
     signal(SIGINT, SIG_DFL);

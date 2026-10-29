@@ -35,6 +35,12 @@
 #define MSG_ERROR_RESPOSTA "Error: %s.\n"
 #define MSG_JA_CONNECTAT   "You are already connected to Ithaca.\n"
 #define MSG_NOMES_A_ITHACA "You can only connect to Ithaca from Ithaca.\n"
+#define TEXT_SENSE_VIATGES "0"
+#define MSG_CAPCALERA_VIATGES "\n--- AVAILABLE VOYAGES ---\n\n"
+#define FORMAT_VIATGE "%s. %-20s -> %-12s [%s]\n"
+#define MSG_SENSE_VIATGES "No voyages available.\n"
+#define MSG_NO_CONNECTAT_ITHACA "You must be connected to Ithaca.\n"
+#define MSG_RESPOSTA_INCORRECTA "Error: unexpected response from the server.\n"
 
 //Procediments i funcions
 
@@ -92,6 +98,25 @@ void atendreServidor (Navegant *navegant);
 ************************************************/
 void ferConnectIthaca (Navegant *navegant);
 
+
+/***********************************************
+*
+* @Finalitat: Interpreta una trama de LIST VOYAGES i mostra el viatge.
+* @Parametres:  in: dades = <Index>&<Total>&<VoyageID>&<Object>&<Destination>&<Reward>.
+*               out: total = nombre total de viatges que enviara Ithaca.
+* @Retorn: TRAMA_OK si el format es correcte, TRAMA_ERROR si no.
+*
+************************************************/
+int mostrarViatge (char *dades, int *total);
+
+/***********************************************
+*
+* @Finalitat: Demana a Ithaca els viatges disponibles i els mostra.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void ferListVoyages (Navegant *navegant);
 
 /***********************************************
 *

@@ -119,6 +119,68 @@ void ferConnectIthaca (Navegant *navegant) {
     free(dades);
 }
 
+int mostrarViatge (char *dades, int *total) {
+    char **trossos = NULL;
+    char *missatge = NULL;
+    int n_trossos;
+    int resultat = TRAMA_ERROR;
+
+    trossos = splitString(dades, '&', &n_trossos);
+
+    if (n_trossos == 6) {
+        *total = atoi(trossos[1]);
+
+        asprintf(&missatge, FORMAT_VIATGE, trossos[2], trossos[3], trossos[4], trossos[5]);
+        printF(1, missatge);
+        free(missatge);
+
+        resultat = TRAMA_OK;
+    }
+
+    freeTokens(trossos, n_trossos);
+
+    return resultat;
+}
+
+void ferListVoyages (Navegant *navegant) {
+    char *dades = NULL;
+    char *missatge = NULL;
+    int resultat;
+    int rebudes = 0;
+    int total = 1;
+
+    if (navegant->estat != ESTAT_CONNECTAT_ITHACA) {
+        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        return;
+    }
+
+    enviarTrama(navegant->fd_connexio, TIPUS_LIST_VOYAGES, FLAG_PETICIO, "");
+    printF(1, MSG_CAPCALERA_VIATGES);
+
+    while (rebudes < total) {
+        resultat = rebreResposta(navegant, TIPUS_LIST_VOYAGES, &dades);
+
+        if (resultat == RESPOSTA_PERDUDA) {
+            rebudes = total;
+        } else if (resultat == RESPOSTA_ERROR) {
+            asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
+            printF(1, missatge);
+            free(missatge);
+            rebudes = total;
+        } else if (strcmp(dades, TEXT_SENSE_VIATGES) == 0) {
+            printF(1, MSG_SENSE_VIATGES);
+            rebudes = total;
+        } else if (mostrarViatge(dades, &total) == TRAMA_OK) {
+            rebudes++;
+        } else {
+            printF(1, MSG_RESPOSTA_INCORRECTA);
+            rebudes = total;
+        }
+
+        free(dades);
+        dades = NULL;
+    }
+}
 
 
 int executarComanda (Navegant *navegant, char *linea) {
@@ -130,6 +192,8 @@ int executarComanda (Navegant *navegant, char *linea) {
         printF(1, MSG_DESCONEGUDA);
     } else if(codi == CMD_CONNECT_ITHACA) {
         ferConnectIthaca(navegant);
+    } else if (codi == CMD_LIST_VOYAGES) {
+        ferListVoyages(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
         printF(1, MSG_COMANDA_OK);
     }

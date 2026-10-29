@@ -16,6 +16,7 @@
 #include "config.h"
 #include "voyages.h"
 
+
 //Variables globals
 int sortirprogram = 0;
 
@@ -85,6 +86,14 @@ int main (int argc, char *argv[]) {
     free(missatge);
 
     inicialitzarServidorIthaca(&servidor);
+
+    if (prepararViatgesIthaca(&servidor, viatges, n_viatges) == ERR_CODI) {
+        alliberarServidorIthaca(&servidor);
+        close(fd_server);
+        freeVoyages(viatges, n_viatges);
+        freeIthacaConfig(&ithaca_config);
+        return ERR_CODI;
+    }
 
     resultat = executarServidorIthaca(fd_server, &servidor, &sortirprogram);
 

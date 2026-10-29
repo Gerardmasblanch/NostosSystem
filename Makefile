@@ -20,7 +20,11 @@ ithaca: ithaca.o $(OBJECTES_COMUNS)
 island: island.o harbor.o $(OBJECTES_COMUNS)
 	$(CC) $(CFLAGS) -o island island.o harbor.o $(OBJECTES_COMUNS)
 
-%.o: %.c
+# Cada .o depen de tots els .h: si es canvia una capcalera (un #define,
+# un struct...) es recompila tot el que la podria fer servir.
+CAPCALERES = types.h utils.h config.h commands.h trama.h harbor.h sphragis.h
+
+%.o: %.c $(CAPCALERES)
 	$(CC) $(CFLAGS) -c $<
 
 # sphragis.o no es compila: ja ve fet. Per aixo clean no l'esborra.

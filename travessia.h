@@ -208,6 +208,16 @@ int arribarIlla (Navegant *navegant);
 
 /***********************************************
 *
+* @Finalitat: Torna a connectar el navegant amb l'illa on es troba despres
+*             d'haver-ne perdut la connexio.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+*
+************************************************/
+int tornarAIlla (Navegant *navegant);
+
+/***********************************************
+*
 * @Finalitat: Navega fins a una illa connectada amb la ubicacio actual.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: illa = nom de l'illa escrit per l'usuari.

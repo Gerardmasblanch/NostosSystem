@@ -397,6 +397,37 @@ int arribarIlla (Navegant *navegant) {
     return final;
 }
 
+int tornarAIlla (Navegant *navegant) {
+    char *missatge = NULL;
+    char *ip = NULL;
+    int port = 0;
+    int index;
+
+    if (strcasecmp(navegant->ubicacio, TEXT_AEAEA) == 0) {
+        ip = navegant->config.aeaea_ip;
+        port = navegant->config.aeaea_port;
+    } else {
+        index = buscarAdreca(navegant, navegant->ubicacio);
+        if (index != ERR_CODI) {
+            ip = navegant->adreces[index].ip;
+            port = navegant->adreces[index].port;
+        }
+    }
+
+    if (ip != NULL) {
+        navegant->fd_connexio = connectarServidor(ip, port);
+    }
+
+    if (navegant->fd_connexio == ERR_CODI) {
+        asprintf(&missatge, MSG_ERROR_CONNEXIO, navegant->ubicacio);
+        printF(1, missatge);
+        free(missatge);
+        return FINAL_NO;
+    }
+
+    return arribarIlla(navegant);
+}
+
 int ferSail (Navegant *navegant, char *illa) {
     char *missatge = NULL;
     char *nom = NULL;
@@ -404,6 +435,10 @@ int ferSail (Navegant *navegant, char *illa) {
     int port = 0;
     int index;
     int fd_nou;
+
+    if (navegant->estat == ESTAT_DESCONNECTAT && strcasecmp(illa, navegant->ubicacio) == 0) {
+        return tornarAIlla(navegant);
+    }
 
     if (navegant->estat == ESTAT_ITHACA || navegant->estat == ESTAT_CONNECTAT_ITHACA) {
         if (strcasecmp(illa, TEXT_AEAEA) == 0) {

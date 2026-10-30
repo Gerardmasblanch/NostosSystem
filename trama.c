@@ -39,13 +39,20 @@ int enviarTrama (int fd, int tipus, int flags, char *dades) {
 
 int rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     unsigned char trama[MIDA_TRAMA];
-    int llegits;
+    int llegits = 0;
+    int resultat_read = 1;
     int mida_dades;
     int resultat = TRAMA_ERROR;
 
     *dades = NULL;
 
-    llegits = read(fd, trama, MIDA_TRAMA);
+    while (llegits < MIDA_TRAMA && resultat_read > 0) {
+        resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+        if (resultat_read > 0) {
+            llegits = llegits + resultat_read;
+        }
+    }
+
     if (llegits == MIDA_TRAMA) {
         mida_dades = trama[POS_MIDA];
         if (mida_dades > MIDA_DADES) {

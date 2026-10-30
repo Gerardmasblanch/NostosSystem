@@ -148,6 +148,86 @@ void mostrarStatus (Navegant *navegant) {
     free(missatge);
 }
 
+int buscarAliment (Navegant *navegant, char *nom) {
+    int i;
+    int index = ERR_CODI;
+
+    for (i = 0; i < navegant->config.n_foods; i++) {
+        if (strcasecmp(navegant->config.foods[i].name, nom) == 0) {
+            index = i;
+        }
+    }
+
+    return index;
+}
+
+int prepararAliment (Navegant *navegant, char *nom) {
+    Food *nous_aliments = NULL;
+    char *nom_copia = NULL;
+    int index;
+
+    index = buscarAliment(navegant, nom);
+    if (index != ERR_CODI) {
+        return index;
+    }
+
+    nom_copia = copiarText(nom);
+    if (nom_copia == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    nous_aliments = realloc(navegant->config.foods, sizeof(Food) * (navegant->config.n_foods + 1));
+
+    if (nous_aliments == NULL) {
+        free(nom_copia);
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    navegant->config.foods = nous_aliments;
+    index = navegant->config.n_foods;
+    navegant->config.foods[index].name = nom_copia;
+    navegant->config.foods[index].amount = 0;
+    navegant->config.n_foods++;
+
+    return index;
+}
+
+int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost) {
+    char **trossos = NULL;
+    int n_trossos;
+    int quantitat_rebuda;
+    int cost_rebut;
+    int resultat = TRAMA_ERROR;
+
+    trossos = splitString(dades, '&', &n_trossos);
+
+    if (n_trossos == 4) {
+        if (strcmp(trossos[0], TEXT_COMPRA_OK) == 0 &&
+            strcasecmp(trossos[1], navegant->config.foods[index].name) == 0 &&
+            esNumeric(trossos[2]) == TEXT_NUMERIC &&
+            esNumeric(trossos[3]) == TEXT_NUMERIC) {
+
+            quantitat_rebuda = atoi(trossos[2]);
+            cost_rebut = atoi(trossos[3]);
+
+            if (quantitat_rebuda == quantitat && quantitat > 0 &&
+                cost_rebut >= 0 && cost_rebut <= navegant->config.gold) {
+
+                navegant->config.foods[index].amount = navegant->config.foods[index].amount + quantitat_rebuda;
+                navegant->config.gold = navegant->config.gold - cost_rebut;
+                *cost = cost_rebut;
+                resultat = TRAMA_OK;
+            }
+        }
+    }
+
+    freeTokens(trossos, n_trossos);
+
+    return resultat;
+}
+
 void consumirRacio (Navegant *navegant, int quilos) {
     int i = 0;
     int pendent = quilos;

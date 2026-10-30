@@ -67,6 +67,13 @@
 #define FORMAT_MAPA_MERCAT     "%-15s %12s gold\n"
 #define MSG_NO_ATRACAT "You must be docked at an island.\n"
 
+#define FORMAT_PETICIO_COMPRA "%s&%d"
+#define MSG_COMPRA_FETA "Bought %d kg of %s for %d gold.\n"
+#define MSG_QUANTITAT_INVALIDA "Error: amount must be positive.\n"
+#define MSG_PRODUCTE_DESCONEGUT "Error: unknown product.\n"
+#define MSG_OR_INSUFICIENT "Error: not enough gold.\n"
+#define MSG_MAPA_PENDENT "Map purchase is not available yet.\n"
+
 //Procediments i funcions
 
 /***********************************************
@@ -311,6 +318,15 @@ int atendreTeclat (Navegant *navegant);
 ************************************************/
 void executarOdysseus (Navegant *navegant, int *sortir);
 
-
+/***********************************************
+*
+* @Finalitat: Comprar un aliment i actualitzar la carrega i els diners.
+* @Parametres: in/out: navegant = estat actual del navegant.
+*              in: producte = nom de l'aliment demanat.
+*              in: text_quantitat = quantitat numerica validada pel parser.
+* @Retorn: ----.
+*
+************************************************/
+void ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
 
 #endif

@@ -588,6 +588,68 @@ void ferListMarket (Navegant *navegant) {
     rebreMercat(navegant, MOSTRAR_SI, NULL, NULL);
 }
 
+void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
+    char *peticio = NULL, *dades = NULL, *missatge = NULL;
+    int quantitat = atoi(text_quantitat);
+    int preu = -1;
+    int index, cost, resultat;
+
+    if (navegant->estat != ESTAT_ATRACAT) {
+        printF(1, MSG_NO_ATRACAT);
+        return;
+    }
+    if (quantitat <= 0) {
+        printF(1, MSG_QUANTITAT_INVALIDA);
+        return;
+    }
+    if (rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
+        return;
+    }
+    if (preu < 0) {
+        printF(1, MSG_PRODUCTE_DESCONEGUT);
+        return;
+    }
+    if (preu > 0 && quantitat > navegant->config.gold / preu) {
+        printF(1, MSG_OR_INSUFICIENT);
+        return;
+    }
+    index = prepararAliment(navegant, producte);
+    if (index == ERR_CODI) {
+        return;
+    }
+    if (asprintf(&peticio, FORMAT_PETICIO_COMPRA, producte, quantitat) < 0) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    resultat = enviarTrama(navegant->fd_connexio, TIPUS_BUY, FLAG_PETICIO, peticio);
+    free(peticio);
+    if (resultat == TRAMA_ERROR) {
+        perdreConnexio(navegant);
+        return;
+    }
+    resultat = rebreResposta(navegant, TIPUS_BUY, &dades);
+    if (resultat == RESPOSTA_OK) {
+        if (guardarCompra(navegant, index, quantitat, dades, &cost) == TRAMA_OK) {
+            if (asprintf(&missatge, MSG_COMPRA_FETA, quantitat, navegant->config.foods[index].name, cost) >= 0) {
+                printF(1, missatge);
+                free(missatge);
+            } else {
+                printF(1, MSG_SENSE_MEMORIA);
+            }
+        } else {
+            printF(1, MSG_RESPOSTA_INCORRECTA);
+        }
+    } else if (resultat == RESPOSTA_ERROR) {
+        if (asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
+            printF(1, missatge);
+            free(missatge);
+        } else {
+            printF(1, MSG_SENSE_MEMORIA);
+        }
+    }
+    free(dades);
+}
+
 int executarComanda (Navegant *navegant, char *linea) {
     char **trossos = NULL;
     int n_trossos;
@@ -609,6 +671,12 @@ int executarComanda (Navegant *navegant, char *linea) {
         final = ferSail(navegant, trossos[1]);
     } else if (codi == CMD_LIST_MARKET) {
         ferListMarket(navegant);
+    } else if (codi == CMD_BUY) {
+        if (strcasecmp(trossos[1], TEXT_MAPA) == 0) {
+            printF(1, MSG_MAPA_PENDENT);
+        } else {
+            ferBuy(navegant, trossos[1], trossos[2]);
+        }
     } else if (codi == CMD_STATUS) {
         mostrarStatus(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {

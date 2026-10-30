@@ -42,6 +42,8 @@
 #define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
 
+#define TEXT_COMPRA_OK "OK"
+
 //Structs
 typedef struct {
     OdysseusConfig config;
@@ -145,5 +147,38 @@ void mostrarCarrega (Navegant *navegant);
 *
 ************************************************/
 void mostrarStatus (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Buscar un aliment pel nom dins de la carrega.
+* @Parametres: in: navegant = navegant amb la carrega actual.
+*              in: nom = nom de l'aliment que es busca.
+* @Retorn: Posicio de l'aliment, o ERR_CODI si no existeix.
+*
+************************************************/
+int buscarAliment (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Obtenir la posicio d'un aliment, creant-lo a zero si es nou.
+* @Parametres: in/out: navegant = navegant amb la carrega actual.
+*              in: nom = nom de l'aliment que es prepara.
+* @Retorn: Posicio de l'aliment, o ERR_CODI si falta memoria.
+*
+************************************************/
+int prepararAliment (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Validar la confirmacio d'una compra i actualitzar els recursos.
+* @Parametres: in/out: navegant = navegant amb la carrega i els diners.
+*              in: index = posicio de l'aliment preparada abans de comprar.
+*              in: quantitat = quilograms demanats a la compra.
+*              in: dades = resposta OK&Product&Amount&Cost.
+*              out: cost = cost confirmat, nomes valid si retorna TRAMA_OK.
+* @Retorn: TRAMA_OK si s'ha aplicat, TRAMA_ERROR si la resposta es incorrecta.
+*
+************************************************/
+int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost);
 
 #endif

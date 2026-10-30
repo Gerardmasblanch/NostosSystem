@@ -62,3 +62,79 @@ void alliberarNavegant (Navegant *navegant) {
 
     freeOdysseusConfig(&navegant->config);
 }
+
+int totalProvisions (Navegant *navegant) {
+    int i;
+    int total = 0;
+
+    for (i = 0; i < navegant->config.n_foods; i++) {
+        total = total + navegant->config.foods[i].amount;
+    }
+
+    return total;
+}
+
+
+void consumirRacio (Navegant *navegant, int quilos) {
+    int i = 0;
+    int pendent = quilos;
+
+    while (pendent > 0 && i < navegant->config.n_foods) {
+        if (navegant->config.foods[i].amount >= pendent) {
+            navegant->config.foods[i].amount = navegant->config.foods[i].amount - pendent;
+            pendent = 0;
+        } else {
+            pendent = pendent - navegant->config.foods[i].amount;
+            navegant->config.foods[i].amount = 0;
+        }
+        i++;
+    }
+}
+
+int buscarAdreca (Navegant *navegant, char *nom) {
+    int i;
+    int index = ERR_CODI;
+
+    for (i = 0; i < navegant->n_adreces; i++) {
+        if (strcasecmp(navegant->adreces[i].name, nom) == 0) {
+            index = i;
+        }
+    }
+
+    return index;
+}
+
+int esRutaDirecta (Navegant *navegant, char *desti) {
+    int i;
+    int j;
+    int directa = RUTA_NO_DIRECTA;
+
+    for (i = 0; i < navegant->n_illes; i++) {
+        if (strcasecmp(navegant->mapa[i].name, navegant->ubicacio) == 0) {
+            for (j = 0; j < navegant->mapa[i].known_island_count; j++) {
+                if (strcasecmp(navegant->mapa[i].known_islands[j], desti) == 0) {
+                    directa = RUTA_DIRECTA;
+                }
+            }
+        }
+    }
+
+    return directa;
+}
+
+int canviarUbicacio (Navegant *navegant, char *nom) {
+    char *nova = NULL;
+    int resultat = ERR_CODI;
+
+    nova = copiarText(nom);
+
+    if (nova == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+    } else {
+        free(navegant->ubicacio);
+        navegant->ubicacio = nova;
+        resultat = 0;
+    }
+
+    return resultat;
+}

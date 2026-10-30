@@ -12,6 +12,9 @@
 #ifndef _NAVEGANT_H
 #define _NAVEGANT_H
 
+//Llibreries
+#include <strings.h>
+
 //Llibreries propies
 #include "trama.h"
 #include "config.h"
@@ -24,6 +27,8 @@
 #define ESTAT_DESCONNECTAT     3
 #define SENSE_VIATGE 0
 #define AMB_VIATGE   1
+#define RUTA_NO_DIRECTA 0
+#define RUTA_DIRECTA    1
 
 #define TEXT_ITHACA "Ithaca"
 #define TEXT_AEAEA  "Aeaea"
@@ -62,5 +67,56 @@ int inicialitzarNavegant (Navegant *navegant);
 *
 ************************************************/
 void alliberarNavegant (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Calcula el total de provisions, la suma dels quilograms de
+*             tota la carrega.
+* @Parametres:  in: navegant = navegant amb la carrega.
+* @Retorn: Total de quilograms de menjar.
+*
+************************************************/
+int totalProvisions (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Resta quilograms de la carrega, comencant pel primer aliment.
+* @Parametres:  in/out: navegant = navegant amb la carrega.
+*               in: quilos = quilograms a consumir.
+* @Retorn: ----.
+*
+************************************************/
+void consumirRacio (Navegant *navegant, int quilos);
+
+/***********************************************
+*
+* @Finalitat: Busca l'adreca coneguda d'una illa pel seu nom.
+* @Parametres:  in: navegant = navegant amb les adreces conegudes.
+*               in: nom = nom de l'illa.
+* @Retorn: Posicio de l'adreca, o ERR_CODI si no es coneix.
+*
+************************************************/
+int buscarAdreca (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Comprova si al mapa conegut hi ha una ruta directa des de la
+*             ubicacio actual fins a una illa.
+* @Parametres:  in: navegant = navegant amb el mapa i la ubicacio.
+*               in: desti = nom de l'illa de desti.
+* @Retorn: RUTA_DIRECTA o RUTA_NO_DIRECTA.
+*
+************************************************/
+int esRutaDirecta (Navegant *navegant, char *desti);
+
+/***********************************************
+*
+* @Finalitat: Canvia la ubicacio actual del navegant.
+* @Parametres:  in/out: navegant = navegant a actualitzar.
+*               in: nom = nom de la nova ubicacio.
+* @Retorn: 0 si s'ha canviat, ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int canviarUbicacio (Navegant *navegant, char *nom);
 
 #endif

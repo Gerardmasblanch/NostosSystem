@@ -14,6 +14,7 @@
 
 //Llibreries
 #include <sys/select.h>
+#include <signal.h>
 
 //Llibreries propies
 #include "commands.h"
@@ -25,6 +26,8 @@
 #define RESPOSTA_OK      0
 #define RESPOSTA_ERROR   1
 #define RESPOSTA_PERDUDA 2
+#define RACIO_KG     7
+#define SEGONS_RACIO 5
 
 #define TEXT_PROMPT "$ "
 #define MSG_DESCONEGUDA "Unknown command\n"
@@ -43,6 +46,17 @@
 #define MSG_RESPOSTA_INCORRECTA "Error: unexpected response from the server.\n"
 #define MSG_VIATGE_ACCEPTAT "Voyage %d accepted.\nDestination: %s.\n"
 #define MSG_JA_TE_VIATGE    "You already have a voyage assigned.\n"
+#define TEXT_ATRACAT "DOCKED"
+#define TEXT_ESPERA  "WAIT"
+#define MSG_NO_ES_POT_NAVEGAR "We can't sail to %s from here...\n"
+#define MSG_MARXANT           "Leaving %s...\n"
+#define MSG_NAVEGANT          "Sailing to %s...\n"
+#define MSG_ACCES             "%s has granted access to the port.\n"
+#define MSG_ACCES_ESPERA      "\n>>> %s has granted access to the port.\n"
+#define MSG_PORT_COMPLET      "The harbor is full. We drop anchor and wait.\n"
+#define MSG_RACIO             "\n>>> The crew consumes another ration.\nProvisions remaining: %d kg\n"
+#define MSG_SENSE_PROVISIONS  "Provisions remaining: 0 kg\nThe crew has run out of provisions.\nOdysseus %s has been lost at sea.\n"
+#define MSG_DESTI             "We have reached %s, the destination of our voyage.\n"
 
 //Procediments i funcions
 
@@ -140,6 +154,67 @@ int guardarViatge (Navegant *navegant, char *dades);
 *
 ************************************************/
 void ferAccept (Navegant *navegant, char *id_viatge);
+
+/***********************************************
+*
+* @Finalitat: Activar la bandera de racio pendent en rebre SIGALRM.
+* @Parametres:  in: senyal = identificador de la senyal rebuda.
+* @Retorn: ----.
+*
+************************************************/
+void handleAlarma (int senyal);
+
+/***********************************************
+*
+* @Finalitat: Abandona la ubicacio actual: s'acomiada d'Ithaca o de l'illa
+*             si hi esta connectat i tanca la connexio.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void marxarUbicacio (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Deixa el navegant atracat i comprova si es la destinacio del
+*             seu viatge.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: format = missatge d'acces al port a mostrar.
+* @Retorn: ----.
+*
+************************************************/
+void atracar (Navegant *navegant, char *format);
+
+/***********************************************
+*
+* @Finalitat: Espera davant del port fins rebre DOCKED, consumint una racio
+*             cada 5 segons d'espera sense espera activa.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: FINAL_SI si s'han acabat les provisions o s'ha premut CTRL+C,
+*          FINAL_NO si no.
+*
+************************************************/
+int esperarPort (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Anuncia l'arribada a l'illa i atraca o espera segons la
+*             resposta.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+*
+************************************************/
+int arribarIlla (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Navega fins a una illa connectada amb la ubicacio actual.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: illa = nom de l'illa escrit per l'usuari.
+* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+*
+************************************************/
+int ferSail (Navegant *navegant, char *illa);
 
 
 /***********************************************

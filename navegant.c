@@ -223,6 +223,7 @@ int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, in
             if (quantitat_rebuda == quantitat && quantitat > 0 &&
                 cost_rebut >= 0 && cost_rebut <= navegant->config.gold) {
 
+                strcpy(navegant->config.foods[index].name, trossos[1]);
                 navegant->config.foods[index].amount = navegant->config.foods[index].amount + quantitat_rebuda;
                 navegant->config.gold = navegant->config.gold - cost_rebut;
                 *cost = cost_rebut;

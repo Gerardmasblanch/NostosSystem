@@ -31,7 +31,7 @@
 
 #define TEXT_PROMPT "$ "
 #define MSG_DESCONEGUDA "Unknown command\n"
-#define MSG_COMANDA_OK  "Command OK\n"
+#define MSG_COMANDA_OK  "Command Available in Phase 3\n"
 #define MSG_CONNEXIO_PERDUDA "\nLost connection with %s.\n"
 #define MSG_CONNECTAT      "Connected to %s.\n"
 #define MSG_ERROR_CONNEXIO "Error: could not reach %s.\n"
@@ -72,7 +72,6 @@
 #define MSG_QUANTITAT_INVALIDA "Error: amount must be positive.\n"
 #define MSG_PRODUCTE_DESCONEGUT "Error: unknown product.\n"
 #define MSG_OR_INSUFICIENT "Error: not enough gold.\n"
-#define MSG_MAPA_PENDENT "Map purchase is not available yet.\n"
 
 #define FORMAT_PETICIO_VENDA "%s&%d"
 #define MSG_VENDA_FETA "Sold %d kg of %s for %d gold.\n"

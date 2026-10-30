@@ -731,7 +731,7 @@ int executarComanda (Navegant *navegant, char *linea) {
         ferListMarket(navegant);
     } else if (codi == CMD_BUY) {
         if (strcasecmp(trossos[1], TEXT_MAPA) == 0) {
-                ferBuyMap(navegant, trossos[2]);
+            ferBuyMap(navegant, trossos[2]);
         } else {
             ferBuy(navegant, trossos[1], trossos[2]);
         }

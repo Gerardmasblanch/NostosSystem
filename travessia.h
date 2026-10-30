@@ -78,6 +78,17 @@
 #define MSG_VENDA_FETA "Sold %d kg of %s for %d gold.\n"
 #define MSG_CARREGA_INSUFICIENT "Error: not enough food in cargo.\n"
 
+#define MAPA_PREU      50
+#define MAPA_QUANTITAT 1
+
+#define MSG_NOMES_UN_MAPA       "Error: maps can only be bought one at a time (BUY MAP 1).\n"
+#define MSG_OR_INSUFICIENT_MAPA "Error: a map costs %d gold and you have %d.\n"
+#define MSG_MAPA_COMPRAT        "Bought the map of %s for %d gold.\n"
+#define MSG_RUTES_NOVES         "New routes have been charted.\n"
+#define MSG_SENSE_RUTES         "No sea routes leave this island.\n"
+#define MSG_ERROR_MAPA_TERMINAL "Error: the terminal must be at least 80 columns wide.\n"
+#define MSG_ERROR_MAPA          "Error: the map could not be displayed.\n"
+
 //Procediments i funcions
 
 /***********************************************
@@ -343,5 +354,25 @@ void ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
 *
 ************************************************/
 void ferSell (Navegant *navegant, char *producte, char *text_quantitat);
+
+/***********************************************
+*
+* @Finalitat: Compra el mapa de l'illa i afegeix les seves rutes al mapa
+*             conegut.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: quantitat = quantitat escrita per l'usuari.
+* @Retorn: ----.
+*
+************************************************/
+void ferBuyMap (Navegant *navegant, char *quantitat);
+
+/***********************************************
+*
+* @Finalitat: Mostra amb SPHRAGIS el mapa i les rutes conegudes.
+* @Parametres:  in: navegant = navegant amb el mapa.
+* @Retorn: ----.
+*
+************************************************/
+void ferMap (Navegant *navegant);
 
 #endif

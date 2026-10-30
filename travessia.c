@@ -731,7 +731,7 @@ int executarComanda (Navegant *navegant, char *linea) {
         ferListMarket(navegant);
     } else if (codi == CMD_BUY) {
         if (strcasecmp(trossos[1], TEXT_MAPA) == 0) {
-            printF(1, MSG_MAPA_PENDENT);
+                ferBuyMap(navegant, trossos[2]);
         } else {
             ferBuy(navegant, trossos[1], trossos[2]);
         }
@@ -739,6 +739,8 @@ int executarComanda (Navegant *navegant, char *linea) {
         ferSell(navegant, trossos[1], trossos[2]);
     } else if (codi == CMD_STATUS) {
         mostrarStatus(navegant);
+    } else if (codi == CMD_MAP) {
+        ferMap(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
         printF(1, MSG_COMANDA_OK);
     }
@@ -786,5 +788,95 @@ void executarOdysseus (Navegant *navegant, int *sortir) {
                 final = atendreTeclat(navegant);
             }
         }
+    }
+}
+
+void ferBuyMap (Navegant *navegant, char *quantitat) {
+    char **trossos = NULL;
+    char *dades = NULL;
+    char *missatge = NULL;
+    int n_trossos;
+    int resultat;
+    int rebudes = 0;
+    int total = 1;
+    int cost = 0;
+
+    if (navegant->estat != ESTAT_ATRACAT) {
+        printF(1, MSG_NO_ATRACAT);
+        return;
+    }
+
+    if (atoi(quantitat) != MAPA_QUANTITAT) {
+        printF(1, MSG_NOMES_UN_MAPA);
+        return;
+    }
+
+    if (navegant->config.gold < MAPA_PREU) {
+        asprintf(&missatge, MSG_OR_INSUFICIENT_MAPA, MAPA_PREU, navegant->config.gold);
+        printF(1, missatge);
+        free(missatge);
+        return;
+    }
+
+    enviarTrama(navegant->fd_connexio, TIPUS_BUY_MAP, FLAG_PETICIO, quantitat);
+
+    while (rebudes < total) {
+        resultat = rebreResposta(navegant, TIPUS_BUY_MAP, &dades);
+
+        if (resultat == RESPOSTA_ERROR) {
+            asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
+            printF(1, missatge);
+            free(missatge);
+            rebudes = total;
+        } else if (resultat == RESPOSTA_PERDUDA) {
+            rebudes = total;
+        } else {
+            trossos = splitString(dades, '&', &n_trossos);
+
+            if (n_trossos == 3) {
+                cost = atoi(trossos[1]);
+                total = 0;
+            } else if (n_trossos == 7) {
+                cost = atoi(trossos[1]);
+                total = atoi(trossos[3]);
+                afegirRuta(navegant, navegant->ubicacio, trossos[4]);
+                afegirAdreca(navegant, trossos[4], trossos[5], atoi(trossos[6]));
+                rebudes++;
+            } else {
+                printF(1, MSG_RESPOSTA_INCORRECTA);
+                rebudes = total;
+            }
+
+            freeTokens(trossos, n_trossos);
+        }
+
+        free(dades);
+        dades = NULL;
+    }
+
+    if (cost > 0) {
+        navegant->config.gold = navegant->config.gold - cost;
+
+        asprintf(&missatge, MSG_MAPA_COMPRAT, navegant->ubicacio, cost);
+        printF(1, missatge);
+        free(missatge);
+
+        if (total > 0) {
+            printF(1, MSG_RUTES_NOVES);
+        } else {
+            printF(1, MSG_SENSE_RUTES);
+        }
+    }
+}
+
+void ferMap (Navegant *navegant) {
+    int resultat;
+
+    resultat = SPHRAGIS_display_map(navegant->mapa, navegant->n_illes);
+
+    if (resultat == SPHRAGIS_ERROR) {
+        printF(1, MSG_ERROR_MAPA_TERMINAL);
+    } else if (resultat != SPHRAGIS_OK) {
+        printF(1, MSG_ERROR_MAPA);
     }
 }

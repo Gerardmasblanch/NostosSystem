@@ -42,6 +42,7 @@
 #define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
 
+
 #define TEXT_COMPRA_OK "OK"
 #define TEXT_VENDA_OK "OK"
 
@@ -194,5 +195,59 @@ int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, in
 *
 ************************************************/
 int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos);
+
+/***********************************************
+*
+* @Finalitat: Busca una illa al mapa conegut pel seu nom.
+* @Parametres:  in: navegant = navegant amb el mapa.
+*               in: nom = nom de l'illa.
+* @Retorn: Posicio de l'illa al mapa, o ERR_CODI si no hi es.
+*
+************************************************/
+int buscarIllaMapa (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Afegeix una illa al mapa conegut si encara no hi es.
+* @Parametres:  in/out: navegant = navegant amb el mapa.
+*               in: nom = nom de l'illa.
+* @Retorn: Posicio de l'illa al mapa, o ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int afegirIllaMapa (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Afegeix una connexio a una illa del mapa si encara no hi es.
+* @Parametres:  in/out: navegant = navegant amb el mapa.
+*               in: index = posicio de l'illa al mapa.
+*               in: desti = nom de l'illa connectada.
+* @Retorn: 0 si s'ha afegit o ja hi era, ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int afegirConnexio (Navegant *navegant, int index, char *desti);
+
+/***********************************************
+*
+* @Finalitat: Afegeix al mapa una ruta bidireccional entre dues illes.
+* @Parametres:  in/out: navegant = navegant amb el mapa.
+*               in: origen = nom d'una de les illes.
+*               in: desti = nom de l'altra illa.
+* @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int afegirRuta (Navegant *navegant, char *origen, char *desti);
+
+/***********************************************
+*
+* @Finalitat: Guarda l'adreca d'una illa si encara no es coneixia.
+* @Parametres:  in/out: navegant = navegant amb les adreces.
+*               in: nom = nom de l'illa.
+*               in: ip = IP de l'illa.
+*               in: port = port de l'illa.
+* @Retorn: 0 si s'ha guardat o ja hi era, ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int afegirAdreca (Navegant *navegant, char *nom, char *ip, int port);
 
 #endif

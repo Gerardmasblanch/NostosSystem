@@ -30,6 +30,14 @@ int inicialitzarNavegant (Navegant *navegant) {
         return ERR_CODI;
     }
 
+    if (afegirIllaMapa(navegant, TEXT_AEAEA) == ERR_CODI) {
+        return ERR_CODI;
+    }
+
+    if (afegirAdreca(navegant, TEXT_AEAEA, navegant->config.aeaea_ip, navegant->config.aeaea_port) == ERR_CODI) {
+        return ERR_CODI;
+    }
+    
     return 0;
 }
 
@@ -323,4 +331,133 @@ int canviarUbicacio (Navegant *navegant, char *nom) {
     }
 
     return resultat;
+}
+
+int buscarIllaMapa (Navegant *navegant, char *nom) {
+    int i;
+    int index = ERR_CODI;
+
+    for (i = 0; i < navegant->n_illes; i++) {
+        if (strcasecmp(navegant->mapa[i].name, nom) == 0) {
+            index = i;
+        }
+    }
+
+    return index;
+}
+
+
+int afegirIllaMapa (Navegant *navegant, char *nom) {
+    SPHRAGIS_Island *nou_mapa = NULL;
+    int index;
+
+    index = buscarIllaMapa(navegant, nom);
+    if (index != ERR_CODI) {
+        return index;
+    }
+
+    nou_mapa = realloc(navegant->mapa, sizeof(SPHRAGIS_Island) * (navegant->n_illes + 1));
+    if (nou_mapa == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    navegant->mapa = nou_mapa;
+    index = navegant->n_illes;
+
+    navegant->mapa[index].name = copiarText(nom);
+    if (navegant->mapa[index].name == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    navegant->mapa[index].known_islands = NULL;
+    navegant->mapa[index].known_island_count = 0;
+    navegant->n_illes++;
+
+    return index;
+}
+
+int afegirConnexio (Navegant *navegant, int index, char *desti) {
+    char **noves_connexions = NULL;
+    int i;
+    int existeix = 0;
+    int resultat = 0;
+
+    for (i = 0; i < navegant->mapa[index].known_island_count; i++) {
+        if (strcasecmp(navegant->mapa[index].known_islands[i], desti) == 0) {
+            existeix = 1;
+        }
+    }
+
+    if (existeix == 0) {
+        noves_connexions = realloc(navegant->mapa[index].known_islands, sizeof(char *) * (navegant->mapa[index].known_island_count + 1));
+
+        if (noves_connexions == NULL) {
+            printF(1, MSG_SENSE_MEMORIA);
+            resultat = ERR_CODI;
+        } else {
+            navegant->mapa[index].known_islands = noves_connexions;
+            navegant->mapa[index].known_islands[navegant->mapa[index].known_island_count] = copiarText(desti);
+
+            if (navegant->mapa[index].known_islands[navegant->mapa[index].known_island_count] == NULL) {
+                printF(1, MSG_SENSE_MEMORIA);
+                resultat = ERR_CODI;
+            } else {
+                navegant->mapa[index].known_island_count++;
+            }
+        }
+    }
+
+    return resultat;
+}
+
+int afegirRuta (Navegant *navegant, char *origen, char *desti) {
+    int index_origen;
+    int index_desti;
+    int resultat = ERR_CODI;
+
+    index_origen = afegirIllaMapa(navegant, origen);
+    index_desti = afegirIllaMapa(navegant, desti);
+
+    if (index_origen != ERR_CODI && index_desti != ERR_CODI) {
+        if (afegirConnexio(navegant, index_origen, desti) == 0 && afegirConnexio(navegant, index_desti, origen) == 0) {
+            resultat = 0;
+        }
+    }
+
+    return resultat;
+}
+
+int afegirAdreca (Navegant *navegant, char *nom, char *ip, int port) {
+    Route *noves_adreces = NULL;
+    int index;
+
+    if (buscarAdreca(navegant, nom) != ERR_CODI) {
+        return 0;
+    }
+
+    noves_adreces = realloc(navegant->adreces, sizeof(Route) * (navegant->n_adreces + 1));
+    if (noves_adreces == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    navegant->adreces = noves_adreces;
+    index = navegant->n_adreces;
+
+    navegant->adreces[index].name = copiarText(nom);
+    navegant->adreces[index].ip = copiarText(ip);
+
+    if (navegant->adreces[index].name == NULL || navegant->adreces[index].ip == NULL) {
+        free(navegant->adreces[index].name);
+        free(navegant->adreces[index].ip);
+        printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+
+    navegant->adreces[index].port = port;
+    navegant->n_adreces++;
+
+    return 0;
 }

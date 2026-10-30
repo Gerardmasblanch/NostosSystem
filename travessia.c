@@ -182,21 +182,93 @@ void ferListVoyages (Navegant *navegant) {
     }
 }
 
+int guardarViatge (Navegant *navegant, char *dades) {
+    char **trossos = NULL;
+    int n_trossos;
+    int resultat = TRAMA_ERROR;
+
+    trossos = splitString(dades, '&', &n_trossos);
+
+    if (n_trossos == 5) {
+        navegant->viatge.object = copiarText(trossos[2]);
+        navegant->viatge.destination = copiarText(trossos[3]);
+
+        if (navegant->viatge.object != NULL && navegant->viatge.destination != NULL) {
+            navegant->viatge.id = atoi(trossos[1]);
+            navegant->viatge.reward = atoi(trossos[4]);
+            navegant->te_viatge = AMB_VIATGE;
+            resultat = TRAMA_OK;
+        } else {
+            printF(1, MSG_SENSE_MEMORIA);
+            free(navegant->viatge.object);
+            free(navegant->viatge.destination);
+            navegant->viatge.object = NULL;
+            navegant->viatge.destination = NULL;
+        }
+    }
+
+    freeTokens(trossos, n_trossos);
+
+    return resultat;
+}
+
+void ferAccept (Navegant *navegant, char *id_viatge) {
+    char *dades = NULL;
+    char *missatge = NULL;
+    int resultat;
+
+    if (navegant->estat != ESTAT_CONNECTAT_ITHACA) {
+        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        return;
+    }
+
+    if (navegant->te_viatge == AMB_VIATGE) {
+        printF(1, MSG_JA_TE_VIATGE);
+        return;
+    }
+
+    enviarTrama(navegant->fd_connexio, TIPUS_ACCEPT, FLAG_PETICIO, id_viatge);
+    resultat = rebreResposta(navegant, TIPUS_ACCEPT, &dades);
+
+    if (resultat == RESPOSTA_ERROR) {
+        asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
+        printF(1, missatge);
+        free(missatge);
+    } else if (resultat == RESPOSTA_OK) {
+        if (guardarViatge(navegant, dades) == TRAMA_OK) {
+            asprintf(&missatge, MSG_VIATGE_ACCEPTAT, navegant->viatge.id, navegant->viatge.destination);
+            printF(1, missatge);
+            free(missatge);
+        } else {
+            printF(1, MSG_RESPOSTA_INCORRECTA);
+        }
+    }
+
+    free(dades);
+}
+
 
 int executarComanda (Navegant *navegant, char *linea) {
+    char **trossos = NULL;
+    int n_trossos;
     int codi;
 
     codi = parseCommand(linea);
+    trossos = splitString(linea, ' ', &n_trossos);
 
     if (codi == CMD_DESCONEGUDA) {
         printF(1, MSG_DESCONEGUDA);
-    } else if(codi == CMD_CONNECT_ITHACA) {
+    } else if (codi == CMD_CONNECT_ITHACA) {
         ferConnectIthaca(navegant);
     } else if (codi == CMD_LIST_VOYAGES) {
         ferListVoyages(navegant);
+    } else if (codi == CMD_ACCEPT) {
+        ferAccept(navegant, trossos[1]);
     } else if (codi != CMD_ERROR_SINTAXI) {
         printF(1, MSG_COMANDA_OK);
     }
+
+    freeTokens(trossos, n_trossos);
 
     return FINAL_NO;
 }

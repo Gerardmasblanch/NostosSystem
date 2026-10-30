@@ -41,6 +41,8 @@
 #define MSG_SENSE_VIATGES "No voyages available.\n"
 #define MSG_NO_CONNECTAT_ITHACA "You must be connected to Ithaca.\n"
 #define MSG_RESPOSTA_INCORRECTA "Error: unexpected response from the server.\n"
+#define MSG_VIATGE_ACCEPTAT "Voyage %d accepted.\nDestination: %s.\n"
+#define MSG_JA_TE_VIATGE    "You already have a voyage assigned.\n"
 
 //Procediments i funcions
 
@@ -117,6 +119,28 @@ int mostrarViatge (char *dades, int *total);
 *
 ************************************************/
 void ferListVoyages (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Guarda al navegant el viatge rebut a la resposta d'ACCEPT.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: dades = OK&<VoyageID>&<Object>&<Destination>&<Reward>.
+* @Retorn: TRAMA_OK si s'ha guardat, TRAMA_ERROR si el format es incorrecte
+*          o no hi ha memoria.
+*
+************************************************/
+int guardarViatge (Navegant *navegant, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Demana a Ithaca que assigni un viatge al navegant.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: id_viatge = identificador del viatge escrit per l'usuari.
+* @Retorn: ----.
+*
+************************************************/
+void ferAccept (Navegant *navegant, char *id_viatge);
+
 
 /***********************************************
 *

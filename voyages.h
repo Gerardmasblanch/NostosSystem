@@ -29,6 +29,7 @@
 #define TEXT_ITHACA_ERROR_FLAGS "INVALID_FLAGS"
 #define TEXT_ITHACA_ERROR_TIPUS "INVALID_TYPE"
 #define MSG_ERROR_SELECT "Error: ha fallat el select d'Ithaca.\n"
+#define MSG_CLIENT_MARXA ">>> %s has left Ithaca. Fair winds!\n"
 
 #define VIATGE_DISPONIBLE 0
 #define VIATGE_ASSIGNAT 1

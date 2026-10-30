@@ -428,6 +428,7 @@ int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
 
 void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     char *dades = NULL;
+    char *missatge = NULL;
     int tipus;
     int flags;
     int fd;
@@ -457,6 +458,10 @@ void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
             resultat = enviarTrama(fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
         } else {
             resultat = enviarTrama(fd, tipus, FLAG_OK, TEXT_ITHACA_OK);
+            asprintf(&missatge, MSG_CLIENT_MARXA, servidor->clients[index].nom);
+            printF(1, missatge);
+            free(missatge);
+            
             desconnectar = 1;
         }
     } else {

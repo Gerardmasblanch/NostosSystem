@@ -57,6 +57,15 @@
 #define MSG_RACIO             "\n>>> The crew consumes another ration.\nProvisions remaining: %d kg\n"
 #define MSG_SENSE_PROVISIONS  "Provisions remaining: 0 kg\nThe crew has run out of provisions.\nOdysseus %s has been lost at sea.\n"
 #define MSG_DESTI             "We have reached %s, the destination of our voyage.\n"
+#define MOSTRAR_NO 0
+#define MOSTRAR_SI 1
+
+#define TEXT_MAPA        "MAP"
+#define TEXT_MAPA_MERCAT "Map"
+#define MSG_CAPCALERA_MERCAT   "\n--- %s MARKET ---\n\n"
+#define FORMAT_PRODUCTE_MERCAT "%-15s %4s kg %4s gold/kg\n"
+#define FORMAT_MAPA_MERCAT     "%-15s %12s gold\n"
+#define MSG_NO_ATRACAT "You must be docked at an island.\n"
 
 //Procediments i funcions
 
@@ -225,6 +234,48 @@ int tornarAIlla (Navegant *navegant);
 *
 ************************************************/
 int ferSail (Navegant *navegant, char *illa);
+
+/***********************************************
+*
+* @Finalitat: Mostra la capcalera del mercat amb el nom de l'illa en majuscules.
+* @Parametres:  in: illa = nom de l'illa.
+* @Retorn: ----.
+*
+************************************************/
+void mostrarCapcaleraMercat (char *illa);
+
+/***********************************************
+*
+* @Finalitat: Mostra una linia del mercat: un producte o el mapa.
+* @Parametres:  in: nom = nom del producte.
+*               in: quantitat = quilograms disponibles.
+*               in: preu = preu per quilogram, o preu del mapa.
+* @Retorn: ----.
+*
+************************************************/
+void mostrarProducte (char *nom, char *quantitat, char *preu);
+
+/***********************************************
+*
+* @Finalitat: Demana el mercat a l'illa i en llegeix totes les trames. Pot
+*             mostrar-lo i buscar-hi el preu d'un producte.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: mostrar = MOSTRAR_SI per mostrar el mercat, MOSTRAR_NO si no.
+*               in: producte = producte del qual es vol el preu, o NULL.
+*               out: preu = preu del producte, si s'ha trobat.
+* @Retorn: RESPOSTA_OK, RESPOSTA_ERROR o RESPOSTA_PERDUDA.
+*
+************************************************/
+int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu);
+
+/***********************************************
+*
+* @Finalitat: Mostra el mercat de l'illa on esta atracat el navegant.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void ferListMarket (Navegant *navegant);
 
 
 /***********************************************

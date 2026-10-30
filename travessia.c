@@ -488,6 +488,106 @@ int ferSail (Navegant *navegant, char *illa) {
     return arribarIlla(navegant);
 }
 
+void mostrarCapcaleraMercat (char *illa) {
+    char *majuscules = NULL;
+    char *missatge = NULL;
+    int i;
+
+    majuscules = copiarText(illa);
+    if (majuscules == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    for (i = 0; majuscules[i] != '\0'; i++) {
+        if (majuscules[i] >= 'a' && majuscules[i] <= 'z') {
+            majuscules[i] = majuscules[i] - 'a' + 'A';
+        }
+    }
+
+    asprintf(&missatge, MSG_CAPCALERA_MERCAT, majuscules);
+    printF(1, missatge);
+    free(missatge);
+    free(majuscules);
+}
+
+void mostrarProducte (char *nom, char *quantitat, char *preu) {
+    char *missatge = NULL;
+
+    if (strcasecmp(nom, TEXT_MAPA) == 0) {
+        asprintf(&missatge, FORMAT_MAPA_MERCAT, TEXT_MAPA_MERCAT, preu);
+    } else {
+        asprintf(&missatge, FORMAT_PRODUCTE_MERCAT, nom, quantitat, preu);
+    }
+
+    printF(1, missatge);
+    free(missatge);
+}
+
+int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
+    char **trossos = NULL;
+    char *dades = NULL;
+    char *missatge = NULL;
+    int n_trossos;
+    int resultat = RESPOSTA_OK;
+    int rebudes = 0;
+    int total = 1;
+
+    enviarTrama(navegant->fd_connexio, TIPUS_LIST_MARKET, FLAG_PETICIO, "");
+
+    while (rebudes < total) {
+        resultat = rebreResposta(navegant, TIPUS_LIST_MARKET, &dades);
+
+        if (resultat == RESPOSTA_ERROR) {
+            asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
+            printF(1, missatge);
+            free(missatge);
+            rebudes = total;
+        } else if (resultat == RESPOSTA_PERDUDA) {
+            rebudes = total;
+        } else {
+            trossos = splitString(dades, '&', &n_trossos);
+
+            if (n_trossos == 5) {
+                total = atoi(trossos[1]);
+
+                if (mostrar == MOSTRAR_SI) {
+                    if (rebudes == 0) {
+                        mostrarCapcaleraMercat(navegant->ubicacio);
+                    }
+                    mostrarProducte(trossos[2], trossos[3], trossos[4]);
+                }
+
+                if (producte != NULL && strcasecmp(trossos[2], producte) == 0) {
+                    *preu = atoi(trossos[4]);
+                }
+
+                rebudes++;
+            } else {
+                printF(1, MSG_RESPOSTA_INCORRECTA);
+                resultat = RESPOSTA_ERROR;
+                rebudes = total;
+            }
+
+            freeTokens(trossos, n_trossos);
+        }
+
+        free(dades);
+        dades = NULL;
+    }
+
+    return resultat;
+}
+
+void ferListMarket (Navegant *navegant) {
+    if (navegant->estat != ESTAT_ATRACAT) {
+        printF(1, MSG_NO_ATRACAT);
+        return;
+    }
+
+    rebreMercat(navegant, MOSTRAR_SI, NULL, NULL);
+}
+
 int executarComanda (Navegant *navegant, char *linea) {
     char **trossos = NULL;
     int n_trossos;
@@ -507,6 +607,8 @@ int executarComanda (Navegant *navegant, char *linea) {
         ferAccept(navegant, trossos[1]);
     } else if (codi == CMD_SAIL) {
         final = ferSail(navegant, trossos[1]);
+    } else if (codi == CMD_LIST_MARKET) {
+        ferListMarket(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
         printF(1, MSG_COMANDA_OK);
     }

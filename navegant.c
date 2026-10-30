@@ -228,6 +228,39 @@ int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, in
     return resultat;
 }
 
+int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos) {
+    char **trossos = NULL;
+    int n_trossos;
+    int quantitat_rebuda;
+    int ingressos_rebuts;
+    int resultat = TRAMA_ERROR;
+
+    trossos = splitString(dades, '&', &n_trossos);
+
+    if (n_trossos == 4) {
+        if (strcmp(trossos[0], TEXT_VENDA_OK) == 0 &&
+            strcasecmp(trossos[1], navegant->config.foods[index].name) == 0 &&
+            esNumeric(trossos[2]) == TEXT_NUMERIC &&
+            esNumeric(trossos[3]) == TEXT_NUMERIC) {
+
+            quantitat_rebuda = atoi(trossos[2]);
+            ingressos_rebuts = atoi(trossos[3]);
+
+            if (quantitat_rebuda == quantitat && quantitat > 0 && quantitat_rebuda <= navegant->config.foods[index].amount && ingressos_rebuts >= 0) {
+
+                navegant->config.foods[index].amount = navegant->config.foods[index].amount - quantitat_rebuda;
+                navegant->config.gold = navegant->config.gold + ingressos_rebuts;
+                *ingressos = ingressos_rebuts;
+                resultat = TRAMA_OK;
+            }
+        }
+    }
+
+    freeTokens(trossos, n_trossos);
+
+    return resultat;
+}
+
 void consumirRacio (Navegant *navegant, int quilos) {
     int i = 0;
     int pendent = quilos;

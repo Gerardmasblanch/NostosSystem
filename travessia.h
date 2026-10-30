@@ -74,6 +74,10 @@
 #define MSG_OR_INSUFICIENT "Error: not enough gold.\n"
 #define MSG_MAPA_PENDENT "Map purchase is not available yet.\n"
 
+#define FORMAT_PETICIO_VENDA "%s&%d"
+#define MSG_VENDA_FETA "Sold %d kg of %s for %d gold.\n"
+#define MSG_CARREGA_INSUFICIENT "Error: not enough food in cargo.\n"
+
 //Procediments i funcions
 
 /***********************************************
@@ -328,5 +332,16 @@ void executarOdysseus (Navegant *navegant, int *sortir);
 *
 ************************************************/
 void ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
+
+/***********************************************
+*
+* @Finalitat: Vendre un aliment i actualitzar la carrega i els diners.
+* @Parametres: in/out: navegant = estat actual del navegant.
+*              in: producte = nom de l'aliment que es ven.
+*              in: text_quantitat = quantitat numerica validada pel parser.
+* @Retorn: ----.
+*
+************************************************/
+void ferSell (Navegant *navegant, char *producte, char *text_quantitat);
 
 #endif

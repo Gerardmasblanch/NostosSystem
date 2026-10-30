@@ -650,6 +650,64 @@ void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
     free(dades);
 }
 
+void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
+    char *peticio = NULL, *dades = NULL, *missatge = NULL;
+    int quantitat = atoi(text_quantitat);
+    int index, ingressos, resultat;
+
+    if (navegant->estat != ESTAT_ATRACAT) {
+        printF(1, MSG_NO_ATRACAT);
+        return;
+    }
+    if (quantitat <= 0) {
+        printF(1, MSG_QUANTITAT_INVALIDA);
+        return;
+    }
+
+    index = buscarAliment(navegant, producte);
+    if (index == ERR_CODI) {
+        printF(1, MSG_CARREGA_INSUFICIENT);
+        return;
+    }
+    if (quantitat > navegant->config.foods[index].amount) {
+        printF(1, MSG_CARREGA_INSUFICIENT);
+        return;
+    }
+
+    if (asprintf(&peticio, FORMAT_PETICIO_VENDA, producte, quantitat) < 0) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    resultat = enviarTrama(navegant->fd_connexio, TIPUS_SELL, FLAG_PETICIO, peticio);
+    free(peticio);
+    if (resultat == TRAMA_ERROR) {
+        perdreConnexio(navegant);
+        return;
+    }
+
+    resultat = rebreResposta(navegant, TIPUS_SELL, &dades);
+    if (resultat == RESPOSTA_OK) {
+        if (guardarVenda(navegant, index, quantitat, dades, &ingressos) == TRAMA_OK) {
+            if (asprintf(&missatge, MSG_VENDA_FETA, quantitat, navegant->config.foods[index].name, ingressos) >= 0) {
+                printF(1, missatge);
+                free(missatge);
+            } else {
+                printF(1, MSG_SENSE_MEMORIA);
+            }
+        } else {
+            printF(1, MSG_RESPOSTA_INCORRECTA);
+        }
+    } else if (resultat == RESPOSTA_ERROR) {
+        if (asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
+            printF(1, missatge);
+            free(missatge);
+        } else {
+            printF(1, MSG_SENSE_MEMORIA);
+        }
+    }
+    free(dades);
+}
+
 int executarComanda (Navegant *navegant, char *linea) {
     char **trossos = NULL;
     int n_trossos;
@@ -677,6 +735,8 @@ int executarComanda (Navegant *navegant, char *linea) {
         } else {
             ferBuy(navegant, trossos[1], trossos[2]);
         }
+    } else if (codi == CMD_SELL) {
+        ferSell(navegant, trossos[1], trossos[2]);
     } else if (codi == CMD_STATUS) {
         mostrarStatus(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {

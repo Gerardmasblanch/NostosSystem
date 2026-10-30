@@ -43,6 +43,7 @@
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
 
 #define TEXT_COMPRA_OK "OK"
+#define TEXT_VENDA_OK "OK"
 
 //Structs
 typedef struct {
@@ -180,5 +181,18 @@ int prepararAliment (Navegant *navegant, char *nom);
 *
 ************************************************/
 int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost);
+
+/***********************************************
+*
+* @Finalitat: Validar la confirmacio d'una venda i actualitzar els recursos.
+* @Parametres: in/out: navegant = navegant amb la carrega i els diners.
+*              in: index = posicio de l'aliment que es ven.
+*              in: quantitat = quilograms demanats a la venda.
+*              in: dades = resposta OK&Product&Amount&Income.
+*              out: ingressos = import confirmat, valid si retorna TRAMA_OK.
+* @Retorn: TRAMA_OK si s'ha aplicat, TRAMA_ERROR si la resposta es incorrecta.
+*
+************************************************/
+int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos);
 
 #endif

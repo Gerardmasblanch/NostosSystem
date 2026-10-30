@@ -33,6 +33,15 @@
 #define TEXT_ITHACA "Ithaca"
 #define TEXT_AEAEA  "Aeaea"
 
+#define MSG_CARREGA "\nCargo:\n"
+#define FORMAT_ALIMENT "%s: %d kg\n"
+#define FORMAT_TOTAL_PROVISIONS "Total provisions: %d kg\n"
+
+#define FORMAT_CAPCALERA_STATUS "\n--- %s ---\nGold: %d\n"
+#define FORMAT_VIATGE_STATUS "\nCurrent voyage: %s -> %s\nReward: %d\n"
+#define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
+#define FORMAT_UBICACIO_STATUS "Current location: %s\n"
+
 //Structs
 typedef struct {
     OdysseusConfig config;
@@ -118,5 +127,23 @@ int esRutaDirecta (Navegant *navegant, char *desti);
 *
 ************************************************/
 int canviarUbicacio (Navegant *navegant, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Mostrar els aliments transportats i el total de provisions.
+* @Parametres: in: navegant = navegant amb la carrega actual.
+* @Retorn: ----.
+*
+************************************************/
+void mostrarCarrega (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Mostrar els recursos, el viatge i la ubicacio del navegant.
+* @Parametres: in: navegant = navegant amb l'estat actual.
+* @Retorn: ----.
+*
+************************************************/
+void mostrarStatus (Navegant *navegant);
 
 #endif

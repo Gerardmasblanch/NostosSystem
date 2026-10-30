@@ -609,6 +609,8 @@ int executarComanda (Navegant *navegant, char *linea) {
         final = ferSail(navegant, trossos[1]);
     } else if (codi == CMD_LIST_MARKET) {
         ferListMarket(navegant);
+    } else if (codi == CMD_STATUS) {
+        mostrarStatus(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
         printF(1, MSG_COMANDA_OK);
     }

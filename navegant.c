@@ -74,6 +74,79 @@ int totalProvisions (Navegant *navegant) {
     return total;
 }
 
+void mostrarCarrega (Navegant *navegant) {
+    char *missatge = NULL;
+    int i;
+
+    printF(1, MSG_CARREGA);
+
+    for (i = 0; i < navegant->config.n_foods; i++) {
+        if (navegant->config.foods[i].amount > 0) {
+            if (asprintf(&missatge, FORMAT_ALIMENT, navegant->config.foods[i].name, navegant->config.foods[i].amount) < 0) {
+                printF(1, MSG_SENSE_MEMORIA);
+                return;
+            }
+
+            printF(1, missatge);
+            free(missatge);
+        }
+    }
+
+    if (asprintf(&missatge, FORMAT_TOTAL_PROVISIONS, totalProvisions(navegant)) < 0) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    printF(1, missatge);
+    free(missatge);
+}
+
+void mostrarStatus (Navegant *navegant) {
+    char *nom = NULL;
+    char *missatge = NULL;
+    int i;
+
+    nom = copiarText(navegant->config.name);
+    if (nom == NULL) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    for (i = 0; nom[i] != '\0'; i++) {
+        if (nom[i] >= 'a' && nom[i] <= 'z') {
+            nom[i] = nom[i] - 'a' + 'A';
+        }
+    }
+
+    if (asprintf(&missatge, FORMAT_CAPCALERA_STATUS, nom, navegant->config.gold) < 0) {
+        free(nom);
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    free(nom);
+    printF(1, missatge);
+    free(missatge);
+
+    mostrarCarrega(navegant);
+
+    if (navegant->te_viatge == AMB_VIATGE) {
+        if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
+            printF(1, MSG_SENSE_MEMORIA);
+            return;
+        }
+        printF(1, missatge);
+        free(missatge);
+    } else {
+        printF(1, MSG_STATUS_SENSE_VIATGE);
+    }
+
+    if (asprintf(&missatge, FORMAT_UBICACIO_STATUS, navegant->ubicacio) < 0) {
+        printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    printF(1, missatge);
+    free(missatge);
+}
 
 void consumirRacio (Navegant *navegant, int quilos) {
     int i = 0;

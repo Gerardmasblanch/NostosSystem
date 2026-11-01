@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Gestio del servidor de l'illa: connexions, port i cua d'espera.
+* @Proposit: Gestio del servidor de l'illa, connexions, port i cua d'espera.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
 * @Data ultima modificacio: 29/10/2026
@@ -88,7 +88,7 @@ void treureDeLaCua (Harbor *harbor, int posicio);
 
 /***********************************************
 *
-* @Finalitat: Treu un vaixell de la llista, alliberant la seva placa o el seu
+* @Finalitat: Treu un vaixell de la llista, alliberant la seva plaça o el seu
 *             lloc a la cua, i tanca el seu socket.
 * @Parametres:  in/out: harbor = port on es troba el vaixell.
 *               in: index = posicio del vaixell a la llista.
@@ -130,7 +130,7 @@ int afegirALaCua (Harbor *harbor, int fd);
 
 /***********************************************
 *
-* @Finalitat: Atén l'arribada d'un vaixell: el deixa atracar si hi ha placa o
+* @Finalitat: Atén l'arribada d'un vaixell, el deixa atracar si hi ha plaça o
 *             el posa a la cua d'espera si el port es ple.
 * @Parametres:  in/out: harbor = port de l'illa.
 *               in: index = posicio del vaixell a la llista.
@@ -144,7 +144,7 @@ void atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *conf
 /***********************************************
 *
 * @Finalitat: Treu un vaixell de l'illa i fa entrar el seguent de la cua si
-*             s'ha alliberat una placa.
+*             s'ha alliberat una plaça.
 * @Parametres:  in/out: harbor = port de l'illa.
 *               in: index = posicio del vaixell a la llista.
 *               in: config = configuracio de l'illa.
@@ -238,7 +238,7 @@ void mostrarInici (IslandConfig *config, int n_productes);
 
 /***********************************************
 *
-* @Finalitat: Bucle principal del servidor: accepta connexions i atén els
+* @Finalitat: Bucle principal del servidor accepta connexions i atén els
 *             vaixells fins que s'activa la bandera de sortida.
 * @Parametres:  in: fd_servidor = socket del servidor.
 *               in/out: harbor = port de l'illa.

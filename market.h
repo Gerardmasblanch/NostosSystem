@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Mercat de l'illa: llistat, compra i venda de productes i venda
+* @Proposit: Mercat de l'illa, llistat, compra i venda de productes i venda
 *            del mapa local.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
@@ -90,7 +90,7 @@ int validarPeticio (int fd, int tipus, char *dades, Mercat *mercat, int *index, 
 
 /***********************************************
 *
-* @Finalitat: Atén una compra: resta el stock, el guarda i respon amb el cost.
+* @Finalitat: Atén una compra i resta el stock, el guarda i respon amb el cost.
 * @Parametres:  in: fd = socket del vaixell.
 *               in: nom_vaixell = nom del vaixell que compra.
 *               in: dades = text de la peticio.
@@ -102,7 +102,7 @@ void atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 
 /***********************************************
 *
-* @Finalitat: Atén una venda: suma el stock, el guarda i respon amb els
+* @Finalitat: Atén una venda i suma el stock, el guarda i respon amb els
 *             ingressos.
 * @Parametres:  in: fd = socket del vaixell.
 *               in: nom_vaixell = nom del vaixell que ven.
@@ -115,7 +115,7 @@ void atendreSell (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 
 /***********************************************
 *
-* @Finalitat: Atén la compra del mapa local: envia una trama per cada ruta
+* @Finalitat: Atén la compra del mapa local i envia una trama per cada ruta
 *             de l'illa.
 * @Parametres:  in: fd = socket del vaixell.
 *               in: nom_vaixell = nom del vaixell que compra.

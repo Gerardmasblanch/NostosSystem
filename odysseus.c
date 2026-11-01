@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Proces Odysseus: llegeix la seva configuracio i ofereix el
+* @Proposit: Proces Odysseus, llegeix la seva configuracio i ofereix el
 *            terminal interactiu de comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026

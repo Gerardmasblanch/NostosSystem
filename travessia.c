@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Implementacio de la travessia de l'Odysseus: bucle principal i
+* @Proposit: Implementacio de la travessia de l'Odysseus, bucle principal i
 *            comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026

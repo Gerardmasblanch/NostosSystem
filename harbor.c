@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Implementacio del servidor de l'illa: connexions, port i cua
+* @Proposit: Implementacio del servidor de l'illa, connexions, port i cua
 *            d'espera.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
@@ -30,15 +30,15 @@ int afegirVaixell (Harbor *harbor, int fd) {
     if (nou_vaixell == NULL) {
         printF(1, MSG_SENSE_MEMORIA);
         close(fd);
-        return ERR_CODI; // Error de memoria
+        return ERR_CODI; 
     }
 
     harbor->vaixells = nou_vaixell;
     harbor->vaixells[harbor->n_vaixells].fd = fd;
-    harbor->vaixells[harbor->n_vaixells].nom = NULL; // Inicialitzar el nom a NULL
-    harbor->vaixells[harbor->n_vaixells].estat = VAIXELL_CONNECTAT; // Estat inicial
+    harbor->vaixells[harbor->n_vaixells].nom = NULL; 
+    harbor->vaixells[harbor->n_vaixells].estat = VAIXELL_CONNECTAT; 
     harbor->n_vaixells++;
-    return 0; // Vaixell afegit correctament
+    return 0;
 }
 
 void treureDeLaCua (Harbor *harbor, int posicio) {

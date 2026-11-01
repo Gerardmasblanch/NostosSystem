@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) {
     Voyage *viatges = NULL;
     char *missatge = NULL;
     int n_viatges = 0;
-    int fd_server = ERR_CODI;  // això fica un -1 per defecte que es error
+    int fd_server = ERR_CODI;  
 
     if (argc != 3) {
         printF(1, "Us: ./ithaca <config.dat> <voyages.dat>\n");
@@ -53,7 +53,7 @@ int main (int argc, char *argv[]) {
     }
 
     signal(SIGINT, handleSignal);
-    signal(SIGPIPE, SIG_IGN); // que es axiò ara ho miro --------------------------------------------------------
+    signal(SIGPIPE, SIG_IGN); 
 
     if (readIthacaConfig(argv[1], &ithaca_config) < 0) {
         printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");

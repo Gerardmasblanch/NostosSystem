@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Implementacio del mercat de l'illa: llistat, compra i venda de
+* @Proposit: Implementacio del mercat de l'illa, llistat, compra i venda de
 *            productes i venda del mapa local.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026

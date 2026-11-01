@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Travessia de l'Odysseus: bucle principal amb select i execucio
+* @Proposit: Travessia de l'Odysseus, bucle principal amb select i execucio
 *            de les comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
@@ -92,8 +92,8 @@
 
 /***********************************************
 *
-* @Finalitat: Omple el conjunt de descriptors amb el teclat i, si n'hi ha,
-*             la connexio actual.
+* @Finalitat: Omple el conjunt de descriptors amb el teclat i
+*             la connexio actual (si n'hi ha).
 * @Parametres:  out: set = conjunt de descriptors a omplir.
 *               in: navegant = navegant amb la connexio actual.
 * @Retorn: El descriptor mes gran del conjunt.
@@ -196,7 +196,7 @@ void handleAlarma (int senyal);
 
 /***********************************************
 *
-* @Finalitat: Abandona la ubicacio actual: s'acomiada d'Ithaca o de l'illa
+* @Finalitat: Abandona la ubicacio actual, s'acomiada d'Ithaca o de l'illa
 *             si hi esta connectat i tanca la connexio.
 * @Parametres:  in/out: navegant = estat del navegant.
 * @Retorn: ----.
@@ -267,7 +267,7 @@ void mostrarCapcaleraMercat (char *illa);
 
 /***********************************************
 *
-* @Finalitat: Mostra una linia del mercat: un producte o el mapa.
+* @Finalitat: Mostra una linia del mercat, un producte o el mapa.
 * @Parametres:  in: nom = nom del producte.
 *               in: quantitat = quilograms disponibles.
 *               in: preu = preu per quilogram, o preu del mapa.
@@ -323,7 +323,7 @@ int atendreTeclat (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Bucle principal de l'Odysseus: atén el teclat i la connexio
+* @Finalitat: Bucle principal de l'Odysseus, atén el teclat i la connexio
 *             fins que s'activa la bandera de sortida o s'ha d'acabar.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: sortir = bandera que posa a 1 el handler de SIGINT.

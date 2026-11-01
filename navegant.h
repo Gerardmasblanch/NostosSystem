@@ -1,6 +1,6 @@
 /***********************************************
 *
-* @Proposit: Estat del navegant Odysseus: diners, carrega, ubicacio, viatge
+* @Proposit: Estat del navegant Odysseus, diners, carrega, ubicacio, viatge
 *            actual i mapa conegut.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026

@@ -57,6 +57,7 @@
 #define MSG_RACIO             "\n>>> The crew consumes another ration.\nProvisions remaining: %d kg\n"
 #define MSG_SENSE_PROVISIONS  "Provisions remaining: 0 kg\nThe crew has run out of provisions.\nOdysseus %s has been lost at sea.\n"
 #define MSG_DESTI             "We have reached %s, the destination of our voyage.\n"
+#define MSG_ESPERANT_PORT     "You are waiting to enter the port.\n"
 #define MOSTRAR_NO 0
 #define MOSTRAR_SI 1
 
@@ -185,14 +186,6 @@ int guardarViatge (Navegant *navegant, char *dades);
 ************************************************/
 void ferAccept (Navegant *navegant, char *id_viatge);
 
-/***********************************************
-*
-* @Finalitat: Activar la bandera de racio pendent en rebre SIGALRM.
-* @Parametres:  in: senyal = identificador de la senyal rebuda.
-* @Retorn: ----.
-*
-************************************************/
-void handleAlarma (int senyal);
 
 /***********************************************
 *
@@ -217,44 +210,44 @@ void atracar (Navegant *navegant, char *format);
 
 /***********************************************
 *
-* @Finalitat: Espera davant del port fins rebre DOCKED, consumint una racio
-*             cada 5 segons d'espera sense espera activa.
+* @Finalitat: Consumeix una racio mentre el navegant espera davant del port
+*             i torna a programar l'alarma. Si no queden provisions, el
+*             navegant es perd al mar.
 * @Parametres:  in/out: navegant = estat del navegant.
-* @Retorn: FINAL_SI si s'han acabat les provisions o s'ha premut CTRL+C,
-*          FINAL_NO si no.
+* @Retorn: FINAL_SI si s'han acabat les provisions, FINAL_NO si no.
 *
 ************************************************/
-int esperarPort (Navegant *navegant);
+int gestionarRacio (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Anuncia l'arribada a l'illa i atraca o espera segons la
-*             resposta.
+* @Finalitat: Anuncia l'arribada a l'illa i atraca o comenca a esperar
+*             segons la resposta.
 * @Parametres:  in/out: navegant = estat del navegant.
-* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+* @Retorn: ----.
 *
 ************************************************/
-int arribarIlla (Navegant *navegant);
+void arribarIlla (Navegant *navegant);
 
 /***********************************************
 *
 * @Finalitat: Torna a connectar el navegant amb l'illa on es troba despres
 *             d'haver-ne perdut la connexio.
 * @Parametres:  in/out: navegant = estat del navegant.
-* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+* @Retorn: ----.
 *
 ************************************************/
-int tornarAIlla (Navegant *navegant);
+void tornarAIlla (Navegant *navegant);
 
 /***********************************************
 *
 * @Finalitat: Navega fins a una illa connectada amb la ubicacio actual.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: illa = nom de l'illa escrit per l'usuari.
-* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+* @Retorn: ----.
 *
 ************************************************/
-int ferSail (Navegant *navegant, char *illa);
+void ferSail (Navegant *navegant, char *illa);
 
 /***********************************************
 *
@@ -304,33 +297,33 @@ void ferListMarket (Navegant *navegant);
 * @Finalitat: Interpreta una linia del teclat i executa la comanda.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: linea = linia escrita per l'usuari.
-* @Retorn: FINAL_SI si l'Odysseus ha d'acabar, FINAL_NO si no.
+* @Retorn: ----.
 *
 ************************************************/
-
-
-int executarComanda (Navegant *navegant, char *linea);
+void executarComanda (Navegant *navegant, char *linea);
 
 /***********************************************
 *
 * @Finalitat: Llegeix una linia del teclat i l'executa.
 * @Parametres:  in/out: navegant = estat del navegant.
-* @Retorn: FINAL_SI si s'ha tancat l'entrada o l'Odysseus ha d'acabar,
-*          FINAL_NO si no.
+* @Retorn: FINAL_SI si s'ha tancat l'entrada, FINAL_NO si no.
 *
 ************************************************/
 int atendreTeclat (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Bucle principal de l'Odysseus, atén el teclat i la connexio
-*             fins que s'activa la bandera de sortida o s'ha d'acabar.
+* @Finalitat: Bucle principal de l'Odysseus, atén el teclat, la connexio i
+*             les racions mentre espera port, fins que s'activa la bandera
+*             de sortida o s'ha d'acabar.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: sortir = bandera que posa a 1 el handler de SIGINT.
+*               in/out: racio_pendent = bandera que posa a 1 el handler de
+*                       SIGALRM.
 * @Retorn: ----.
 *
 ************************************************/
-void executarOdysseus (Navegant *navegant, int *sortir);
+void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent);
 
 /***********************************************
 *

@@ -19,6 +19,7 @@
 
 //Variables globals
 int sortirprogram = 0;
+int racio_pendent = 0;
 
 //Procediments i funcions
 
@@ -32,6 +33,19 @@ int sortirprogram = 0;
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
         sortirprogram = 1;
+    }
+}
+
+/***********************************************
+*
+* @Finalitat: Activar la bandera de racio pendent en rebre SIGALRM.
+* @Parametres:  in: senyal = identificador de la senyal rebuda.
+* @Retorn: ----.
+*
+************************************************/
+void handleAlarma (int senyal) {
+    if (senyal == SIGALRM) {
+        racio_pendent = 1;
     }
 }
 
@@ -63,12 +77,13 @@ int main (int argc, char *argv[]) {
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGALRM, handleAlarma);
 
     asprintf(&missatge, "Odysseus %s is ready to sail.\n\n", navegant.config.name);
     printF(1, missatge);
     free(missatge);
 
-    executarOdysseus(&navegant, &sortirprogram);
+    executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
 
     alliberarNavegant(&navegant);
 

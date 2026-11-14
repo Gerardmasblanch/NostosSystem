@@ -11,9 +11,6 @@
 //Include del fitxer .h del mateix modul
 #include "travessia.h"
 
-//Variables globals
-int racio_pendent = 0;
-
 //Procediments i funcions
 
 int prepararSetOdysseus (fd_set *set, Navegant *navegant) {
@@ -38,6 +35,7 @@ void perdreConnexio (Navegant *navegant) {
     printF(1, missatge);
     free(missatge);
 
+    alarm(0);
     close(navegant->fd_connexio);
     navegant->fd_connexio = ERR_CODI;
 
@@ -55,6 +53,10 @@ void atendreServidor (Navegant *navegant) {
 
     if (rebreTrama(navegant->fd_connexio, &tipus, &flags, &dades) == TRAMA_ERROR) {
         perdreConnexio(navegant);
+        printF(1, TEXT_PROMPT);
+    } else if (navegant->estat == ESTAT_ESPERANT && tipus == TIPUS_ARRIBADA && flags == FLAG_OK && strcmp(dades, TEXT_ATRACAT) == 0) {
+        alarm(0);
+        atracar(navegant, MSG_ACCES_ESPERA);
         printF(1, TEXT_PROMPT);
     }
 
@@ -255,13 +257,6 @@ void ferAccept (Navegant *navegant, char *id_viatge) {
     free(dades);
 }
 
-void handleAlarma (int senyal) {
-    if (senyal == SIGALRM) {
-        racio_pendent = 1;
-    }
-}
-
-
 void marxarUbicacio (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
@@ -302,70 +297,31 @@ void atracar (Navegant *navegant, char *format) {
     }
 }
 
-int esperarPort (Navegant *navegant) {
-    fd_set set;
-    char *dades = NULL;
+int gestionarRacio (Navegant *navegant) {
     char *missatge = NULL;
-    int tipus;
-    int flags;
-    int resultat;
-    int esperant = 1;
     int final = FINAL_NO;
 
-    racio_pendent = 0;
-    signal(SIGALRM, handleAlarma);
-    alarm(SEGONS_RACIO);
-
-    while (esperant == 1) {
-        FD_ZERO(&set);
-        FD_SET(navegant->fd_connexio, &set);
-
-        resultat = 0;
-        if (racio_pendent == 0) {
-            resultat = select(navegant->fd_connexio + 1, &set, NULL, NULL, NULL);
-        }
-
-        if (racio_pendent == 1) {
-            racio_pendent = 0;
-
-            if (totalProvisions(navegant) <= RACIO_KG) {
-                asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
-                printF(1, missatge);
-                free(missatge);
-                esperant = 0;
-                final = FINAL_SI;
-            } else {
-                consumirRacio(navegant, RACIO_KG);
-                asprintf(&missatge, MSG_RACIO, totalProvisions(navegant));
-                printF(1, missatge);
-                free(missatge);
-                alarm(SEGONS_RACIO);
-            }
-        } else if (resultat < 0) {
-            esperant = 0;
-            final = FINAL_SI;
-        } else if (rebreTrama(navegant->fd_connexio, &tipus, &flags, &dades) == TRAMA_ERROR) {
-            perdreConnexio(navegant);
-            esperant = 0;
-        } else if (tipus == TIPUS_ARRIBADA && flags == FLAG_OK && strcmp(dades, TEXT_ATRACAT) == 0) {
-            atracar(navegant, MSG_ACCES_ESPERA);
-            esperant = 0;
-        }
-
-        free(dades);
-        dades = NULL;
+    if (totalProvisions(navegant) <= RACIO_KG) {
+        asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
+        printF(1, missatge);
+        free(missatge);
+        final = FINAL_SI;
+    } else {
+        consumirRacio(navegant, RACIO_KG);
+        asprintf(&missatge, MSG_RACIO, totalProvisions(navegant));
+        printF(1, missatge);
+        free(missatge);
+        printF(1, TEXT_PROMPT);
+        alarm(SEGONS_RACIO);
     }
-
-    alarm(0);
 
     return final;
 }
 
-int arribarIlla (Navegant *navegant) {
+void arribarIlla (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
     int resultat;
-    int final = FINAL_NO;
 
     printF(1, "\n");
     asprintf(&missatge, MSG_CONNECTAT, navegant->ubicacio);
@@ -379,7 +335,8 @@ int arribarIlla (Navegant *navegant) {
         atracar(navegant, MSG_ACCES);
     } else if (resultat == RESPOSTA_OK && strcmp(dades, TEXT_ESPERA) == 0) {
         printF(1, MSG_PORT_COMPLET);
-        final = esperarPort(navegant);
+        navegant->estat = ESTAT_ESPERANT;
+        alarm(SEGONS_RACIO);
     } else if (resultat != RESPOSTA_PERDUDA) {
         if (resultat == RESPOSTA_ERROR) {
             asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
@@ -393,11 +350,9 @@ int arribarIlla (Navegant *navegant) {
     }
 
     free(dades);
-
-    return final;
 }
 
-int tornarAIlla (Navegant *navegant) {
+void tornarAIlla (Navegant *navegant) {
     char *missatge = NULL;
     char *ip = NULL;
     int port = 0;
@@ -422,13 +377,13 @@ int tornarAIlla (Navegant *navegant) {
         asprintf(&missatge, MSG_ERROR_CONNEXIO, navegant->ubicacio);
         printF(1, missatge);
         free(missatge);
-        return FINAL_NO;
+        return;
     }
 
-    return arribarIlla(navegant);
+    arribarIlla(navegant);
 }
 
-int ferSail (Navegant *navegant, char *illa) {
+void ferSail (Navegant *navegant, char *illa) {
     char *missatge = NULL;
     char *nom = NULL;
     char *ip = NULL;
@@ -436,8 +391,14 @@ int ferSail (Navegant *navegant, char *illa) {
     int index;
     int fd_nou;
 
+    if (navegant->estat == ESTAT_ESPERANT) {
+        printF(1, MSG_ESPERANT_PORT);
+        return;
+    }
+
     if (navegant->estat == ESTAT_DESCONNECTAT && strcasecmp(illa, navegant->ubicacio) == 0) {
-        return tornarAIlla(navegant);
+        tornarAIlla(navegant);
+        return;
     }
 
     if (navegant->estat == ESTAT_ITHACA || navegant->estat == ESTAT_CONNECTAT_ITHACA) {
@@ -459,7 +420,7 @@ int ferSail (Navegant *navegant, char *illa) {
         asprintf(&missatge, MSG_NO_ES_POT_NAVEGAR, illa);
         printF(1, missatge);
         free(missatge);
-        return FINAL_NO;
+        return;
     }
 
     fd_nou = connectarServidor(ip, port);
@@ -467,7 +428,7 @@ int ferSail (Navegant *navegant, char *illa) {
         asprintf(&missatge, MSG_ERROR_CONNEXIO, nom);
         printF(1, missatge);
         free(missatge);
-        return FINAL_NO;
+        return;
     }
 
     marxarUbicacio(navegant);
@@ -475,7 +436,7 @@ int ferSail (Navegant *navegant, char *illa) {
     if (canviarUbicacio(navegant, nom) == ERR_CODI) {
         close(fd_nou);
         navegant->estat = ESTAT_DESCONNECTAT;
-        return FINAL_NO;
+        return;
     }
 
     asprintf(&missatge, MSG_NAVEGANT, nom);
@@ -485,7 +446,7 @@ int ferSail (Navegant *navegant, char *illa) {
     navegant->fd_connexio = fd_nou;
     navegant->estat = ESTAT_DESCONNECTAT;
 
-    return arribarIlla(navegant);
+    arribarIlla(navegant);
 }
 
 void mostrarCapcaleraMercat (char *illa) {
@@ -708,11 +669,10 @@ void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
     free(dades);
 }
 
-int executarComanda (Navegant *navegant, char *linea) {
+void executarComanda (Navegant *navegant, char *linea) {
     char **trossos = NULL;
     int n_trossos;
     int codi;
-    int final = FINAL_NO;
 
     codi = parseCommand(linea);
     trossos = splitString(linea, ' ', &n_trossos);
@@ -726,7 +686,7 @@ int executarComanda (Navegant *navegant, char *linea) {
     } else if (codi == CMD_ACCEPT) {
         ferAccept(navegant, trossos[1]);
     } else if (codi == CMD_SAIL) {
-        final = ferSail(navegant, trossos[1]);
+        ferSail(navegant, trossos[1]);
     } else if (codi == CMD_LIST_MARKET) {
         ferListMarket(navegant);
     } else if (codi == CMD_BUY) {
@@ -746,8 +706,6 @@ int executarComanda (Navegant *navegant, char *linea) {
     }
 
     freeTokens(trossos, n_trossos);
-
-    return final;
 }
 
 int atendreTeclat (Navegant *navegant) {
@@ -757,22 +715,21 @@ int atendreTeclat (Navegant *navegant) {
     linea = readUntil(0, '\n');
 
     if (linea != NULL) {
-        final = executarComanda(navegant, linea);
+        executarComanda(navegant, linea);
         free(linea);
+        final = FINAL_NO;
 
-        if (final == FINAL_NO) {
-            printF(1, "\n");
-            printF(1, TEXT_PROMPT);
-        }
+        printF(1, "\n");
+        printF(1, TEXT_PROMPT);
     }
 
     return final;
 }
 
-void executarOdysseus (Navegant *navegant, int *sortir) {
-
+void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent) {
     fd_set set;
     int max_fd;
+    int resultat;
     int final = FINAL_NO;
 
     printF(1, TEXT_PROMPT);
@@ -780,7 +737,17 @@ void executarOdysseus (Navegant *navegant, int *sortir) {
     while (*sortir == 0 && final == FINAL_NO) {
         max_fd = prepararSetOdysseus(&set, navegant);
 
-        if (select(max_fd + 1, &set, NULL, NULL, NULL) > 0) {
+        resultat = 0;
+        if (*racio_pendent == 0) {
+            resultat = select(max_fd + 1, &set, NULL, NULL, NULL);
+        }
+
+        if (*racio_pendent == 1) {
+            *racio_pendent = 0;
+            if (navegant->estat == ESTAT_ESPERANT) {
+                final = gestionarRacio(navegant);
+            }
+        } else if (resultat > 0) {
             if (navegant->fd_connexio != ERR_CODI && FD_ISSET(navegant->fd_connexio, &set)) {
                 atendreServidor(navegant);
             }

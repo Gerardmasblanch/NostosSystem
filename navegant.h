@@ -25,6 +25,7 @@
 #define ESTAT_CONNECTAT_ITHACA 1
 #define ESTAT_ATRACAT          2
 #define ESTAT_DESCONNECTAT     3
+#define ESTAT_ESPERANT         4
 #define SENSE_VIATGE 0
 #define AMB_VIATGE   1
 #define RUTA_NO_DIRECTA 0

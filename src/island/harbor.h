@@ -41,6 +41,8 @@
 #define MSG_HA_MARXAT "\n>>> %s has left.\n"
 #define MSG_ERROR_PIPE   "Error: no s'ha pogut crear la pipe d'avis.\n"
 #define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del vaixell.\n"
+#define MSG_ERROR_ACCEPT     "Error: no s'ha pogut acceptar la connexio.\n"
+#define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
 #define MSG_INICI_ILLA "Island %s initialized.\nPort capacity: %d %s.\n%d sea routes loaded.\n%d products available.\n"
 
 //Structs
@@ -95,13 +97,45 @@ void HARBOR_alliberarVaixell (Vaixell *vaixell);
 
 /***********************************************
 *
-* @Finalitat: Afegeix a la llista un vaixell nou.
+* @Finalitat: Accepta una connexio, afegeix el vaixell a la llista i crea
+*             el seu thread.
 * @Parametres:  in/out: harbor = port on s'afegeix el vaixell.
-*               in: fd = socket retornat per l'accept.
-* @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
+*               in: fd_servidor = socket que escolta connexions.
+* @Retorn: 0 si s'ha afegit, ERR_CODI si hi ha un error.
 *
 ************************************************/
-int HARBOR_afegirVaixell (Harbor *harbor, int fd);
+int HARBOR_acceptarVaixell (Harbor *harbor, int fd_servidor);
+
+/***********************************************
+*
+* @Finalitat: Fa el join i allibera els vaixells el thread dels quals ja ha
+*             acabat, i els treu de la llista.
+* @Parametres:  in/out: harbor = port amb la llista de vaixells.
+* @Retorn: ----.
+*
+************************************************/
+void HARBOR_netejarVaixellsAcabats (Harbor *harbor);
+
+/***********************************************
+*
+* @Finalitat: Espera (join) que acabin els threads de tots els vaixells que
+*             queden en tancar l'illa. No agafa el mutex de vaixells perque
+*             els threads el necessiten per acabar.
+* @Parametres:  in/out: harbor = port amb la llista de vaixells.
+* @Retorn: ----.
+*
+************************************************/
+void HARBOR_esperarVaixells (Harbor *harbor);
+
+/***********************************************
+*
+* @Finalitat: Funcio del thread de cada vaixell: atén les seves trames fins
+*             que marxa, cau la connexio o s'avisa la sortida de l'illa.
+* @Parametres:  in/out: arg = punter al Vaixell que atén el thread.
+* @Retorn: NULL.
+*
+************************************************/
+void *HARBOR_atendreVaixell (void *arg);
 
 /***********************************************
 *
@@ -193,18 +227,6 @@ void HARBOR_atendreSortida (Harbor *harbor, int index, IslandConfig *config);
 
 /***********************************************
 *
-* @Finalitat: Omple el conjunt de descriptors que vigilara el select amb el
-*             socket del servidor i els de tots els vaixells.
-* @Parametres:  out: set = conjunt de descriptors a omplir.
-*               in: fd_servidor = socket del servidor.
-*               in: harbor = port amb la llista de vaixells.
-* @Retorn: El descriptor mes gran del conjunt.
-*
-************************************************/
-int HARBOR_prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
-
-/***********************************************
-*
 * @Finalitat: Atén una peticio del mercat (LIST MARKET, BUY, SELL o BUY MAP)
 *             si el vaixell esta atracat.
 * @Parametres:  in: harbor = port de l'illa.
@@ -233,18 +255,6 @@ void HARBOR_atendreTrama (Harbor *harbor, int index, IslandConfig *config, Merca
 
 /***********************************************
 *
-* @Finalitat: Atén tots els vaixells que el select ha marcat amb dades.
-* @Parametres:  in/out: harbor = port de l'illa.
-*               in: set = conjunt retornat pel select.
-*               in: config = configuracio de l'illa.
-*               in/out: mercat = mercat de l'illa.
-* @Retorn: ----.
-*
-************************************************/
-void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat);
-
-/***********************************************
-*
 * @Finalitat: Allibera els vaixells, la cua i els mutex del port. Nomes es
 *             pot cridar quan ja s'ha fet el join de tots els threads.
 * @Parametres:  in/out: harbor = port a alliberar.
@@ -265,16 +275,14 @@ void HARBOR_mostrarInici (IslandConfig *config, int n_productes);
 
 /***********************************************
 *
-* @Finalitat: Bucle principal del servidor accepta connexions i atén els
-*             vaixells fins que s'activa la bandera de sortida.
+* @Finalitat: Bucle del fil principal: accepta vaixells i crea el thread de
+*             cadascun fins que la pipe d'avis indica la sortida. En acabar,
+*             espera tots els threads.
 * @Parametres:  in: fd_servidor = socket del servidor.
 *               in/out: harbor = port de l'illa.
-*               in: config = configuracio de l'illa.
-*               in: sortir = bandera que posa a 1 el handler de SIGINT.
-*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
-void HARBOR_executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir);
+void HARBOR_executarServidor (int fd_servidor, Harbor *harbor);
 
 #endif

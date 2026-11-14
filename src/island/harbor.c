@@ -33,23 +33,89 @@ void HARBOR_alliberarVaixell (Vaixell *vaixell) {
     free(vaixell);
 }
 
-int HARBOR_afegirVaixell (Harbor *harbor, int fd) {
-    Vaixell *nou_vaixell = NULL;
+int HARBOR_acceptarVaixell (Harbor *harbor, int fd_servidor) {
+    Vaixell *vaixell = NULL;
+    Vaixell **nous_vaixells = NULL;
+    int fd_vaixell;
 
-    nou_vaixell = realloc(harbor->vaixells, sizeof(Vaixell) * (harbor->n_vaixells + 1));
-
-    if (nou_vaixell == NULL) {
-        UTILS_printF(1, MSG_SENSE_MEMORIA);
-        close(fd);
-        return ERR_CODI; 
+    fd_vaixell = accept(fd_servidor, NULL, NULL);
+    if (fd_vaixell < 0) {
+        UTILS_printF(1, MSG_ERROR_ACCEPT);
+        return ERR_CODI;
     }
 
-    harbor->vaixells = nou_vaixell;
-    harbor->vaixells[harbor->n_vaixells].fd = fd;
-    harbor->vaixells[harbor->n_vaixells].nom = NULL; 
-    harbor->vaixells[harbor->n_vaixells].estat = VAIXELL_CONNECTAT; 
+    if (fd_vaixell >= FD_SETSIZE) {
+        UTILS_printF(1, MSG_ERROR_DESCRIPTOR);
+        close(fd_vaixell);
+        return ERR_CODI;
+    }
+
+    vaixell = malloc(sizeof(Vaixell));
+    if (vaixell == NULL) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        close(fd_vaixell);
+        return ERR_CODI;
+    }
+
+    vaixell->harbor = harbor;
+    vaixell->fd = fd_vaixell;
+    vaixell->nom = NULL;
+    vaixell->estat = VAIXELL_CONNECTAT;
+    vaixell->acabat = 0;
+
+    pthread_mutex_lock(&harbor->mutex_vaixells);
+
+    nous_vaixells = realloc(harbor->vaixells, sizeof(Vaixell *) * (harbor->n_vaixells + 1));
+    if (nous_vaixells == NULL) {
+        pthread_mutex_unlock(&harbor->mutex_vaixells);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        close(fd_vaixell);
+        free(vaixell);
+        return ERR_CODI;
+    }
+
+    harbor->vaixells = nous_vaixells;
+    harbor->vaixells[harbor->n_vaixells] = vaixell;
     harbor->n_vaixells++;
+
+    if (pthread_create(&vaixell->fil, NULL, HARBOR_atendreVaixell, vaixell) != 0) {
+        harbor->n_vaixells--;
+        pthread_mutex_unlock(&harbor->mutex_vaixells);
+        UTILS_printF(1, MSG_ERROR_THREAD);
+        close(fd_vaixell);
+        free(vaixell);
+        return ERR_CODI;
+    }
+
+    pthread_mutex_unlock(&harbor->mutex_vaixells);
+
     return 0;
+}
+
+void HARBOR_netejarVaixellsAcabats (Harbor *harbor) {
+    Vaixell *vaixell = NULL;
+    int i = 0;
+    int j;
+
+    pthread_mutex_lock(&harbor->mutex_vaixells);
+
+    while (i < harbor->n_vaixells) {
+        if (harbor->vaixells[i]->acabat == 1) {
+            vaixell = harbor->vaixells[i];
+
+            for (j = i; j < harbor->n_vaixells - 1; j++) {
+                harbor->vaixells[j] = harbor->vaixells[j + 1];
+            }
+            harbor->n_vaixells--;
+
+            pthread_join(vaixell->fil, NULL);
+            HARBOR_alliberarVaixell(vaixell);
+        } else {
+            i++;
+        }
+    }
+
+    pthread_mutex_unlock(&harbor->mutex_vaixells);
 }
 
 void HARBOR_treureDeLaCua (Harbor *harbor, int posicio) {
@@ -210,23 +276,6 @@ void HARBOR_atendreSortida (Harbor *harbor, int index, IslandConfig *config) {
     }
 }
 
-int HARBOR_prepararSet (fd_set *set, int fd_servidor, Harbor *harbor) {
-    int i;
-    int max_fd = fd_servidor;
-
-    FD_ZERO(set);
-    FD_SET(fd_servidor, set);
-
-    for (i = 0; i < harbor->n_vaixells; i++) {
-        FD_SET(harbor->vaixells[i].fd, set);
-        if (harbor->vaixells[i].fd > max_fd) {
-            max_fd = harbor->vaixells[i].fd;
-        }
-    }
-
-    return max_fd;
-}
-
 void HARBOR_atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat) {
     Vaixell *vaixell = NULL;
 
@@ -272,16 +321,6 @@ void HARBOR_atendreTrama (Harbor *harbor, int index, IslandConfig *config, Merca
     free(dades);
 }
 
-void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat) {
-    int i;
-
-    for (i = harbor->n_vaixells - 1; i >= 0; i--) {
-        if (FD_ISSET(harbor->vaixells[i].fd, set)) {
-            HARBOR_atendreTrama(harbor, i, config, mercat);
-        }
-    }
-}
-
 void HARBOR_alliberarHarbor (Harbor *harbor) {
     int i;
 
@@ -313,22 +352,36 @@ void HARBOR_mostrarInici (IslandConfig *config, int n_productes) {
     free(missatge);
 }
 
-void HARBOR_executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir) {
+void HARBOR_executarServidor (int fd_servidor, Harbor *harbor) {
     fd_set set;
     int max_fd;
-    int fd_vaixell;
+    int sortir = 0;
 
-    while (*sortir == 0) {
-        max_fd = HARBOR_prepararSet(&set, fd_servidor, harbor);
+    if (fd_servidor >= FD_SETSIZE || harbor->fd_avis >= FD_SETSIZE) {
+        UTILS_printF(1, MSG_ERROR_DESCRIPTOR);
+        return;
+    }
+
+    max_fd = fd_servidor;
+    if (harbor->fd_avis > max_fd) {
+        max_fd = harbor->fd_avis;
+    }
+
+    while (sortir == 0) {
+        FD_ZERO(&set);
+        FD_SET(fd_servidor, &set);
+        FD_SET(harbor->fd_avis, &set);
 
         if (select(max_fd + 1, &set, NULL, NULL, NULL) > 0) {
-            if (FD_ISSET(fd_servidor, &set)) {
-                fd_vaixell = accept(fd_servidor, NULL, NULL);
-                if (fd_vaixell != ERR_CODI) {
-                    HARBOR_afegirVaixell(harbor, fd_vaixell);
-                }
+            if (FD_ISSET(harbor->fd_avis, &set)) {
+                sortir = 1;
+            } else if (FD_ISSET(fd_servidor, &set)) {
+                HARBOR_acceptarVaixell(harbor, fd_servidor);
             }
-            HARBOR_atendreVaixells(harbor, &set, config, mercat);
         }
+
+        HARBOR_netejarVaixellsAcabats(harbor);
     }
+
+    HARBOR_esperarVaixells(harbor);
 }

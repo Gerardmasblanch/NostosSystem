@@ -632,7 +632,7 @@ void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
 
     index = buscarAliment(navegant, producte);
     if (index == ERR_CODI) {
-        printF(1, MSG_CARREGA_INSUFICIENT);
+        printF(1, MSG_PRODUCTE_DESCONEGUT);
         return;
     }
     if (quantitat > navegant->config.foods[index].amount) {

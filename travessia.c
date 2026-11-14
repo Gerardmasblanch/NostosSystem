@@ -408,6 +408,10 @@ void ferSail (Navegant *navegant, char *illa) {
     }
 
     if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
+        if (navegant->te_viatge == SENSE_VIATGE) {
+            printF(1, MSG_SENSE_VIATGE_SAIL);
+            return;
+        }
         if (strcasecmp(illa, TEXT_AEAEA) == 0) {
             nom = TEXT_AEAEA;
             ip = navegant->config.aeaea_ip;

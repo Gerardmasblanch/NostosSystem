@@ -58,6 +58,7 @@
 #define MSG_SENSE_PROVISIONS  "Provisions remaining: 0 kg\nThe crew has run out of provisions.\nOdysseus %s has been lost at sea.\n"
 #define MSG_DESTI             "We have reached %s, the destination of our voyage.\n"
 #define MSG_ESPERANT_PORT     "You are waiting to enter the port.\n"
+#define MSG_SENSE_VIATGE_SAIL "You must accept a voyage before leaving Ithaca.\n"
 #define MOSTRAR_NO 0
 #define MOSTRAR_SI 1
 

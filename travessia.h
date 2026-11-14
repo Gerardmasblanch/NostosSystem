@@ -79,6 +79,7 @@
 #define FORMAT_PETICIO_VENDA "%s&%d"
 #define MSG_VENDA_FETA "Sold %d kg of %s for %d gold.\n"
 #define MSG_CARREGA_INSUFICIENT "Error: not enough food in cargo.\n"
+#define MSG_NO_EL_PORTES "Error: you are not carrying %s.\n"
 
 #define MAPA_PREU      50
 #define MAPA_QUANTITAT 1

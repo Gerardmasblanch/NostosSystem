@@ -630,6 +630,7 @@ void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
 void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
     char *peticio = NULL, *dades = NULL, *missatge = NULL;
     int quantitat = atoi(text_quantitat);
+    int preu = -1;
     int index, ingressos, resultat;
 
     if (navegant->estat != ESTAT_ATRACAT) {
@@ -643,7 +644,22 @@ void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
 
     index = buscarAliment(navegant, producte);
     if (index == ERR_CODI) {
-        printF(1, MSG_PRODUCTE_DESCONEGUT);
+        if (rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
+            return;
+        }
+        if (preu < 0) {
+            printF(1, MSG_PRODUCTE_DESCONEGUT);
+        } else {
+            asprintf(&missatge, MSG_NO_EL_PORTES, producte);
+            printF(1, missatge);
+            free(missatge);
+        }
+        return;
+    }
+    if (navegant->config.foods[index].amount == 0) {
+        asprintf(&missatge, MSG_NO_EL_PORTES, navegant->config.foods[index].name);
+        printF(1, missatge);
+        free(missatge);
         return;
     }
     if (quantitat > navegant->config.foods[index].amount) {

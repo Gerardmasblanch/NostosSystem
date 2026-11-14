@@ -285,6 +285,7 @@ void atracar (Navegant *navegant, char *format) {
     char *missatge = NULL;
 
     navegant->estat = ESTAT_ATRACAT;
+    navegant->mercat_consultat = 0;
 
     asprintf(&missatge, format, navegant->ubicacio);
     printF(1, missatge);
@@ -551,7 +552,9 @@ void ferListMarket (Navegant *navegant) {
         return;
     }
 
-    rebreMercat(navegant, MOSTRAR_SI, NULL, NULL);
+    if (rebreMercat(navegant, MOSTRAR_SI, NULL, NULL) == RESPOSTA_OK) {
+        navegant->mercat_consultat = 1;
+    }
 }
 
 void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
@@ -562,6 +565,10 @@ void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
 
     if (navegant->estat != ESTAT_ATRACAT) {
         printF(1, MSG_NO_ATRACAT);
+        return;
+    }
+    if (navegant->mercat_consultat == 0) {
+        printF(1, MSG_CAL_LIST_MARKET);
         return;
     }
     if (quantitat <= 0) {

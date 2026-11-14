@@ -60,6 +60,7 @@ typedef struct {
     int n_illes;
     Route *adreces;
     int n_adreces;
+    int mercat_consultat;
 } Navegant;
 
 //Procediments i funcions

@@ -73,6 +73,7 @@
 #define MSG_QUANTITAT_INVALIDA "Error: amount must be positive.\n"
 #define MSG_PRODUCTE_DESCONEGUT "Error: unknown product.\n"
 #define MSG_OR_INSUFICIENT "Error: not enough gold.\n"
+#define MSG_CAL_LIST_MARKET "Error: check the market first with LIST MARKET.\n"
 
 #define FORMAT_PETICIO_VENDA "%s&%d"
 #define MSG_VENDA_FETA "Sold %d kg of %s for %d gold.\n"

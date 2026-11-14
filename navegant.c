@@ -23,6 +23,7 @@ int inicialitzarNavegant (Navegant *navegant) {
     navegant->n_illes = 0;
     navegant->adreces = NULL;
     navegant->n_adreces = 0;
+    navegant->mercat_consultat = 0;
 
     navegant->ubicacio = copiarText(TEXT_ITHACA);
     if (navegant->ubicacio == NULL) {

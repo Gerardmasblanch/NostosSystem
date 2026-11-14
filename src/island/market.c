@@ -13,6 +13,14 @@
 
 //Procediments i funcions
 
+void MARKET_inicialitzarMercat (Mercat *mercat) {
+    pthread_mutex_init(&mercat->mutex_stock, NULL);
+}
+
+void MARKET_destruirMercat (Mercat *mercat) {
+    pthread_mutex_destroy(&mercat->mutex_stock);
+}
+
 int MARKET_guardarStock (Mercat *mercat) {
     int fd;
     int i;

@@ -13,6 +13,7 @@
 
 //Llibreries
 #include <sys/select.h>
+#include <pthread.h>
 
 //Llibreries propies
 #include "trama.h"
@@ -41,30 +42,54 @@
 #define MSG_INICI_ILLA "Island %s initialized.\nPort capacity: %d %s.\n%d sea routes loaded.\n%d products available.\n"
 
 //Structs
+typedef struct Harbor Harbor;
+
 typedef struct {
+    Harbor *harbor;
+    pthread_t fil;
     int fd;
     char *nom;
     int estat;
+    int acabat;
 } Vaixell;
 
-typedef struct {
-    Vaixell *vaixells;
+struct Harbor {
+    IslandConfig *config;
+    Mercat *mercat;
+    Vaixell **vaixells;
     int n_vaixells;
-    int *cua;
+    pthread_mutex_t mutex_vaixells;
+    Vaixell **cua;
     int n_cua;
     int n_atracats;
-} Harbor;
+    pthread_mutex_t mutex_port;
+    int fd_avis;
+};
 
 //Procediments i funcions
 
 /***********************************************
 *
-* @Finalitat: Deixa el port buit, sense vaixells ni cua.
+* @Finalitat: Deixa el port buit, sense vaixells ni cua, i crea els mutex de
+*             la llista de vaixells i del port.
 * @Parametres:  out: harbor = port a inicialitzar.
+*               in: config = configuracio de l'illa.
+*               in: mercat = mercat de l'illa.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida.
 * @Retorn: ----.
 *
 ************************************************/
-void HARBOR_inicialitzarHarbor (Harbor *harbor);
+void HARBOR_inicialitzarHarbor (Harbor *harbor, IslandConfig *config, Mercat *mercat, int fd_avis);
+
+/***********************************************
+*
+* @Finalitat: Allibera la memoria d'un vaixell. El socket ja l'ha d'haver
+*             tancat el seu thread.
+* @Parametres:  in/out: vaixell = vaixell a alliberar.
+* @Retorn: ----.
+*
+************************************************/
+void HARBOR_alliberarVaixell (Vaixell *vaixell);
 
 /***********************************************
 *
@@ -218,9 +243,9 @@ void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, 
 
 /***********************************************
 *
-* @Finalitat: Tanca els sockets de tots els vaixells i allibera la memoria del port.
+* @Finalitat: Allibera els vaixells, la cua i els mutex del port. Nomes es
+*             pot cridar quan ja s'ha fet el join de tots els threads.
 * @Parametres:  in/out: harbor = port a alliberar.
-*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/

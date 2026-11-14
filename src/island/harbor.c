@@ -14,12 +14,23 @@
 
 //funcions i procediments
 
-void HARBOR_inicialitzarHarbor (Harbor *harbor) {
+void HARBOR_inicialitzarHarbor (Harbor *harbor, IslandConfig *config, Mercat *mercat, int fd_avis) {
+    harbor->config = config;
+    harbor->mercat = mercat;
     harbor->vaixells = NULL;
     harbor->n_vaixells = 0;
     harbor->cua = NULL;
     harbor->n_cua = 0;
     harbor->n_atracats = 0;
+    harbor->fd_avis = fd_avis;
+
+    pthread_mutex_init(&harbor->mutex_vaixells, NULL);
+    pthread_mutex_init(&harbor->mutex_port, NULL);
+}
+
+void HARBOR_alliberarVaixell (Vaixell *vaixell) {
+    free(vaixell->nom);
+    free(vaixell);
 }
 
 int HARBOR_afegirVaixell (Harbor *harbor, int fd) {
@@ -272,12 +283,21 @@ void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, 
 }
 
 void HARBOR_alliberarHarbor (Harbor *harbor) {
-    while (harbor->n_vaixells > 0) {
-        HARBOR_treureVaixell(harbor, harbor->n_vaixells - 1);
-    }
+    int i;
 
+    for (i = 0; i < harbor->n_vaixells; i++) {
+        HARBOR_alliberarVaixell(harbor->vaixells[i]);
+    }
     free(harbor->vaixells);
+    harbor->vaixells = NULL;
+    harbor->n_vaixells = 0;
+
     free(harbor->cua);
+    harbor->cua = NULL;
+    harbor->n_cua = 0;
+
+    pthread_mutex_destroy(&harbor->mutex_vaixells);
+    pthread_mutex_destroy(&harbor->mutex_port);
 }
 
 void HARBOR_mostrarInici (IslandConfig *config, int n_productes) {

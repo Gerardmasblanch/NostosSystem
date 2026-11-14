@@ -28,7 +28,7 @@ ithaca: $(OBJECTES_ITHACA) $(OBJECTES_COMUNS)
 	$(CC) $(CFLAGS) -o ithaca $(OBJECTES_ITHACA) $(OBJECTES_COMUNS) -lpthread
 
 island: $(OBJECTES_ISLAND) $(OBJECTES_COMUNS)
-	$(CC) $(CFLAGS) -o island $(OBJECTES_ISLAND) $(OBJECTES_COMUNS)
+	$(CC) $(CFLAGS) -o island $(OBJECTES_ISLAND) $(OBJECTES_COMUNS) -lpthread
 
 # Cada .o depen de tots els .h: si es canvia una capcalera (un #define,
 # un struct...) es recompila tot el que la podria fer servir.

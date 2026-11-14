@@ -12,6 +12,9 @@
 #ifndef _MARKET_H
 #define _MARKET_H
 
+//Llibreries
+#include <pthread.h>
+
 //Llibreries propies
 #include "trama.h"
 #include "config.h"
@@ -39,9 +42,30 @@ typedef struct {
     Product *productes;
     int n_productes;
     char *fitxer;
+    pthread_mutex_t mutex_stock;
 } Mercat;
 
 //Procediments i funcions
+
+/***********************************************
+*
+* @Finalitat: Crea el mutex que protegeix el stock del mercat. Es crida
+*             abans de crear cap thread.
+* @Parametres:  in/out: mercat = mercat ja carregat.
+* @Retorn: ----.
+*
+************************************************/
+void MARKET_inicialitzarMercat (Mercat *mercat);
+
+/***********************************************
+*
+* @Finalitat: Destrueix el mutex del stock. Es crida despres del join de
+*             tots els threads.
+* @Parametres:  in/out: mercat = mercat de l'illa.
+* @Retorn: ----.
+*
+************************************************/
+void MARKET_destruirMercat (Mercat *mercat);
 
 /***********************************************
 *

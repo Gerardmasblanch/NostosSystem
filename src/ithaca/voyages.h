@@ -19,6 +19,7 @@
 
 #define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n" 
 
+#define MSG_ERROR_PIPE "Error: no s'ha pogut crear la pipe d'avis.\n"
 #define MSG_ERROR_ACCEPT "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
 #define TEXT_ITHACA_OK "OK"

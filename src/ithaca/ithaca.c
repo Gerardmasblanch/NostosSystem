@@ -19,12 +19,14 @@
 
 //Variables globals
 int sortirprogram = 0;
+int canonada_avis[2];
 
 //Procediments i funcions
 
 /***********************************************
 *
-* @Finalitat: Activar la bandera de sortida en rebre SIGINT.
+* @Finalitat: Activar la bandera de sortida en rebre SIGINT i escriure un
+*             byte a la pipe d'avis per despertar tots els select.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
@@ -32,6 +34,7 @@ int sortirprogram = 0;
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
         sortirprogram = 1;
+        write(canonada_avis[1], "x", 1);
     }
 }
 
@@ -51,9 +54,6 @@ int main (int argc, char *argv[]) {
         UTILS_printF(1, "Us: ./ithaca <config.dat> <voyages.dat>\n");
         return -1;
     }
-
-    signal(SIGINT, handleSignal);
-    signal(SIGPIPE, SIG_IGN); 
 
     if (CONFIG_readIthacaConfig(argv[1], &ithaca_config) < 0) {
         UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
@@ -85,10 +85,23 @@ int main (int argc, char *argv[]) {
     UTILS_printF(1, missatge);
     free(missatge);
 
-    VOYAGES_inicialitzarServidorIthaca(&servidor);
+    if (pipe(canonada_avis) < 0) {
+        UTILS_printF(1, MSG_ERROR_PIPE);
+        close(fd_server);
+        CONFIG_freeVoyages(viatges, n_viatges);
+        CONFIG_freeIthacaConfig(&ithaca_config);
+        return -1;
+    }
+
+    signal(SIGINT, handleSignal);
+    signal(SIGPIPE, SIG_IGN);
+
+    VOYAGES_inicialitzarServidorIthaca(&servidor, canonada_avis[0]);
 
     if (VOYAGES_prepararViatgesIthaca(&servidor, viatges, n_viatges) == ERR_CODI) {
         VOYAGES_alliberarServidorIthaca(&servidor);
+        close(canonada_avis[0]);
+        close(canonada_avis[1]);
         close(fd_server);
         CONFIG_freeVoyages(viatges, n_viatges);
         CONFIG_freeIthacaConfig(&ithaca_config);
@@ -102,6 +115,8 @@ int main (int argc, char *argv[]) {
     }
 
     VOYAGES_alliberarServidorIthaca(&servidor);
+    close(canonada_avis[0]);
+    close(canonada_avis[1]);
     close(fd_server);
     CONFIG_freeVoyages(viatges, n_viatges);
     CONFIG_freeIthacaConfig(&ithaca_config);

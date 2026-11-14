@@ -401,7 +401,12 @@ void ferSail (Navegant *navegant, char *illa) {
         return;
     }
 
-    if (navegant->estat == ESTAT_ITHACA || navegant->estat == ESTAT_CONNECTAT_ITHACA) {
+    if (navegant->estat == ESTAT_ITHACA) {
+        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        return;
+    }
+
+    if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
         if (strcasecmp(illa, TEXT_AEAEA) == 0) {
             nom = TEXT_AEAEA;
             ip = navegant->config.aeaea_ip;

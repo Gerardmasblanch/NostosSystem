@@ -197,6 +197,14 @@ int atendreListVoyages (ServidorIthaca *servidor, int index, char *dades) {
 
     if (index_viatge != ERR_CODI) {
         servidor->viatges[index_viatge].estat = VIATGE_FRACASSAT;
+
+        if (asprintf(&missatge, MSG_VIATGE_FRACASSAT, servidor->viatges[index_viatge].viatge->id, client->nom) >= 0) {
+            printF(1, missatge);
+            free(missatge);
+            missatge = NULL;
+        } else {
+            printF(1, MSG_SENSE_MEMORIA);
+        }
     }
 
     if (guardarViatgesConsultats(servidor, index) == ERR_CODI) {

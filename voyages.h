@@ -46,6 +46,7 @@
 #define FORMAT_VIATGE_ACCEPTAT "OK&%d&%s&%s&%d"
 
 #define MSG_VIATGE_ASSIGNAT ">>> Voyage %d assigned to %s.\n"
+#define MSG_VIATGE_FRACASSAT ">>> Voyage %d of %s marked as failed.\n"
 
 typedef struct {
     int fd;

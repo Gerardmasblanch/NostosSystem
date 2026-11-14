@@ -121,11 +121,6 @@ int main (int argc, char *argv[]) {
     CONFIG_freeVoyages(viatges, n_viatges);
     CONFIG_freeIthacaConfig(&ithaca_config);
 
-    if (sortirprogram == 1) {
-        signal(SIGINT, SIG_DFL);
-        raise(SIGINT);
-    }
-
     return resultat;
 }
 

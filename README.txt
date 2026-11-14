@@ -2,10 +2,27 @@ THE NOSTOS SYSTEM - FASE 2
 Grup 1: Arnau Ricart (arnau.ricart) i Gerard Mas (gerard.mb)
 
 
+ESTRUCTURA
+
+    src/common     moduls compartits pels tres processos
+                   (utils, config, trama, types, sphragis)
+    src/odysseus   proces Odysseus (odysseus, commands, navegant, travessia)
+    src/ithaca     proces Ithaca (ithaca, voyages)
+    src/island     proces Island (island, harbor, market)
+    config         fitxers de configuracio
+    stock          fitxers stock.db de les illes
+
+    Les funcions publiques de cada modul porten el prefix del modul:
+    UTILS_, CONFIG_, TRAMA_, COMMANDS_, NAVEGANT_, TRAVESSIA_, VOYAGES_,
+    HARBOR_ i MARKET_.
+
+
 COMPILAR
 
     make
     make clean
+
+    Els executables es generen a l'arrel del projecte.
 
 
 EXECUTAR

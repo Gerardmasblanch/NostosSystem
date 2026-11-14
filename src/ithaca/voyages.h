@@ -34,6 +34,9 @@
 #define MSG_ERROR_SELECT "Error: ha fallat el select d'Ithaca.\n"
 #define MSG_CLIENT_MARXA ">>> %s has left Ithaca. Fair winds!\n"
 
+#define CLIENT_CONTINUA 1
+#define CLIENT_ACABA    0
+
 #define VIATGE_DISPONIBLE 0
 #define VIATGE_ASSIGNAT 1
 #define VIATGE_FRACASSAT 2

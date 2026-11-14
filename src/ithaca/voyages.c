@@ -529,6 +529,42 @@ void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     }
 }
 
+void *VOYAGES_atendreClient (void *arg) {
+    ClientIthaca *client = (ClientIthaca *) arg;
+    ServidorIthaca *servidor = client->servidor;
+    fd_set conjunt;
+    int max_fd;
+    int continuar = CLIENT_CONTINUA;
+
+    max_fd = client->fd;
+    if (servidor->fd_avis > max_fd) {
+        max_fd = servidor->fd_avis;
+    }
+
+    while (continuar == CLIENT_CONTINUA) {
+        FD_ZERO(&conjunt);
+        FD_SET(client->fd, &conjunt);
+        FD_SET(servidor->fd_avis, &conjunt);
+
+        if (select(max_fd + 1, &conjunt, NULL, NULL, NULL) > 0) {
+            if (FD_ISSET(servidor->fd_avis, &conjunt)) {
+                continuar = CLIENT_ACABA;
+            } else if (FD_ISSET(client->fd, &conjunt)) {
+                continuar = VOYAGES_atendreTramaIthaca(client);
+            }
+        }
+    }
+
+    close(client->fd);
+
+    pthread_mutex_lock(&servidor->mutex_clients);
+    client->acabat = 1;
+    pthread_mutex_unlock(&servidor->mutex_clients);
+
+    return NULL;
+}
+
+
 int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor) {
     fd_set conjunt;
     int max_fd;

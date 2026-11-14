@@ -76,7 +76,7 @@ typedef struct {
 * @Retorn: ----.
 *
 ************************************************/
-void inicialitzarServidorIthaca (ServidorIthaca *servidor);
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor);
 
 /***********************************************
 *
@@ -87,7 +87,7 @@ void inicialitzarServidorIthaca (ServidorIthaca *servidor);
 * @Retorn: 0 si s'han preparat, ERR_CODI si falta memoria.
 *
 ************************************************/
-int prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viatges);
+int VOYAGES_prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viatges);
 
 /***********************************************
 *
@@ -97,7 +97,7 @@ int prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viat
 * @Retorn: 0 si s'ha afegit el client, ERR_CODI si hi ha un error.
 *
 ************************************************/
-int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server);
+int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server);
 
 
 /***********************************************
@@ -109,7 +109,7 @@ int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server);
 * @Retorn: El descriptor mes gran del conjunt.
 *
 ************************************************/
-int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor);
+int VOYAGES_prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor);
 
 /***********************************************
 *
@@ -119,7 +119,7 @@ int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor)
 * @Retorn: ----.
 *
 ************************************************/
-void treureClientIthaca (ServidorIthaca *servidor, int index);
+void VOYAGES_treureClientIthaca (ServidorIthaca *servidor, int index);
 
 /***********************************************
 *
@@ -128,7 +128,7 @@ void treureClientIthaca (ServidorIthaca *servidor, int index);
 * @Retorn: ----.
 *
 ************************************************/
-void alliberarServidorIthaca (ServidorIthaca *servidor);
+void VOYAGES_alliberarServidorIthaca (ServidorIthaca *servidor);
 
 /***********************************************
 *
@@ -139,7 +139,7 @@ void alliberarServidorIthaca (ServidorIthaca *servidor);
 * @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
 *
 ************************************************/
-int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades);
+int VOYAGES_atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades);
 
 /***********************************************
 *
@@ -149,7 +149,7 @@ int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreTramaIthaca (ServidorIthaca *servidor, int index);
+void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index);
 
 /***********************************************
 *
@@ -160,7 +160,7 @@ void atendreTramaIthaca (ServidorIthaca *servidor, int index);
 * @Retorn: 0 si es tanca per la bandera, ERR_CODI si falla.
 *
 ************************************************/
-int executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir);
+int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir);
 
 /***********************************************
 *
@@ -169,7 +169,7 @@ int executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir
 * @Retorn: Nombre de viatges disponibles.
 *
 ************************************************/
-int comptarViatgesDisponibles (ServidorIthaca *servidor);
+int VOYAGES_comptarViatgesDisponibles (ServidorIthaca *servidor);
 
 /***********************************************
 *
@@ -179,7 +179,7 @@ int comptarViatgesDisponibles (ServidorIthaca *servidor);
 * @Retorn: TRAMA_OK si s'han enviat les respostes, TRAMA_ERROR si falla.
 *
 ************************************************/
-int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd);
+int VOYAGES_enviarViatgesDisponibles (ServidorIthaca *servidor, int fd);
 
 /***********************************************
 *
@@ -189,7 +189,7 @@ int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd);
 * @Retorn: Posicio del viatge assignat, o ERR_CODI si no en te cap.
 *
 ************************************************/
-int buscarViatgeAssignat (ServidorIthaca *servidor, char *nom);
+int VOYAGES_buscarViatgeAssignat (ServidorIthaca *servidor, char *nom);
 
 /***********************************************
 *
@@ -199,7 +199,7 @@ int buscarViatgeAssignat (ServidorIthaca *servidor, char *nom);
 * @Retorn: 0 si s'han guardat, ERR_CODI si falta memoria.
 *
 ************************************************/
-int guardarViatgesConsultats (ServidorIthaca *servidor, int index);
+int VOYAGES_guardarViatgesConsultats (ServidorIthaca *servidor, int index);
 
 /***********************************************
 *
@@ -210,7 +210,7 @@ int guardarViatgesConsultats (ServidorIthaca *servidor, int index);
 * @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
 *
 ************************************************/
-int atendreListVoyages (ServidorIthaca *servidor, int index, char *dades);
+int VOYAGES_atendreListVoyages (ServidorIthaca *servidor, int index, char *dades);
 
 /***********************************************
 *
@@ -220,7 +220,7 @@ int atendreListVoyages (ServidorIthaca *servidor, int index, char *dades);
 * @Retorn: 1 si el nom ja existeix, 0 si no existeix.
 *
 ************************************************/
-int existeixNomIthaca (ServidorIthaca *servidor, char *nom);
+int VOYAGES_existeixNomIthaca (ServidorIthaca *servidor, char *nom);
 
 /***********************************************
 *
@@ -230,7 +230,7 @@ int existeixNomIthaca (ServidorIthaca *servidor, char *nom);
 * @Retorn: 1 si el viatge apareix a la consulta, 0 si no hi apareix.
 *
 ************************************************/
-int haConsultatViatge (ClientIthaca *client, int id_viatge);
+int VOYAGES_haConsultatViatge (ClientIthaca *client, int id_viatge);
 
 /***********************************************
 *
@@ -240,7 +240,7 @@ int haConsultatViatge (ClientIthaca *client, int id_viatge);
 * @Retorn: Posicio del viatge, o ERR_CODI si no existeix.
 *
 ************************************************/
-int buscarViatgePerId (ServidorIthaca *servidor, int id_viatge);
+int VOYAGES_buscarViatgePerId (ServidorIthaca *servidor, int id_viatge);
 
 /***********************************************
 *
@@ -251,6 +251,6 @@ int buscarViatgePerId (ServidorIthaca *servidor, int id_viatge);
 * @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
 *
 ************************************************/
-int atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades);
+int VOYAGES_atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades);
 
 #endif

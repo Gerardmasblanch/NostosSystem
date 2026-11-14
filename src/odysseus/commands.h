@@ -45,7 +45,7 @@
 *
 ************************************************/
 
-int parseSenseArguments(int n_trossos, char *us, int codi_valid);
+int COMMANDS_parseSenseArguments(int n_trossos, char *us, int codi_valid);
 
 /***********************************************
 *
@@ -58,7 +58,7 @@ int parseSenseArguments(int n_trossos, char *us, int codi_valid);
 * @Retorn: codi_valid, o CMD_ERROR_SINTAXI.
 *
 ************************************************/
-int parseAmbQuantitat(char **trossos, int n_trossos, char *us, int codi_valid);
+int COMMANDS_parseAmbQuantitat(char **trossos, int n_trossos, char *us, int codi_valid);
 
 /***********************************************
 *
@@ -69,6 +69,6 @@ int parseAmbQuantitat(char **trossos, int n_trossos, char *us, int codi_valid);
 *          no son correctes, o CMD_DESCONEGUDA si no existeix.
 *
 ************************************************/
-int parseCommand (char *linia);
+int COMMANDS_parseCommand (char *linia);
 
 #endif

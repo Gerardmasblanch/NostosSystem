@@ -50,7 +50,7 @@ typedef struct {
 * @Retorn: 0 si s'ha guardat, ERR_CODI si hi ha hagut un error.
 *
 ************************************************/
-int guardarStock (Mercat *mercat);
+int MARKET_guardarStock (Mercat *mercat);
 
 /***********************************************
 *
@@ -60,7 +60,7 @@ int guardarStock (Mercat *mercat);
 * @Retorn: Posicio del producte a la llista, o ERR_CODI si no hi es.
 *
 ************************************************/
-int buscarProducte (Mercat *mercat, char *nom);
+int MARKET_buscarProducte (Mercat *mercat, char *nom);
 
 /***********************************************
 *
@@ -71,7 +71,7 @@ int buscarProducte (Mercat *mercat, char *nom);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreListMarket (int fd, Mercat *mercat);
+void MARKET_atendreListMarket (int fd, Mercat *mercat);
 
 /***********************************************
 *
@@ -86,7 +86,7 @@ void atendreListMarket (int fd, Mercat *mercat);
 * @Retorn: PETICIO_VALIDA o PETICIO_NO_VALIDA.
 *
 ************************************************/
-int validarPeticio (int fd, int tipus, char *dades, Mercat *mercat, int *index, int *quantitat);
+int MARKET_validarPeticio (int fd, int tipus, char *dades, Mercat *mercat, int *index, int *quantitat);
 
 /***********************************************
 *
@@ -98,7 +98,7 @@ int validarPeticio (int fd, int tipus, char *dades, Mercat *mercat, int *index, 
 * @Retorn: ----.
 *
 ************************************************/
-void atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
+void MARKET_atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 
 /***********************************************
 *
@@ -111,7 +111,7 @@ void atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreSell (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
+void MARKET_atendreSell (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 
 /***********************************************
 *
@@ -124,6 +124,6 @@ void atendreSell (int fd, char *nom_vaixell, char *dades, Mercat *mercat);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreBuyMap (int fd, char *nom_vaixell, char *dades, IslandConfig *config);
+void MARKET_atendreBuyMap (int fd, char *nom_vaixell, char *dades, IslandConfig *config);
 
 #endif

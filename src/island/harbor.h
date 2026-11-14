@@ -64,7 +64,7 @@ typedef struct {
 * @Retorn: ----.
 *
 ************************************************/
-void inicialitzarHarbor (Harbor *harbor);
+void HARBOR_inicialitzarHarbor (Harbor *harbor);
 
 /***********************************************
 *
@@ -74,7 +74,7 @@ void inicialitzarHarbor (Harbor *harbor);
 * @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirVaixell (Harbor *harbor, int fd);
+int HARBOR_afegirVaixell (Harbor *harbor, int fd);
 
 /***********************************************
 *
@@ -84,7 +84,7 @@ int afegirVaixell (Harbor *harbor, int fd);
 * @Retorn: ----.
 *
 ************************************************/
-void treureDeLaCua (Harbor *harbor, int posicio);
+void HARBOR_treureDeLaCua (Harbor *harbor, int posicio);
 
 /***********************************************
 *
@@ -95,7 +95,7 @@ void treureDeLaCua (Harbor *harbor, int posicio);
 * @Retorn: ----.
 *
 ************************************************/
-void treureVaixell (Harbor *harbor, int index);
+void HARBOR_treureVaixell (Harbor *harbor, int index);
 
 /***********************************************
 *
@@ -105,7 +105,7 @@ void treureVaixell (Harbor *harbor, int index);
 * @Retorn: Posicio del vaixell a la llista, o ERR_CODI si no hi es.
 *
 ************************************************/
-int buscarVaixell (Harbor *harbor, int fd);
+int HARBOR_buscarVaixell (Harbor *harbor, int fd);
 
 /***********************************************
 *
@@ -116,7 +116,7 @@ int buscarVaixell (Harbor *harbor, int fd);
 * @Retorn: ----.
 *
 ************************************************/
-void atracarSeguent (Harbor *harbor, int capacitat);
+void HARBOR_atracarSeguent (Harbor *harbor, int capacitat);
 
 /***********************************************
 *
@@ -126,11 +126,11 @@ void atracarSeguent (Harbor *harbor, int capacitat);
 * @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirALaCua (Harbor *harbor, int fd);
+int HARBOR_afegirALaCua (Harbor *harbor, int fd);
 
 /***********************************************
 *
-* @Finalitat: Atén l'arribada d'un vaixell, el deixa atracar si hi ha plaça o
+* @Finalitat: Atén l'arribada d'un vaixell, el deixa TRAVESSIA_atracar si hi ha plaça o
 *             el posa a la cua d'espera si el port es ple.
 * @Parametres:  in/out: harbor = port de l'illa.
 *               in: index = posicio del vaixell a la llista.
@@ -139,7 +139,7 @@ int afegirALaCua (Harbor *harbor, int fd);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *config);
+void HARBOR_atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *config);
 
 /***********************************************
 *
@@ -151,7 +151,7 @@ void atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *conf
 * @Retorn: ----.
 *
 ************************************************/
-void ferSortir (Harbor *harbor, int index, IslandConfig *config);
+void HARBOR_ferSortir (Harbor *harbor, int index, IslandConfig *config);
 
 /***********************************************
 *
@@ -162,7 +162,7 @@ void ferSortir (Harbor *harbor, int index, IslandConfig *config);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreSortida (Harbor *harbor, int index, IslandConfig *config);
+void HARBOR_atendreSortida (Harbor *harbor, int index, IslandConfig *config);
 
 /***********************************************
 *
@@ -174,7 +174,7 @@ void atendreSortida (Harbor *harbor, int index, IslandConfig *config);
 * @Retorn: El descriptor mes gran del conjunt.
 *
 ************************************************/
-int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
+int HARBOR_prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
 
 /***********************************************
 *
@@ -189,7 +189,7 @@ int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat);
+void HARBOR_atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat);
 
 
 /***********************************************
@@ -202,7 +202,7 @@ void atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandCon
 * @Retorn: ----.
 *
 ************************************************/
-void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat);
+void HARBOR_atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat);
 
 /***********************************************
 *
@@ -214,7 +214,7 @@ void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *merc
 * @Retorn: ----.
 *
 ************************************************/
-void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat);
+void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat);
 
 /***********************************************
 *
@@ -224,7 +224,7 @@ void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat 
 * @Retorn: ----.
 *
 ************************************************/
-void alliberarHarbor (Harbor *harbor);
+void HARBOR_alliberarHarbor (Harbor *harbor);
 
 /***********************************************
 *
@@ -234,7 +234,7 @@ void alliberarHarbor (Harbor *harbor);
 * @Retorn: ----.
 *
 ************************************************/
-void mostrarInici (IslandConfig *config, int n_productes);
+void HARBOR_mostrarInici (IslandConfig *config, int n_productes);
 
 /***********************************************
 *
@@ -248,6 +248,6 @@ void mostrarInici (IslandConfig *config, int n_productes);
 * @Retorn: ----.
 *
 ************************************************/
-void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir);
+void HARBOR_executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir);
 
 #endif

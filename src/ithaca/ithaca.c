@@ -48,63 +48,63 @@ int main (int argc, char *argv[]) {
     int fd_server = ERR_CODI;  
 
     if (argc != 3) {
-        printF(1, "Us: ./ithaca <config.dat> <voyages.dat>\n");
+        UTILS_printF(1, "Us: ./ithaca <config.dat> <voyages.dat>\n");
         return -1;
     }
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN); 
 
-    if (readIthacaConfig(argv[1], &ithaca_config) < 0) {
-        printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
+    if (CONFIG_readIthacaConfig(argv[1], &ithaca_config) < 0) {
+        UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
         return -1;
     }
 
-    if (esPortValid(ithaca_config.port) == PORT_NO_VALID) {
-        printF(1, MSG_PORT_NO_VALID);
-        freeIthacaConfig(&ithaca_config);
+    if (UTILS_esPortValid(ithaca_config.port) == PORT_NO_VALID) {
+        UTILS_printF(1, MSG_PORT_NO_VALID);
+        CONFIG_freeIthacaConfig(&ithaca_config);
         return -1;
     }
     
-    if (readVoyages(argv[2], &viatges, &n_viatges) < 0) {
-        printF(1, "Error: no s'ha pogut obrir el fitxer de viatges.\n");
-        freeIthacaConfig(&ithaca_config);
+    if (CONFIG_readVoyages(argv[2], &viatges, &n_viatges) < 0) {
+        UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de viatges.\n");
+        CONFIG_freeIthacaConfig(&ithaca_config);
         return -1;
     }
 
-    fd_server = obrirServidor(ithaca_config.ip, ithaca_config.port);
+    fd_server = TRAMA_obrirServidor(ithaca_config.ip, ithaca_config.port);
 
     if (fd_server == ERR_CODI) {
-        printF(1, MSG_ERROR_SERVIDOR);
-        freeVoyages(viatges, n_viatges);
-        freeIthacaConfig(&ithaca_config);
+        UTILS_printF(1, MSG_ERROR_SERVIDOR);
+        CONFIG_freeVoyages(viatges, n_viatges);
+        CONFIG_freeIthacaConfig(&ithaca_config);
         return -1;
     }
 
     asprintf(&missatge, "Ithaca initialized. %d voyages loaded.\nWaiting for Odysseus...\n", n_viatges);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
-    inicialitzarServidorIthaca(&servidor);
+    VOYAGES_inicialitzarServidorIthaca(&servidor);
 
-    if (prepararViatgesIthaca(&servidor, viatges, n_viatges) == ERR_CODI) {
-        alliberarServidorIthaca(&servidor);
+    if (VOYAGES_prepararViatgesIthaca(&servidor, viatges, n_viatges) == ERR_CODI) {
+        VOYAGES_alliberarServidorIthaca(&servidor);
         close(fd_server);
-        freeVoyages(viatges, n_viatges);
-        freeIthacaConfig(&ithaca_config);
+        CONFIG_freeVoyages(viatges, n_viatges);
+        CONFIG_freeIthacaConfig(&ithaca_config);
         return ERR_CODI;
     }
 
-    resultat = executarServidorIthaca(fd_server, &servidor, &sortirprogram);
+    resultat = VOYAGES_executarServidorIthaca(fd_server, &servidor, &sortirprogram);
 
     if (sortirprogram == 1) {
-        printF(1, "\nIthaca closes the harbor.\n");
+        UTILS_printF(1, "\nIthaca closes the harbor.\n");
     }
 
-    alliberarServidorIthaca(&servidor);
+    VOYAGES_alliberarServidorIthaca(&servidor);
     close(fd_server);
-    freeVoyages(viatges, n_viatges);
-    freeIthacaConfig(&ithaca_config);
+    CONFIG_freeVoyages(viatges, n_viatges);
+    CONFIG_freeIthacaConfig(&ithaca_config);
 
     if (sortirprogram == 1) {
         signal(SIGINT, SIG_DFL);

@@ -13,7 +13,7 @@
 
 //Procediments i funcions
 
-int prepararSetOdysseus (fd_set *set, Navegant *navegant) {
+int TRAVESSIA_prepararSetOdysseus (fd_set *set, Navegant *navegant) {
     int max_fd = 0;
 
     FD_ZERO(set);
@@ -28,11 +28,11 @@ int prepararSetOdysseus (fd_set *set, Navegant *navegant) {
     return max_fd;
 }
 
-void perdreConnexio (Navegant *navegant) {
+void TRAVESSIA_perdreConnexio (Navegant *navegant) {
     char *missatge = NULL;
 
     asprintf(&missatge, MSG_CONNEXIO_PERDUDA, navegant->ubicacio);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
     alarm(0);
@@ -46,30 +46,30 @@ void perdreConnexio (Navegant *navegant) {
     }
 }
 
-void atendreServidor (Navegant *navegant) {
+void TRAVESSIA_atendreServidor (Navegant *navegant) {
     char *dades = NULL;
     int tipus;
     int flags;
 
-    if (rebreTrama(navegant->fd_connexio, &tipus, &flags, &dades) == TRAMA_ERROR) {
-        perdreConnexio(navegant);
-        printF(1, TEXT_PROMPT);
+    if (TRAMA_rebreTrama(navegant->fd_connexio, &tipus, &flags, &dades) == TRAMA_ERROR) {
+        TRAVESSIA_perdreConnexio(navegant);
+        UTILS_printF(1, TEXT_PROMPT);
     } else if (navegant->estat == ESTAT_ESPERANT && tipus == TIPUS_ARRIBADA && flags == FLAG_OK && strcmp(dades, TEXT_ATRACAT) == 0) {
         alarm(0);
-        atracar(navegant, MSG_ACCES_ESPERA);
-        printF(1, TEXT_PROMPT);
+        TRAVESSIA_atracar(navegant, MSG_ACCES_ESPERA);
+        UTILS_printF(1, TEXT_PROMPT);
     }
 
     free(dades);
 }
 
-int rebreResposta (Navegant *navegant, int tipus_esperat, char **dades) {
+int TRAVESSIA_rebreResposta (Navegant *navegant, int tipus_esperat, char **dades) {
     int tipus;
     int flags;
     int resultat = RESPOSTA_ERROR;
 
-    if (rebreTrama(navegant->fd_connexio, &tipus, &flags, dades) == TRAMA_ERROR) {
-        perdreConnexio(navegant);
+    if (TRAMA_rebreTrama(navegant->fd_connexio, &tipus, &flags, dades) == TRAMA_ERROR) {
+        TRAVESSIA_perdreConnexio(navegant);
         resultat = RESPOSTA_PERDUDA;
     } else if (tipus == tipus_esperat && flags == FLAG_OK) {
         resultat = RESPOSTA_OK;
@@ -78,43 +78,43 @@ int rebreResposta (Navegant *navegant, int tipus_esperat, char **dades) {
     return resultat;
 }
 
-void ferConnectIthaca (Navegant *navegant) {
+void TRAVESSIA_ferConnectIthaca (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
     int resultat;
 
     if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
-        printF(1, MSG_JA_CONNECTAT);
+        UTILS_printF(1, MSG_JA_CONNECTAT);
         return;
     }
 
     if (navegant->estat != ESTAT_ITHACA) {
-        printF(1, MSG_NOMES_A_ITHACA);
+        UTILS_printF(1, MSG_NOMES_A_ITHACA);
         return;
     }
 
-    navegant->fd_connexio = connectarServidor(navegant->config.ithaca_ip, navegant->config.ithaca_port);
+    navegant->fd_connexio = TRAMA_connectarServidor(navegant->config.ithaca_ip, navegant->config.ithaca_port);
 
     if (navegant->fd_connexio == ERR_CODI) {
         asprintf(&missatge, MSG_ERROR_CONNEXIO, TEXT_ITHACA);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
-    enviarTrama(navegant->fd_connexio, TIPUS_CONNECT, FLAG_PETICIO, navegant->config.name);
-    resultat = rebreResposta(navegant, TIPUS_CONNECT, &dades);
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_CONNECT, FLAG_PETICIO, navegant->config.name);
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_CONNECT, &dades);
 
     if (resultat == RESPOSTA_OK) {
         navegant->estat = ESTAT_CONNECTAT_ITHACA;
 
         asprintf(&missatge, MSG_CONNECTAT, TEXT_ITHACA);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
 
     } else if (resultat == RESPOSTA_ERROR) {
         asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
 
         close(navegant->fd_connexio);
@@ -124,30 +124,30 @@ void ferConnectIthaca (Navegant *navegant) {
     free(dades);
 }
 
-int mostrarViatge (char *dades, int *total) {
+int TRAVESSIA_mostrarViatge (char *dades, int *total) {
     char **trossos = NULL;
     char *missatge = NULL;
     int n_trossos;
     int resultat = TRAMA_ERROR;
 
-    trossos = splitString(dades, '&', &n_trossos);
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
 
     if (n_trossos == 6) {
         *total = atoi(trossos[1]);
 
         asprintf(&missatge, FORMAT_VIATGE, trossos[2], trossos[3], trossos[4], trossos[5]);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
 
         resultat = TRAMA_OK;
     }
 
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
 
     return resultat;
 }
 
-void ferListVoyages (Navegant *navegant) {
+void TRAVESSIA_ferListVoyages (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
     int resultat;
@@ -155,35 +155,35 @@ void ferListVoyages (Navegant *navegant) {
     int total = 1;
 
     if (navegant->estat != ESTAT_CONNECTAT_ITHACA) {
-        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        UTILS_printF(1, MSG_NO_CONNECTAT_ITHACA);
         return;
     }
 
     if (navegant->te_viatge == AMB_VIATGE) {
-        printF(1, MSG_JA_TE_VIATGE);
+        UTILS_printF(1, MSG_JA_TE_VIATGE);
         return;
     }    
 
-    enviarTrama(navegant->fd_connexio, TIPUS_LIST_VOYAGES, FLAG_PETICIO, "");
-    printF(1, MSG_CAPCALERA_VIATGES);
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_LIST_VOYAGES, FLAG_PETICIO, "");
+    UTILS_printF(1, MSG_CAPCALERA_VIATGES);
 
     while (rebudes < total) {
-        resultat = rebreResposta(navegant, TIPUS_LIST_VOYAGES, &dades);
+        resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_LIST_VOYAGES, &dades);
 
         if (resultat == RESPOSTA_PERDUDA) {
             rebudes = total;
         } else if (resultat == RESPOSTA_ERROR) {
             asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
             rebudes = total;
         } else if (strcmp(dades, TEXT_SENSE_VIATGES) == 0) {
-            printF(1, MSG_SENSE_VIATGES);
+            UTILS_printF(1, MSG_SENSE_VIATGES);
             rebudes = total;
-        } else if (mostrarViatge(dades, &total) == TRAMA_OK) {
+        } else if (TRAVESSIA_mostrarViatge(dades, &total) == TRAMA_OK) {
             rebudes++;
         } else {
-            printF(1, MSG_RESPOSTA_INCORRECTA);
+            UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
             rebudes = total;
         }
 
@@ -192,16 +192,16 @@ void ferListVoyages (Navegant *navegant) {
     }
 }
 
-int guardarViatge (Navegant *navegant, char *dades) {
+int TRAVESSIA_guardarViatge (Navegant *navegant, char *dades) {
     char **trossos = NULL;
     int n_trossos;
     int resultat = TRAMA_ERROR;
 
-    trossos = splitString(dades, '&', &n_trossos);
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
 
     if (n_trossos == 5) {
-        navegant->viatge.object = copiarText(trossos[2]);
-        navegant->viatge.destination = copiarText(trossos[3]);
+        navegant->viatge.object = UTILS_copiarText(trossos[2]);
+        navegant->viatge.destination = UTILS_copiarText(trossos[3]);
 
         if (navegant->viatge.object != NULL && navegant->viatge.destination != NULL) {
             navegant->viatge.id = atoi(trossos[1]);
@@ -209,7 +209,7 @@ int guardarViatge (Navegant *navegant, char *dades) {
             navegant->te_viatge = AMB_VIATGE;
             resultat = TRAMA_OK;
         } else {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
             free(navegant->viatge.object);
             free(navegant->viatge.destination);
             navegant->viatge.object = NULL;
@@ -217,60 +217,60 @@ int guardarViatge (Navegant *navegant, char *dades) {
         }
     }
 
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
 
     return resultat;
 }
 
-void ferAccept (Navegant *navegant, char *id_viatge) {
+void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge) {
     char *dades = NULL;
     char *missatge = NULL;
     int resultat;
 
     if (navegant->estat != ESTAT_CONNECTAT_ITHACA) {
-        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        UTILS_printF(1, MSG_NO_CONNECTAT_ITHACA);
         return;
     }
 
     if (navegant->te_viatge == AMB_VIATGE) {
-        printF(1, MSG_JA_TE_VIATGE);
+        UTILS_printF(1, MSG_JA_TE_VIATGE);
         return;
     }
 
-    enviarTrama(navegant->fd_connexio, TIPUS_ACCEPT, FLAG_PETICIO, id_viatge);
-    resultat = rebreResposta(navegant, TIPUS_ACCEPT, &dades);
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_ACCEPT, FLAG_PETICIO, id_viatge);
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_ACCEPT, &dades);
 
     if (resultat == RESPOSTA_ERROR) {
         asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     } else if (resultat == RESPOSTA_OK) {
-        if (guardarViatge(navegant, dades) == TRAMA_OK) {
+        if (TRAVESSIA_guardarViatge(navegant, dades) == TRAMA_OK) {
             asprintf(&missatge, MSG_VIATGE_ACCEPTAT, navegant->viatge.id, navegant->viatge.destination);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         } else {
-            printF(1, MSG_RESPOSTA_INCORRECTA);
+            UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
         }
     }
 
     free(dades);
 }
 
-void marxarUbicacio (Navegant *navegant) {
+void TRAVESSIA_marxarUbicacio (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
 
     asprintf(&missatge, MSG_MARXANT, navegant->ubicacio);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
     if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
-        enviarTrama(navegant->fd_connexio, TIPUS_SORTIR_ITHACA, FLAG_PETICIO, "");
-        rebreResposta(navegant, TIPUS_SORTIR_ITHACA, &dades);
+        TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_SORTIR_ITHACA, FLAG_PETICIO, "");
+        TRAVESSIA_rebreResposta(navegant, TIPUS_SORTIR_ITHACA, &dades);
     } else if (navegant->estat == ESTAT_ATRACAT) {
-        enviarTrama(navegant->fd_connexio, TIPUS_SORTIR_ILLA, FLAG_PETICIO, "");
-        rebreResposta(navegant, TIPUS_SORTIR_ILLA, &dades);
+        TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_SORTIR_ILLA, FLAG_PETICIO, "");
+        TRAVESSIA_rebreResposta(navegant, TIPUS_SORTIR_ILLA, &dades);
     }
 
     free(dades);
@@ -281,70 +281,70 @@ void marxarUbicacio (Navegant *navegant) {
     }
 }
 
-void atracar (Navegant *navegant, char *format) {
+void TRAVESSIA_atracar (Navegant *navegant, char *format) {
     char *missatge = NULL;
 
     navegant->estat = ESTAT_ATRACAT;
     navegant->mercat_consultat = 0;
 
     asprintf(&missatge, format, navegant->ubicacio);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
     if (navegant->te_viatge == AMB_VIATGE && strcasecmp(navegant->ubicacio, navegant->viatge.destination) == 0) {
         asprintf(&missatge, MSG_DESTI, navegant->ubicacio);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     }
 }
 
-int gestionarRacio (Navegant *navegant) {
+int TRAVESSIA_gestionarRacio (Navegant *navegant) {
     char *missatge = NULL;
     int final = FINAL_NO;
 
-    if (totalProvisions(navegant) <= RACIO_KG) {
+    if (NAVEGANT_totalProvisions(navegant) <= RACIO_KG) {
         asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         final = FINAL_SI;
     } else {
-        consumirRacio(navegant, RACIO_KG);
-        asprintf(&missatge, MSG_RACIO, totalProvisions(navegant));
-        printF(1, missatge);
+        NAVEGANT_consumirRacio(navegant, RACIO_KG);
+        asprintf(&missatge, MSG_RACIO, NAVEGANT_totalProvisions(navegant));
+        UTILS_printF(1, missatge);
         free(missatge);
-        printF(1, TEXT_PROMPT);
+        UTILS_printF(1, TEXT_PROMPT);
         alarm(SEGONS_RACIO);
     }
 
     return final;
 }
 
-void arribarIlla (Navegant *navegant) {
+void TRAVESSIA_arribarIlla (Navegant *navegant) {
     char *dades = NULL;
     char *missatge = NULL;
     int resultat;
 
-    printF(1, "\n");
+    UTILS_printF(1, "\n");
     asprintf(&missatge, MSG_CONNECTAT, navegant->ubicacio);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
-    enviarTrama(navegant->fd_connexio, TIPUS_ARRIBADA, FLAG_PETICIO, navegant->config.name);
-    resultat = rebreResposta(navegant, TIPUS_ARRIBADA, &dades);
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_ARRIBADA, FLAG_PETICIO, navegant->config.name);
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_ARRIBADA, &dades);
 
     if (resultat == RESPOSTA_OK && strcmp(dades, TEXT_ATRACAT) == 0) {
-        atracar(navegant, MSG_ACCES);
+        TRAVESSIA_atracar(navegant, MSG_ACCES);
     } else if (resultat == RESPOSTA_OK && strcmp(dades, TEXT_ESPERA) == 0) {
-        printF(1, MSG_PORT_COMPLET);
+        UTILS_printF(1, MSG_PORT_COMPLET);
         navegant->estat = ESTAT_ESPERANT;
         alarm(SEGONS_RACIO);
     } else if (resultat != RESPOSTA_PERDUDA) {
         if (resultat == RESPOSTA_ERROR) {
             asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         } else {
-            printF(1, MSG_RESPOSTA_INCORRECTA);
+            UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
         }
         close(navegant->fd_connexio);
         navegant->fd_connexio = ERR_CODI;
@@ -353,7 +353,7 @@ void arribarIlla (Navegant *navegant) {
     free(dades);
 }
 
-void tornarAIlla (Navegant *navegant) {
+void TRAVESSIA_tornarAIlla (Navegant *navegant) {
     char *missatge = NULL;
     char *ip = NULL;
     int port = 0;
@@ -363,7 +363,7 @@ void tornarAIlla (Navegant *navegant) {
         ip = navegant->config.aeaea_ip;
         port = navegant->config.aeaea_port;
     } else {
-        index = buscarAdreca(navegant, navegant->ubicacio);
+        index = NAVEGANT_buscarAdreca(navegant, navegant->ubicacio);
         if (index != ERR_CODI) {
             ip = navegant->adreces[index].ip;
             port = navegant->adreces[index].port;
@@ -371,20 +371,20 @@ void tornarAIlla (Navegant *navegant) {
     }
 
     if (ip != NULL) {
-        navegant->fd_connexio = connectarServidor(ip, port);
+        navegant->fd_connexio = TRAMA_connectarServidor(ip, port);
     }
 
     if (navegant->fd_connexio == ERR_CODI) {
         asprintf(&missatge, MSG_ERROR_CONNEXIO, navegant->ubicacio);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
-    arribarIlla(navegant);
+    TRAVESSIA_arribarIlla(navegant);
 }
 
-void ferSail (Navegant *navegant, char *illa) {
+void TRAVESSIA_ferSail (Navegant *navegant, char *illa) {
     char *missatge = NULL;
     char *nom = NULL;
     char *ip = NULL;
@@ -393,23 +393,23 @@ void ferSail (Navegant *navegant, char *illa) {
     int fd_nou;
 
     if (navegant->estat == ESTAT_ESPERANT) {
-        printF(1, MSG_ESPERANT_PORT);
+        UTILS_printF(1, MSG_ESPERANT_PORT);
         return;
     }
 
     if (navegant->estat == ESTAT_DESCONNECTAT && strcasecmp(illa, navegant->ubicacio) == 0) {
-        tornarAIlla(navegant);
+        TRAVESSIA_tornarAIlla(navegant);
         return;
     }
 
     if (navegant->estat == ESTAT_ITHACA) {
-        printF(1, MSG_NO_CONNECTAT_ITHACA);
+        UTILS_printF(1, MSG_NO_CONNECTAT_ITHACA);
         return;
     }
 
     if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
         if (navegant->te_viatge == SENSE_VIATGE) {
-            printF(1, MSG_SENSE_VIATGE_SAIL);
+            UTILS_printF(1, MSG_SENSE_VIATGE_SAIL);
             return;
         }
         if (strcasecmp(illa, TEXT_AEAEA) == 0) {
@@ -417,8 +417,8 @@ void ferSail (Navegant *navegant, char *illa) {
             ip = navegant->config.aeaea_ip;
             port = navegant->config.aeaea_port;
         }
-    } else if (esRutaDirecta(navegant, illa) == RUTA_DIRECTA) {
-        index = buscarAdreca(navegant, illa);
+    } else if (NAVEGANT_esRutaDirecta(navegant, illa) == RUTA_DIRECTA) {
+        index = NAVEGANT_buscarAdreca(navegant, illa);
         if (index != ERR_CODI) {
             nom = navegant->adreces[index].name;
             ip = navegant->adreces[index].ip;
@@ -428,45 +428,45 @@ void ferSail (Navegant *navegant, char *illa) {
 
     if (nom == NULL) {
         asprintf(&missatge, MSG_NO_ES_POT_NAVEGAR, illa);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
-    fd_nou = connectarServidor(ip, port);
+    fd_nou = TRAMA_connectarServidor(ip, port);
     if (fd_nou == ERR_CODI) {
         asprintf(&missatge, MSG_ERROR_CONNEXIO, nom);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
-    marxarUbicacio(navegant);
+    TRAVESSIA_marxarUbicacio(navegant);
 
-    if (canviarUbicacio(navegant, nom) == ERR_CODI) {
+    if (NAVEGANT_canviarUbicacio(navegant, nom) == ERR_CODI) {
         close(fd_nou);
         navegant->estat = ESTAT_DESCONNECTAT;
         return;
     }
 
     asprintf(&missatge, MSG_NAVEGANT, nom);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
     navegant->fd_connexio = fd_nou;
     navegant->estat = ESTAT_DESCONNECTAT;
 
-    arribarIlla(navegant);
+    TRAVESSIA_arribarIlla(navegant);
 }
 
-void mostrarCapcaleraMercat (char *illa) {
+void TRAVESSIA_mostrarCapcaleraMercat (char *illa) {
     char *majuscules = NULL;
     char *missatge = NULL;
     int i;
 
-    majuscules = copiarText(illa);
+    majuscules = UTILS_copiarText(illa);
     if (majuscules == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
 
@@ -477,12 +477,12 @@ void mostrarCapcaleraMercat (char *illa) {
     }
 
     asprintf(&missatge, MSG_CAPCALERA_MERCAT, majuscules);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
     free(majuscules);
 }
 
-void mostrarProducte (char *nom, char *quantitat, char *preu) {
+void TRAVESSIA_mostrarProducte (char *nom, char *quantitat, char *preu) {
     char *missatge = NULL;
 
     if (strcasecmp(nom, TEXT_MAPA) == 0) {
@@ -491,11 +491,11 @@ void mostrarProducte (char *nom, char *quantitat, char *preu) {
         asprintf(&missatge, FORMAT_PRODUCTE_MERCAT, nom, quantitat, preu);
     }
 
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 }
 
-int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
+int TRAVESSIA_rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
     char **trossos = NULL;
     char *dades = NULL;
     char *missatge = NULL;
@@ -504,29 +504,29 @@ int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
     int rebudes = 0;
     int total = 1;
 
-    enviarTrama(navegant->fd_connexio, TIPUS_LIST_MARKET, FLAG_PETICIO, "");
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_LIST_MARKET, FLAG_PETICIO, "");
 
     while (rebudes < total) {
-        resultat = rebreResposta(navegant, TIPUS_LIST_MARKET, &dades);
+        resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_LIST_MARKET, &dades);
 
         if (resultat == RESPOSTA_ERROR) {
             asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
             rebudes = total;
         } else if (resultat == RESPOSTA_PERDUDA) {
             rebudes = total;
         } else {
-            trossos = splitString(dades, '&', &n_trossos);
+            trossos = UTILS_splitString(dades, '&', &n_trossos);
 
             if (n_trossos == 5) {
                 total = atoi(trossos[1]);
 
                 if (mostrar == MOSTRAR_SI) {
                     if (rebudes == 0) {
-                        mostrarCapcaleraMercat(navegant->ubicacio);
+                        TRAVESSIA_mostrarCapcaleraMercat(navegant->ubicacio);
                     }
-                    mostrarProducte(trossos[2], trossos[3], trossos[4]);
+                    TRAVESSIA_mostrarProducte(trossos[2], trossos[3], trossos[4]);
                 }
 
                 if (producte != NULL && strcasecmp(trossos[2], producte) == 0) {
@@ -535,12 +535,12 @@ int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
 
                 rebudes++;
             } else {
-                printF(1, MSG_RESPOSTA_INCORRECTA);
+                UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
                 resultat = RESPOSTA_ERROR;
                 rebudes = total;
             }
 
-            freeTokens(trossos, n_trossos);
+            UTILS_freeTokens(trossos, n_trossos);
         }
 
         free(dades);
@@ -550,224 +550,224 @@ int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu) {
     return resultat;
 }
 
-void ferListMarket (Navegant *navegant) {
+void TRAVESSIA_ferListMarket (Navegant *navegant) {
     if (navegant->estat != ESTAT_ATRACAT) {
-        printF(1, MSG_NO_ATRACAT);
+        UTILS_printF(1, MSG_NO_ATRACAT);
         return;
     }
 
-    if (rebreMercat(navegant, MOSTRAR_SI, NULL, NULL) == RESPOSTA_OK) {
+    if (TRAVESSIA_rebreMercat(navegant, MOSTRAR_SI, NULL, NULL) == RESPOSTA_OK) {
         navegant->mercat_consultat = 1;
     }
 }
 
-void ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
+void TRAVESSIA_ferBuy (Navegant *navegant, char *producte, char *text_quantitat) {
     char *peticio = NULL, *dades = NULL, *missatge = NULL;
     int quantitat = atoi(text_quantitat);
     int preu = -1;
     int index, cost, resultat;
 
     if (navegant->estat != ESTAT_ATRACAT) {
-        printF(1, MSG_NO_ATRACAT);
+        UTILS_printF(1, MSG_NO_ATRACAT);
         return;
     }
     if (navegant->mercat_consultat == 0) {
-        printF(1, MSG_CAL_LIST_MARKET);
+        UTILS_printF(1, MSG_CAL_LIST_MARKET);
         return;
     }
     if (quantitat <= 0) {
-        printF(1, MSG_QUANTITAT_INVALIDA);
+        UTILS_printF(1, MSG_QUANTITAT_INVALIDA);
         return;
     }
-    if (rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
+    if (TRAVESSIA_rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
         return;
     }
     if (preu < 0) {
-        printF(1, MSG_PRODUCTE_DESCONEGUT);
+        UTILS_printF(1, MSG_PRODUCTE_DESCONEGUT);
         return;
     }
     if (preu > 0 && quantitat > navegant->config.gold / preu) {
-        printF(1, MSG_OR_INSUFICIENT);
+        UTILS_printF(1, MSG_OR_INSUFICIENT);
         return;
     }
-    index = prepararAliment(navegant, producte);
+    index = NAVEGANT_prepararAliment(navegant, producte);
     if (index == ERR_CODI) {
         return;
     }
     if (asprintf(&peticio, FORMAT_PETICIO_COMPRA, producte, quantitat) < 0) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
-    resultat = enviarTrama(navegant->fd_connexio, TIPUS_BUY, FLAG_PETICIO, peticio);
+    resultat = TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_BUY, FLAG_PETICIO, peticio);
     free(peticio);
     if (resultat == TRAMA_ERROR) {
-        perdreConnexio(navegant);
+        TRAVESSIA_perdreConnexio(navegant);
         return;
     }
-    resultat = rebreResposta(navegant, TIPUS_BUY, &dades);
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_BUY, &dades);
     if (resultat == RESPOSTA_OK) {
-        if (guardarCompra(navegant, index, quantitat, dades, &cost) == TRAMA_OK) {
+        if (NAVEGANT_guardarCompra(navegant, index, quantitat, dades, &cost) == TRAMA_OK) {
             if (asprintf(&missatge, MSG_COMPRA_FETA, quantitat, navegant->config.foods[index].name, cost) >= 0) {
-                printF(1, missatge);
+                UTILS_printF(1, missatge);
                 free(missatge);
             } else {
-                printF(1, MSG_SENSE_MEMORIA);
+                UTILS_printF(1, MSG_SENSE_MEMORIA);
             }
         } else {
-            printF(1, MSG_RESPOSTA_INCORRECTA);
+            UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
         }
     } else if (resultat == RESPOSTA_ERROR) {
         if (asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         } else {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
         }
     }
     free(dades);
 }
 
-void ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
+void TRAVESSIA_ferSell (Navegant *navegant, char *producte, char *text_quantitat) {
     char *peticio = NULL, *dades = NULL, *missatge = NULL;
     int quantitat = atoi(text_quantitat);
     int preu = -1;
     int index, ingressos, resultat;
 
     if (navegant->estat != ESTAT_ATRACAT) {
-        printF(1, MSG_NO_ATRACAT);
+        UTILS_printF(1, MSG_NO_ATRACAT);
         return;
     }
     if (quantitat <= 0) {
-        printF(1, MSG_QUANTITAT_INVALIDA);
+        UTILS_printF(1, MSG_QUANTITAT_INVALIDA);
         return;
     }
 
-    index = buscarAliment(navegant, producte);
+    index = NAVEGANT_buscarAliment(navegant, producte);
     if (index == ERR_CODI) {
-        if (rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
+        if (TRAVESSIA_rebreMercat(navegant, MOSTRAR_NO, producte, &preu) != RESPOSTA_OK) {
             return;
         }
         if (preu < 0) {
-            printF(1, MSG_PRODUCTE_DESCONEGUT);
+            UTILS_printF(1, MSG_PRODUCTE_DESCONEGUT);
         } else {
             asprintf(&missatge, MSG_NO_EL_PORTES, producte);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         }
         return;
     }
     if (navegant->config.foods[index].amount == 0) {
         asprintf(&missatge, MSG_NO_EL_PORTES, navegant->config.foods[index].name);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
     if (quantitat > navegant->config.foods[index].amount) {
-        printF(1, MSG_CARREGA_INSUFICIENT);
+        UTILS_printF(1, MSG_CARREGA_INSUFICIENT);
         return;
     }
 
     if (asprintf(&peticio, FORMAT_PETICIO_VENDA, producte, quantitat) < 0) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
-    resultat = enviarTrama(navegant->fd_connexio, TIPUS_SELL, FLAG_PETICIO, peticio);
+    resultat = TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_SELL, FLAG_PETICIO, peticio);
     free(peticio);
     if (resultat == TRAMA_ERROR) {
-        perdreConnexio(navegant);
+        TRAVESSIA_perdreConnexio(navegant);
         return;
     }
 
-    resultat = rebreResposta(navegant, TIPUS_SELL, &dades);
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_SELL, &dades);
     if (resultat == RESPOSTA_OK) {
-        if (guardarVenda(navegant, index, quantitat, dades, &ingressos) == TRAMA_OK) {
+        if (NAVEGANT_guardarVenda(navegant, index, quantitat, dades, &ingressos) == TRAMA_OK) {
             if (asprintf(&missatge, MSG_VENDA_FETA, quantitat, navegant->config.foods[index].name, ingressos) >= 0) {
-                printF(1, missatge);
+                UTILS_printF(1, missatge);
                 free(missatge);
             } else {
-                printF(1, MSG_SENSE_MEMORIA);
+                UTILS_printF(1, MSG_SENSE_MEMORIA);
             }
         } else {
-            printF(1, MSG_RESPOSTA_INCORRECTA);
+            UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
         }
     } else if (resultat == RESPOSTA_ERROR) {
         if (asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         } else {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
         }
     }
     free(dades);
 }
 
-void executarComanda (Navegant *navegant, char *linea) {
+void TRAVESSIA_executarComanda (Navegant *navegant, char *linea) {
     char **trossos = NULL;
     int n_trossos;
     int codi;
 
-    codi = parseCommand(linea);
-    trossos = splitString(linea, ' ', &n_trossos);
+    codi = COMMANDS_parseCommand(linea);
+    trossos = UTILS_splitString(linea, ' ', &n_trossos);
 
     if (codi == CMD_DESCONEGUDA) {
-        printF(1, MSG_DESCONEGUDA);
+        UTILS_printF(1, MSG_DESCONEGUDA);
     } else if (codi == CMD_CONNECT_ITHACA) {
-        ferConnectIthaca(navegant);
+        TRAVESSIA_ferConnectIthaca(navegant);
     } else if (codi == CMD_LIST_VOYAGES) {
-        ferListVoyages(navegant);
+        TRAVESSIA_ferListVoyages(navegant);
     } else if (codi == CMD_ACCEPT) {
-        ferAccept(navegant, trossos[1]);
+        TRAVESSIA_ferAccept(navegant, trossos[1]);
     } else if (codi == CMD_SAIL) {
-        ferSail(navegant, trossos[1]);
+        TRAVESSIA_ferSail(navegant, trossos[1]);
     } else if (codi == CMD_LIST_MARKET) {
-        ferListMarket(navegant);
+        TRAVESSIA_ferListMarket(navegant);
     } else if (codi == CMD_BUY) {
         if (strcasecmp(trossos[1], TEXT_MAPA) == 0) {
-            ferBuyMap(navegant, trossos[2]);
+            TRAVESSIA_ferBuyMap(navegant, trossos[2]);
         } else {
-            ferBuy(navegant, trossos[1], trossos[2]);
+            TRAVESSIA_ferBuy(navegant, trossos[1], trossos[2]);
         }
     } else if (codi == CMD_SELL) {
-        ferSell(navegant, trossos[1], trossos[2]);
+        TRAVESSIA_ferSell(navegant, trossos[1], trossos[2]);
     } else if (codi == CMD_STATUS) {
-        mostrarStatus(navegant);
+        NAVEGANT_mostrarStatus(navegant);
     } else if (codi == CMD_MAP) {
-        ferMap(navegant);
+        TRAVESSIA_ferMap(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
-        printF(1, MSG_COMANDA_OK);
+        UTILS_printF(1, MSG_COMANDA_OK);
     }
 
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
 }
 
-int atendreTeclat (Navegant *navegant) {
+int TRAVESSIA_atendreTeclat (Navegant *navegant) {
     char *linea = NULL;
     int final = FINAL_SI;
 
-    linea = readUntil(0, '\n');
+    linea = UTILS_readUntil(0, '\n');
 
     if (linea != NULL) {
-        executarComanda(navegant, linea);
+        TRAVESSIA_executarComanda(navegant, linea);
         free(linea);
         final = FINAL_NO;
 
-        printF(1, "\n");
-        printF(1, TEXT_PROMPT);
+        UTILS_printF(1, "\n");
+        UTILS_printF(1, TEXT_PROMPT);
     }
 
     return final;
 }
 
-void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent) {
+void TRAVESSIA_executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent) {
     fd_set set;
     int max_fd;
     int resultat;
     int final = FINAL_NO;
 
-    printF(1, TEXT_PROMPT);
+    UTILS_printF(1, TEXT_PROMPT);
 
     while (*sortir == 0 && final == FINAL_NO) {
-        max_fd = prepararSetOdysseus(&set, navegant);
+        max_fd = TRAVESSIA_prepararSetOdysseus(&set, navegant);
 
         resultat = 0;
         if (*racio_pendent == 0) {
@@ -777,20 +777,20 @@ void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent) {
         if (*racio_pendent == 1) {
             *racio_pendent = 0;
             if (navegant->estat == ESTAT_ESPERANT) {
-                final = gestionarRacio(navegant);
+                final = TRAVESSIA_gestionarRacio(navegant);
             }
         } else if (resultat > 0) {
             if (navegant->fd_connexio != ERR_CODI && FD_ISSET(navegant->fd_connexio, &set)) {
-                atendreServidor(navegant);
+                TRAVESSIA_atendreServidor(navegant);
             }
             if (FD_ISSET(0, &set)) {
-                final = atendreTeclat(navegant);
+                final = TRAVESSIA_atendreTeclat(navegant);
             }
         }
     }
 }
 
-void ferBuyMap (Navegant *navegant, char *quantitat) {
+void TRAVESSIA_ferBuyMap (Navegant *navegant, char *quantitat) {
     char **trossos = NULL;
     char *dades = NULL;
     char *missatge = NULL;
@@ -801,36 +801,36 @@ void ferBuyMap (Navegant *navegant, char *quantitat) {
     int cost = 0;
 
     if (navegant->estat != ESTAT_ATRACAT) {
-        printF(1, MSG_NO_ATRACAT);
+        UTILS_printF(1, MSG_NO_ATRACAT);
         return;
     }
 
     if (atoi(quantitat) != MAPA_QUANTITAT) {
-        printF(1, MSG_NOMES_UN_MAPA);
+        UTILS_printF(1, MSG_NOMES_UN_MAPA);
         return;
     }
 
     if (navegant->config.gold < MAPA_PREU) {
         asprintf(&missatge, MSG_OR_INSUFICIENT_MAPA, MAPA_PREU, navegant->config.gold);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
-    enviarTrama(navegant->fd_connexio, TIPUS_BUY_MAP, FLAG_PETICIO, quantitat);
+    TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_BUY_MAP, FLAG_PETICIO, quantitat);
 
     while (rebudes < total) {
-        resultat = rebreResposta(navegant, TIPUS_BUY_MAP, &dades);
+        resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_BUY_MAP, &dades);
 
         if (resultat == RESPOSTA_ERROR) {
             asprintf(&missatge, MSG_ERROR_RESPOSTA, dades);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
             rebudes = total;
         } else if (resultat == RESPOSTA_PERDUDA) {
             rebudes = total;
         } else {
-            trossos = splitString(dades, '&', &n_trossos);
+            trossos = UTILS_splitString(dades, '&', &n_trossos);
 
             if (n_trossos == 3) {
                 cost = atoi(trossos[1]);
@@ -838,15 +838,15 @@ void ferBuyMap (Navegant *navegant, char *quantitat) {
             } else if (n_trossos == 7) {
                 cost = atoi(trossos[1]);
                 total = atoi(trossos[3]);
-                afegirRuta(navegant, navegant->ubicacio, trossos[4]);
-                afegirAdreca(navegant, trossos[4], trossos[5], atoi(trossos[6]));
+                NAVEGANT_afegirRuta(navegant, navegant->ubicacio, trossos[4]);
+                NAVEGANT_afegirAdreca(navegant, trossos[4], trossos[5], atoi(trossos[6]));
                 rebudes++;
             } else {
-                printF(1, MSG_RESPOSTA_INCORRECTA);
+                UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
                 rebudes = total;
             }
 
-            freeTokens(trossos, n_trossos);
+            UTILS_freeTokens(trossos, n_trossos);
         }
 
         free(dades);
@@ -857,25 +857,25 @@ void ferBuyMap (Navegant *navegant, char *quantitat) {
         navegant->config.gold = navegant->config.gold - cost;
 
         asprintf(&missatge, MSG_MAPA_COMPRAT, navegant->ubicacio, cost);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
 
         if (total > 0) {
-            printF(1, MSG_RUTES_NOVES);
+            UTILS_printF(1, MSG_RUTES_NOVES);
         } else {
-            printF(1, MSG_SENSE_RUTES);
+            UTILS_printF(1, MSG_SENSE_RUTES);
         }
     }
 }
 
-void ferMap (Navegant *navegant) {
+void TRAVESSIA_ferMap (Navegant *navegant) {
     int resultat;
 
     resultat = SPHRAGIS_display_map(navegant->mapa, navegant->n_illes);
 
     if (resultat == SPHRAGIS_ERROR) {
-        printF(1, MSG_ERROR_MAPA_TERMINAL);
+        UTILS_printF(1, MSG_ERROR_MAPA_TERMINAL);
     } else if (resultat != SPHRAGIS_OK) {
-        printF(1, MSG_ERROR_MAPA);
+        UTILS_printF(1, MSG_ERROR_MAPA);
     }
 }

@@ -10,7 +10,7 @@
 #include "voyages.h"
 
 
-void inicialitzarServidorIthaca (ServidorIthaca *servidor) {
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor) {
     servidor->clients = NULL;
     servidor->n_clients = 0;
     servidor->viatges = NULL;
@@ -18,7 +18,7 @@ void inicialitzarServidorIthaca (ServidorIthaca *servidor) {
 }
 
 
-int prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viatges) {
+int VOYAGES_prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viatges) {
     int i;
 
     if (n_viatges == 0) {
@@ -28,7 +28,7 @@ int prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viat
     servidor->viatges = malloc(sizeof(ViatgeIthaca) * n_viatges);
 
     if (servidor->viatges == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -44,7 +44,7 @@ int prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, int n_viat
 }
 
 
-int buscarViatgeAssignat (ServidorIthaca *servidor, char *nom) {
+int VOYAGES_buscarViatgeAssignat (ServidorIthaca *servidor, char *nom) {
     int i;
     int index = ERR_CODI;
 
@@ -64,7 +64,7 @@ int buscarViatgeAssignat (ServidorIthaca *servidor, char *nom) {
 }
 
 
-int buscarViatgePerId (ServidorIthaca *servidor, int id_viatge) {
+int VOYAGES_buscarViatgePerId (ServidorIthaca *servidor, int id_viatge) {
     int i;
     int index = ERR_CODI;
 
@@ -78,7 +78,7 @@ int buscarViatgePerId (ServidorIthaca *servidor, int id_viatge) {
 }
 
 
-int comptarViatgesDisponibles (ServidorIthaca *servidor) {
+int VOYAGES_comptarViatgesDisponibles (ServidorIthaca *servidor) {
     int i;
     int disponibles = 0;
 
@@ -92,7 +92,7 @@ int comptarViatgesDisponibles (ServidorIthaca *servidor) {
 }
 
 
-int guardarViatgesConsultats (ServidorIthaca *servidor, int index) {
+int VOYAGES_guardarViatgesConsultats (ServidorIthaca *servidor, int index) {
     ClientIthaca *client = NULL;
     int total;
     int i;
@@ -103,7 +103,7 @@ int guardarViatgesConsultats (ServidorIthaca *servidor, int index) {
     client->viatges_consultats = NULL;
     client->n_viatges_consultats = 0;
 
-    total = comptarViatgesDisponibles(servidor);
+    total = VOYAGES_comptarViatgesDisponibles(servidor);
 
     if (total == 0) {
         return 0;
@@ -112,7 +112,7 @@ int guardarViatgesConsultats (ServidorIthaca *servidor, int index) {
     client->viatges_consultats = malloc(sizeof(int) * total);
 
     if (client->viatges_consultats == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -127,7 +127,7 @@ int guardarViatgesConsultats (ServidorIthaca *servidor, int index) {
 }
 
 
-int haConsultatViatge (ClientIthaca *client, int id_viatge) {
+int VOYAGES_haConsultatViatge (ClientIthaca *client, int id_viatge) {
     int i;
     int consultat = 0;
 
@@ -141,7 +141,7 @@ int haConsultatViatge (ClientIthaca *client, int id_viatge) {
 }
 
 
-int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd) {
+int VOYAGES_enviarViatgesDisponibles (ServidorIthaca *servidor, int fd) {
     Voyage *viatge = NULL;
     char *text = NULL;
     int total;
@@ -149,10 +149,10 @@ int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd) {
     int resultat;
     int i;
 
-    total = comptarViatgesDisponibles(servidor);
+    total = VOYAGES_comptarViatgesDisponibles(servidor);
 
     if (total == 0) {
-        return enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_OK, TEXT_ITHACA_SENSE_VIATGES);
+        return TRAMA_enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_OK, TEXT_ITHACA_SENSE_VIATGES);
     }
 
     for (i = 0; i < servidor->n_viatges; i++) {
@@ -161,11 +161,11 @@ int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd) {
             numero++;
 
             if (asprintf(&text, FORMAT_VIATGE_DISPONIBLE, numero, total, viatge->id, viatge->object, viatge->destination, viatge->reward) < 0) {
-                printF(1, MSG_SENSE_MEMORIA);
-                return enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
+                UTILS_printF(1, MSG_SENSE_MEMORIA);
+                return TRAMA_enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
             }
 
-            resultat = enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_OK, text);
+            resultat = TRAMA_enviarTrama(fd, TIPUS_LIST_VOYAGES, FLAG_OK, text);
             free(text);
 
             if (resultat == TRAMA_ERROR) {
@@ -178,7 +178,7 @@ int enviarViatgesDisponibles (ServidorIthaca *servidor, int fd) {
 }
 
 
-int atendreListVoyages (ServidorIthaca *servidor, int index, char *dades) {
+int VOYAGES_atendreListVoyages (ServidorIthaca *servidor, int index, char *dades) {
     ClientIthaca *client = NULL;
     char *missatge = NULL;
     int index_viatge;
@@ -186,43 +186,43 @@ int atendreListVoyages (ServidorIthaca *servidor, int index, char *dades) {
     client = &servidor->clients[index];
 
     if (client->nom == NULL || client->viatge_acceptat == 1) {
-        return enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+        return TRAMA_enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
     }
 
     if (strlen(dades) != 0) {
-        return enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+        return TRAMA_enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
     }
 
-    index_viatge = buscarViatgeAssignat(servidor, client->nom);
+    index_viatge = VOYAGES_buscarViatgeAssignat(servidor, client->nom);
 
     if (index_viatge != ERR_CODI) {
         servidor->viatges[index_viatge].estat = VIATGE_FRACASSAT;
 
         if (asprintf(&missatge, MSG_VIATGE_FRACASSAT, servidor->viatges[index_viatge].viatge->id, client->nom) >= 0) {
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
             missatge = NULL;
         } else {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
         }
     }
 
-    if (guardarViatgesConsultats(servidor, index) == ERR_CODI) {
-        return enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
+    if (VOYAGES_guardarViatgesConsultats(servidor, index) == ERR_CODI) {
+        return TRAMA_enviarTrama(client->fd, TIPUS_LIST_VOYAGES, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
     }
 
     if (asprintf(&missatge, MSG_CONSULTA_VIATGES, client->nom) >= 0) {
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     } else {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
     }
 
-    return enviarViatgesDisponibles(servidor, client->fd);
+    return VOYAGES_enviarViatgesDisponibles(servidor, client->fd);
 }
 
 
-int atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades) {
+int VOYAGES_atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades) {
     ClientIthaca *client = NULL;
     ViatgeIthaca *assignacio = NULL;
     Voyage *viatge = NULL;
@@ -236,67 +236,67 @@ int atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades) {
     client = &servidor->clients[index];
 
     if (client->nom == NULL || client->viatge_acceptat == 1) {
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
     }
-    if (buscarViatgeAssignat(servidor, client->nom) != ERR_CODI) {
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+    if (VOYAGES_buscarViatgeAssignat(servidor, client->nom) != ERR_CODI) {
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
     }
-    if (esNumeric(dades) == TEXT_NO_NUMERIC) {
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+    if (UTILS_esNumeric(dades) == TEXT_NO_NUMERIC) {
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
     }
 
-    index_viatge = buscarViatgePerId(servidor, atoi(dades));
+    index_viatge = VOYAGES_buscarViatgePerId(servidor, atoi(dades));
     if (index_viatge == ERR_CODI ||
-        haConsultatViatge(client, atoi(dades)) == 0) {
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+        VOYAGES_haConsultatViatge(client, atoi(dades)) == 0) {
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
     }
 
     assignacio = &servidor->viatges[index_viatge];
     if (assignacio->estat != VIATGE_DISPONIBLE) {
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DISPONIBILITAT);
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_DISPONIBILITAT);
     }
 
     viatge = assignacio->viatge;
     if (asprintf(&text, FORMAT_VIATGE_ACCEPTAT, viatge->id, viatge->object, viatge->destination, viatge->reward) < 0) {
-        printF(1, MSG_SENSE_MEMORIA);
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
     }
     assignacio->nom_odysseus = malloc(strlen(client->nom) + 1);
     if (assignacio->nom_odysseus == NULL) {
         free(text);
-        printF(1, MSG_SENSE_MEMORIA);
-        return enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
     }
 
     strcpy(assignacio->nom_odysseus, client->nom);
     assignacio->estat = VIATGE_ASSIGNAT;
     client->viatge_acceptat = 1;
-    resultat = enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_OK, text);
+    resultat = TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_OK, text);
     free(text);
 
     if (asprintf(&missatge, MSG_VIATGE_ASSIGNAT, viatge->id, client->nom) >= 0) {
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     } else {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
     }
 
     return resultat;
 }
 
 
-int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
+int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
     ClientIthaca *nous_clients = NULL;
     int fd_client;
 
     fd_client = accept(fd_server, NULL, NULL);
     if (fd_client == ERR_CODI) {
-        printF(1, MSG_ERROR_ACCEPT);
+        UTILS_printF(1, MSG_ERROR_ACCEPT);
         return ERR_CODI;
     }
 
     if (fd_client >= FD_SETSIZE) {
-        printF(1, MSG_ERROR_DESCRIPTOR);
+        UTILS_printF(1, MSG_ERROR_DESCRIPTOR);
         close(fd_client);
         return ERR_CODI;
     }
@@ -304,7 +304,7 @@ int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
     nous_clients = realloc(servidor->clients, sizeof(ClientIthaca) * (servidor->n_clients + 1));
 
     if (nous_clients == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         close(fd_client);
         return ERR_CODI;
     }
@@ -321,7 +321,7 @@ int acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
 }
 
 
-int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor) {
+int VOYAGES_prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor) {
     int i;
     int max_fd = fd_server;
 
@@ -340,7 +340,7 @@ int prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor)
 }
 
 
-void treureClientIthaca (ServidorIthaca *servidor, int index) {
+void VOYAGES_treureClientIthaca (ServidorIthaca *servidor, int index) {
     int i;
 
     close(servidor->clients[index].fd);
@@ -355,11 +355,11 @@ void treureClientIthaca (ServidorIthaca *servidor, int index) {
 }
 
 
-void alliberarServidorIthaca (ServidorIthaca *servidor) {
+void VOYAGES_alliberarServidorIthaca (ServidorIthaca *servidor) {
     int i = 0;
 
     while (servidor->n_clients > 0) {
-        treureClientIthaca(servidor, servidor->n_clients - 1);
+        VOYAGES_treureClientIthaca(servidor, servidor->n_clients - 1);
     }
 
     free(servidor->clients);
@@ -376,7 +376,7 @@ void alliberarServidorIthaca (ServidorIthaca *servidor) {
 }
 
 
-int existeixNomIthaca (ServidorIthaca *servidor, char *nom) {
+int VOYAGES_existeixNomIthaca (ServidorIthaca *servidor, char *nom) {
     int i;
     int existeix = 0;
 
@@ -392,7 +392,7 @@ int existeixNomIthaca (ServidorIthaca *servidor, char *nom) {
 }
 
 
-int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
+int VOYAGES_atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
     ClientIthaca *client = NULL;
     char *missatge = NULL;
     int resultat;
@@ -400,33 +400,33 @@ int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
     client = &servidor->clients[index];
 
     if (client->nom != NULL) {
-        return enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+        return TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
     }
 
     if (strlen(dades) == 0) {
-        return enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+        return TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
     }
 
-    if (existeixNomIthaca(servidor, dades) == 1) {
-        return enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_NOM);
+    if (VOYAGES_existeixNomIthaca(servidor, dades) == 1) {
+        return TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_NOM);
     }
 
     client->nom = malloc(strlen(dades) + 1);
     if (client->nom == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
-        return enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_ERROR, TEXT_ITHACA_ERROR_SERVIDOR);
     }
 
     strcpy(client->nom, dades);
 
-    resultat = enviarTrama(client->fd, TIPUS_CONNECT, FLAG_OK, TEXT_ITHACA_OK);
+    resultat = TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_OK, TEXT_ITHACA_OK);
 
     if (resultat == TRAMA_OK) {
         if (asprintf(&missatge, MSG_CLIENT_CONNECTAT, client->nom) >= 0) {
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         } else {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
         }
     }
 
@@ -434,7 +434,7 @@ int atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades) {
 }
 
 
-void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
+void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     char *dades = NULL;
     char *missatge = NULL;
     int tipus;
@@ -445,74 +445,74 @@ void atendreTramaIthaca (ServidorIthaca *servidor, int index) {
 
     fd = servidor->clients[index].fd;
 
-    if (rebreTrama(fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
         free(dades);
-        treureClientIthaca(servidor, index);
+        VOYAGES_treureClientIthaca(servidor, index);
         return;
     }
 
     if (flags != FLAG_PETICIO) {
-        resultat = enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_ITHACA_ERROR_FLAGS);
+        resultat = TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_ITHACA_ERROR_FLAGS);
     } else if (tipus == TIPUS_CONNECT) {
-        resultat = atendreConnectIthaca(servidor, index, dades);
+        resultat = VOYAGES_atendreConnectIthaca(servidor, index, dades);
     } else if (tipus == TIPUS_LIST_VOYAGES) {
-        resultat = atendreListVoyages(servidor, index, dades);
+        resultat = VOYAGES_atendreListVoyages(servidor, index, dades);
     } else if (tipus == TIPUS_ACCEPT) {
-        resultat = atendreAcceptIthaca(servidor, index, dades);
+        resultat = VOYAGES_atendreAcceptIthaca(servidor, index, dades);
     } else if (tipus == TIPUS_SORTIR_ITHACA) {
         if (servidor->clients[index].nom == NULL) {
-            resultat = enviarTrama(fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+            resultat = TRAMA_enviarTrama(fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
         } else if (strlen(dades) != 0) {
-            resultat = enviarTrama(fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+            resultat = TRAMA_enviarTrama(fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
         } else {
-            resultat = enviarTrama(fd, tipus, FLAG_OK, TEXT_ITHACA_OK);
+            resultat = TRAMA_enviarTrama(fd, tipus, FLAG_OK, TEXT_ITHACA_OK);
             asprintf(&missatge, MSG_CLIENT_MARXA, servidor->clients[index].nom);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
             
             desconnectar = 1;
         }
     } else {
-        resultat = enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_ITHACA_ERROR_TIPUS);
+        resultat = TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_ITHACA_ERROR_TIPUS);
     }
 
     free(dades);
 
     if (resultat == TRAMA_ERROR || desconnectar == 1) {
-        treureClientIthaca(servidor, index);
+        VOYAGES_treureClientIthaca(servidor, index);
     }
 }
 
-int executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir) {
+int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir) {
     fd_set conjunt;
     int max_fd;
     int resultat;
     int i;
 
     if (fd_server < 0 || fd_server >= FD_SETSIZE) {
-        printF(1, MSG_ERROR_DESCRIPTOR);
+        UTILS_printF(1, MSG_ERROR_DESCRIPTOR);
         return ERR_CODI;
     }
 
     while (*sortir == 0) {
-        max_fd = prepararSetIthaca(&conjunt, fd_server, servidor);
+        max_fd = VOYAGES_prepararSetIthaca(&conjunt, fd_server, servidor);
 
         resultat = select(max_fd + 1, &conjunt, NULL, NULL, NULL);
 
         if (resultat < 0) {
             if (*sortir == 0) {
-                printF(1, MSG_ERROR_SELECT);
+                UTILS_printF(1, MSG_ERROR_SELECT);
                 return ERR_CODI;
             }
         } else if (*sortir == 0) {
             for (i = servidor->n_clients - 1; i >= 0; i--) {
                 if (FD_ISSET(servidor->clients[i].fd, &conjunt)) {
-                    atendreTramaIthaca(servidor, i);
+                    VOYAGES_atendreTramaIthaca(servidor, i);
                 }
             }
 
             if (FD_ISSET(fd_server, &conjunt)) {
-                acceptarClientIthaca(servidor, fd_server);
+                VOYAGES_acceptarClientIthaca(servidor, fd_server);
             }
         }
     }

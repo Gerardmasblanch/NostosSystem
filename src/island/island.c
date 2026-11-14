@@ -46,60 +46,60 @@ int main (int argc, char *argv[]) {
 
 
     if (argc != 3) {
-        printF(1, "Us: ./island <config.dat> <stock.db>\n");
+        UTILS_printF(1, "Us: ./island <config.dat> <stock.db>\n");
         return -1;
     }
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
     
-    if (readIslandConfig(argv[1], &config) < 0) {
-        printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
+    if (CONFIG_readIslandConfig(argv[1], &config) < 0) {
+        UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
         return -1;
     }
 
-    if (esPortValid(config.port) == PORT_NO_VALID) {
-        printF(1, MSG_PORT_NO_VALID);
-        freeIslandConfig(&config);
+    if (UTILS_esPortValid(config.port) == PORT_NO_VALID) {
+        UTILS_printF(1, MSG_PORT_NO_VALID);
+        CONFIG_freeIslandConfig(&config);
         return -1;
     }
 
     // Filtra amb SPHRAGIS les rutes i elimina les que no coneix
-    if (filterIslandRoutes(&config) < 0) {
-        printF(1, "Error: no s'han pogut validar les rutes de l'illa.\n");
-        freeIslandConfig(&config);
+    if (CONFIG_filterIslandRoutes(&config) < 0) {
+        UTILS_printF(1, "Error: no s'han pogut validar les rutes de l'illa.\n");
+        CONFIG_freeIslandConfig(&config);
         return -1;
     }
 
-    if (readStock(argv[2], &mercat.productes, &mercat.n_productes) < 0) {
-        printF(1, "Error: no s'ha pogut obrir el fitxer de productes.\n");
-        freeIslandConfig(&config);
+    if (CONFIG_readStock(argv[2], &mercat.productes, &mercat.n_productes) < 0) {
+        UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de productes.\n");
+        CONFIG_freeIslandConfig(&config);
         return -1;
     }
 
     mercat.fitxer = argv[2];
-    fd_servidor = obrirServidor(config.ip, config.port);
+    fd_servidor = TRAMA_obrirServidor(config.ip, config.port);
 
     if (fd_servidor == ERR_CODI) {
-        printF(1, "Error: no s'ha pogut obrir el servidor de l'illa.\n");
-        freeStock(mercat.productes);
-        freeIslandConfig(&config);
+        UTILS_printF(1, "Error: no s'ha pogut obrir el servidor de l'illa.\n");
+        CONFIG_freeStock(mercat.productes);
+        CONFIG_freeIslandConfig(&config);
         return -1;
     }
 
-    mostrarInici(&config, mercat.n_productes);
+    HARBOR_mostrarInici(&config, mercat.n_productes);
 
-    inicialitzarHarbor(&harbor);
-    executarServidor(fd_servidor, &harbor, &config, &mercat, &sortirprogram);
+    HARBOR_inicialitzarHarbor(&harbor);
+    HARBOR_executarServidor(fd_servidor, &harbor, &config, &mercat, &sortirprogram);
 
     asprintf(&missatge, "\n%s closes its port.\n", config.name);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
-    alliberarHarbor(&harbor);
+    HARBOR_alliberarHarbor(&harbor);
     close(fd_servidor);
-    freeStock(mercat.productes);
-    freeIslandConfig(&config);
+    CONFIG_freeStock(mercat.productes);
+    CONFIG_freeIslandConfig(&config);
 
     signal(SIGINT, SIG_DFL);
     raise(SIGINT);

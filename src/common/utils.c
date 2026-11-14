@@ -13,11 +13,11 @@
 
 //Procediments i funcions
 
-void printF (int fd, char *text) {
+void UTILS_printF (int fd, char *text) {
     write(fd, text, strlen(text));
 }
 
-char *readUntil (int fd, char delimitador) {
+char *UTILS_readUntil (int fd, char delimitador) {
     char *buffer = NULL;
     char *nou = NULL;
     char lletra;
@@ -28,7 +28,7 @@ char *readUntil (int fd, char delimitador) {
         nou = realloc(buffer, sizeof(char) * (llargada + 2));
 
         if (nou == NULL) {
-            printF(2, MSG_SENSE_MEMORIA);
+            UTILS_printF(2, MSG_SENSE_MEMORIA);
             free(buffer);
             return NULL;
         }
@@ -49,7 +49,7 @@ char *readUntil (int fd, char delimitador) {
         buffer = malloc(sizeof(char));
 
         if (buffer == NULL) {
-            printF(2, MSG_SENSE_MEMORIA);
+            UTILS_printF(2, MSG_SENSE_MEMORIA);
             return NULL;
         }
     }
@@ -59,7 +59,7 @@ char *readUntil (int fd, char delimitador) {
     return buffer;
 }
 
-char **splitString (char *text, char delimitador, int *n_trossos) {
+char **UTILS_splitString (char *text, char delimitador, int *n_trossos) {
     char **trossos = NULL;
     char **nous = NULL;
     char *tros_actual = NULL;
@@ -81,9 +81,9 @@ char **splitString (char *text, char delimitador, int *n_trossos) {
             nou = realloc(tros_actual, sizeof(char) * (llargada + 2));
 
             if (nou == NULL) {
-                printF(2, MSG_SENSE_MEMORIA);
+                UTILS_printF(2, MSG_SENSE_MEMORIA);
                 free(tros_actual);
-                freeTokens(trossos, n_actuals);
+                UTILS_freeTokens(trossos, n_actuals);
                 return NULL;
             }
 
@@ -97,9 +97,9 @@ char **splitString (char *text, char delimitador, int *n_trossos) {
                 nous = realloc(trossos, sizeof(char *) * (n_actuals + 1));
 
                 if (nous == NULL) {
-                    printF(2, MSG_SENSE_MEMORIA);
+                    UTILS_printF(2, MSG_SENSE_MEMORIA);
                     free(tros_actual);
-                    freeTokens(trossos, n_actuals);
+                    UTILS_freeTokens(trossos, n_actuals);
                     return NULL;
                 }
 
@@ -123,7 +123,7 @@ char **splitString (char *text, char delimitador, int *n_trossos) {
     return trossos;
 }
 
-void freeTokens (char **trossos, int n_trossos) {
+void UTILS_freeTokens (char **trossos, int n_trossos) {
     int i;
 
     if (trossos == NULL) {
@@ -137,7 +137,7 @@ void freeTokens (char **trossos, int n_trossos) {
     free(trossos);
 }
 
-int esNumeric (char *text) {
+int UTILS_esNumeric (char *text) {
     int i;
 
     if (text == NULL || text[0] == '\0') {
@@ -153,7 +153,7 @@ int esNumeric (char *text) {
     return TEXT_NUMERIC;
 }
 
-int esPortValid (int port) {
+int UTILS_esPortValid (int port) {
     int valid = PORT_NO_VALID;
 
     if (port >= PORT_MINIM && port <= PORT_MAXIM) {
@@ -163,7 +163,7 @@ int esPortValid (int port) {
     return valid;
 }
 
-char *copiarText (char *text) {
+char *UTILS_copiarText (char *text) {
     char *copia = NULL;
 
     copia = malloc(sizeof(char) * (strlen(text) + 1));

@@ -26,7 +26,7 @@
 * @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
 *
 ************************************************/
-int readIthacaConfig (char *nom_fitxer, IthacaConfig *config);
+int CONFIG_readIthacaConfig (char *nom_fitxer, IthacaConfig *config);
 
 /***********************************************
 *
@@ -35,7 +35,7 @@ int readIthacaConfig (char *nom_fitxer, IthacaConfig *config);
 * @Retorn: ----.
 *
 ************************************************/
-void freeIthacaConfig (IthacaConfig *config);
+void CONFIG_freeIthacaConfig (IthacaConfig *config);
 
 /***********************************************
 *
@@ -47,7 +47,7 @@ void freeIthacaConfig (IthacaConfig *config);
 * @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
 *
 ************************************************/
-int readVoyages (char *nom_fitxer, Voyage **viatges, int *n_viatges);
+int CONFIG_readVoyages (char *nom_fitxer, Voyage **viatges, int *n_viatges);
 
 /***********************************************
 *
@@ -57,7 +57,7 @@ int readVoyages (char *nom_fitxer, Voyage **viatges, int *n_viatges);
 * @Retorn: ----.
 *
 ************************************************/
-void freeVoyages (Voyage *viatges, int n_viatges);
+void CONFIG_freeVoyages (Voyage *viatges, int n_viatges);
 
 /***********************************************
 *
@@ -67,7 +67,7 @@ void freeVoyages (Voyage *viatges, int n_viatges);
 * @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
 *
 ************************************************/
-int readIslandConfig (char *nom_fitxer, IslandConfig *config);
+int CONFIG_readIslandConfig (char *nom_fitxer, IslandConfig *config);
 
 /***********************************************
 *
@@ -76,7 +76,7 @@ int readIslandConfig (char *nom_fitxer, IslandConfig *config);
 * @Retorn: ----.
 *
 ************************************************/
-void freeIslandConfig (IslandConfig *config);
+void CONFIG_freeIslandConfig (IslandConfig *config);
 
 /***********************************************
 *
@@ -87,7 +87,7 @@ void freeIslandConfig (IslandConfig *config);
 * @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
 *
 ************************************************/
-int readStock (char *nom_fitxer, Product **productes, int *n_productes);
+int CONFIG_readStock (char *nom_fitxer, Product **productes, int *n_productes);
 
 /***********************************************
 *
@@ -96,7 +96,7 @@ int readStock (char *nom_fitxer, Product **productes, int *n_productes);
 * @Retorn: ----.
 *
 ************************************************/
-void freeStock (Product *productes);
+void CONFIG_freeStock (Product *productes);
 
 /***********************************************
 *
@@ -106,7 +106,7 @@ void freeStock (Product *productes);
 * @Retorn: El nombre de rutes valides, o un codi d'error de SPHRAGIS.
 *
 ************************************************/
-int filterIslandRoutes (IslandConfig *config);
+int CONFIG_filterIslandRoutes (IslandConfig *config);
 
 /***********************************************
 *
@@ -116,7 +116,7 @@ int filterIslandRoutes (IslandConfig *config);
 * @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
 *
 ************************************************/
-int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config);
+int CONFIG_readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config);
 
 /***********************************************
 *
@@ -125,6 +125,6 @@ int readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config);
 * @Retorn: ----.
 *
 ************************************************/
-void freeOdysseusConfig (OdysseusConfig *config);
+void CONFIG_freeOdysseusConfig (OdysseusConfig *config);
 
 #endif

@@ -103,7 +103,7 @@
 * @Retorn: El descriptor mes gran del conjunt.
 *
 ************************************************/
-int prepararSetOdysseus (fd_set *set, Navegant *navegant);
+int TRAVESSIA_prepararSetOdysseus (fd_set *set, Navegant *navegant);
 
 /***********************************************
 *
@@ -113,7 +113,7 @@ int prepararSetOdysseus (fd_set *set, Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void perdreConnexio (Navegant *navegant);
+void TRAVESSIA_perdreConnexio (Navegant *navegant);
 
 /***********************************************
 *
@@ -125,7 +125,7 @@ void perdreConnexio (Navegant *navegant);
 * @Retorn: RESPOSTA_OK, RESPOSTA_ERROR o RESPOSTA_PERDUDA.
 *
 ************************************************/
-int rebreResposta (Navegant *navegant, int tipus_esperat, char **dades);
+int TRAVESSIA_rebreResposta (Navegant *navegant, int tipus_esperat, char **dades);
 
 
 /***********************************************
@@ -136,7 +136,7 @@ int rebreResposta (Navegant *navegant, int tipus_esperat, char **dades);
 * @Retorn: ----.
 *
 ************************************************/
-void atendreServidor (Navegant *navegant);
+void TRAVESSIA_atendreServidor (Navegant *navegant);
 
 
 /***********************************************
@@ -146,7 +146,7 @@ void atendreServidor (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void ferConnectIthaca (Navegant *navegant);
+void TRAVESSIA_ferConnectIthaca (Navegant *navegant);
 
 
 /***********************************************
@@ -157,7 +157,7 @@ void ferConnectIthaca (Navegant *navegant);
 * @Retorn: TRAMA_OK si el format es correcte, TRAMA_ERROR si no.
 *
 ************************************************/
-int mostrarViatge (char *dades, int *total);
+int TRAVESSIA_mostrarViatge (char *dades, int *total);
 
 /***********************************************
 *
@@ -166,7 +166,7 @@ int mostrarViatge (char *dades, int *total);
 * @Retorn: ----.
 *
 ************************************************/
-void ferListVoyages (Navegant *navegant);
+void TRAVESSIA_ferListVoyages (Navegant *navegant);
 
 /***********************************************
 *
@@ -177,7 +177,7 @@ void ferListVoyages (Navegant *navegant);
 *          o no hi ha memoria.
 *
 ************************************************/
-int guardarViatge (Navegant *navegant, char *dades);
+int TRAVESSIA_guardarViatge (Navegant *navegant, char *dades);
 
 /***********************************************
 *
@@ -187,7 +187,7 @@ int guardarViatge (Navegant *navegant, char *dades);
 * @Retorn: ----.
 *
 ************************************************/
-void ferAccept (Navegant *navegant, char *id_viatge);
+void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge);
 
 
 /***********************************************
@@ -198,7 +198,7 @@ void ferAccept (Navegant *navegant, char *id_viatge);
 * @Retorn: ----.
 *
 ************************************************/
-void marxarUbicacio (Navegant *navegant);
+void TRAVESSIA_marxarUbicacio (Navegant *navegant);
 
 /***********************************************
 *
@@ -209,7 +209,7 @@ void marxarUbicacio (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void atracar (Navegant *navegant, char *format);
+void TRAVESSIA_atracar (Navegant *navegant, char *format);
 
 /***********************************************
 *
@@ -220,7 +220,7 @@ void atracar (Navegant *navegant, char *format);
 * @Retorn: FINAL_SI si s'han acabat les provisions, FINAL_NO si no.
 *
 ************************************************/
-int gestionarRacio (Navegant *navegant);
+int TRAVESSIA_gestionarRacio (Navegant *navegant);
 
 /***********************************************
 *
@@ -230,7 +230,7 @@ int gestionarRacio (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void arribarIlla (Navegant *navegant);
+void TRAVESSIA_arribarIlla (Navegant *navegant);
 
 /***********************************************
 *
@@ -240,7 +240,7 @@ void arribarIlla (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void tornarAIlla (Navegant *navegant);
+void TRAVESSIA_tornarAIlla (Navegant *navegant);
 
 /***********************************************
 *
@@ -250,7 +250,7 @@ void tornarAIlla (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void ferSail (Navegant *navegant, char *illa);
+void TRAVESSIA_ferSail (Navegant *navegant, char *illa);
 
 /***********************************************
 *
@@ -259,7 +259,7 @@ void ferSail (Navegant *navegant, char *illa);
 * @Retorn: ----.
 *
 ************************************************/
-void mostrarCapcaleraMercat (char *illa);
+void TRAVESSIA_mostrarCapcaleraMercat (char *illa);
 
 /***********************************************
 *
@@ -270,7 +270,7 @@ void mostrarCapcaleraMercat (char *illa);
 * @Retorn: ----.
 *
 ************************************************/
-void mostrarProducte (char *nom, char *quantitat, char *preu);
+void TRAVESSIA_mostrarProducte (char *nom, char *quantitat, char *preu);
 
 /***********************************************
 *
@@ -283,7 +283,7 @@ void mostrarProducte (char *nom, char *quantitat, char *preu);
 * @Retorn: RESPOSTA_OK, RESPOSTA_ERROR o RESPOSTA_PERDUDA.
 *
 ************************************************/
-int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu);
+int TRAVESSIA_rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu);
 
 /***********************************************
 *
@@ -292,7 +292,7 @@ int rebreMercat (Navegant *navegant, int mostrar, char *producte, int *preu);
 * @Retorn: ----.
 *
 ************************************************/
-void ferListMarket (Navegant *navegant);
+void TRAVESSIA_ferListMarket (Navegant *navegant);
 
 
 /***********************************************
@@ -303,7 +303,7 @@ void ferListMarket (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void executarComanda (Navegant *navegant, char *linea);
+void TRAVESSIA_executarComanda (Navegant *navegant, char *linea);
 
 /***********************************************
 *
@@ -312,7 +312,7 @@ void executarComanda (Navegant *navegant, char *linea);
 * @Retorn: FINAL_SI si s'ha tancat l'entrada, FINAL_NO si no.
 *
 ************************************************/
-int atendreTeclat (Navegant *navegant);
+int TRAVESSIA_atendreTeclat (Navegant *navegant);
 
 /***********************************************
 *
@@ -326,7 +326,7 @@ int atendreTeclat (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent);
+void TRAVESSIA_executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent);
 
 /***********************************************
 *
@@ -337,7 +337,7 @@ void executarOdysseus (Navegant *navegant, int *sortir, int *racio_pendent);
 * @Retorn: ----.
 *
 ************************************************/
-void ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
+void TRAVESSIA_ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
 
 /***********************************************
 *
@@ -348,7 +348,7 @@ void ferBuy (Navegant *navegant, char *producte, char *text_quantitat);
 * @Retorn: ----.
 *
 ************************************************/
-void ferSell (Navegant *navegant, char *producte, char *text_quantitat);
+void TRAVESSIA_ferSell (Navegant *navegant, char *producte, char *text_quantitat);
 
 /***********************************************
 *
@@ -359,7 +359,7 @@ void ferSell (Navegant *navegant, char *producte, char *text_quantitat);
 * @Retorn: ----.
 *
 ************************************************/
-void ferBuyMap (Navegant *navegant, char *quantitat);
+void TRAVESSIA_ferBuyMap (Navegant *navegant, char *quantitat);
 
 /***********************************************
 *
@@ -368,6 +368,6 @@ void ferBuyMap (Navegant *navegant, char *quantitat);
 * @Retorn: ----.
 *
 ************************************************/
-void ferMap (Navegant *navegant);
+void TRAVESSIA_ferMap (Navegant *navegant);
 
 #endif

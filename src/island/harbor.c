@@ -14,7 +14,7 @@
 
 //funcions i procediments
 
-void inicialitzarHarbor (Harbor *harbor) {
+void HARBOR_inicialitzarHarbor (Harbor *harbor) {
     harbor->vaixells = NULL;
     harbor->n_vaixells = 0;
     harbor->cua = NULL;
@@ -22,13 +22,13 @@ void inicialitzarHarbor (Harbor *harbor) {
     harbor->n_atracats = 0;
 }
 
-int afegirVaixell (Harbor *harbor, int fd) {
+int HARBOR_afegirVaixell (Harbor *harbor, int fd) {
     Vaixell *nou_vaixell = NULL;
 
     nou_vaixell = realloc(harbor->vaixells, sizeof(Vaixell) * (harbor->n_vaixells + 1));
 
     if (nou_vaixell == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         close(fd);
         return ERR_CODI; 
     }
@@ -41,7 +41,7 @@ int afegirVaixell (Harbor *harbor, int fd) {
     return 0;
 }
 
-void treureDeLaCua (Harbor *harbor, int posicio) {
+void HARBOR_treureDeLaCua (Harbor *harbor, int posicio) {
     int i = 0;
 
     for (i = posicio; i < harbor->n_cua - 1; i++) {
@@ -50,7 +50,7 @@ void treureDeLaCua (Harbor *harbor, int posicio) {
     harbor->n_cua--;
 }
 
-void treureVaixell (Harbor *harbor, int index) {
+void HARBOR_treureVaixell (Harbor *harbor, int index) {
     int i;
 
     if (harbor->vaixells[index].estat == VAIXELL_ATRACAT) {
@@ -58,7 +58,7 @@ void treureVaixell (Harbor *harbor, int index) {
     } else if (harbor->vaixells[index].estat == VAIXELL_ESPERANT) {
         for (i = 0; i < harbor->n_cua; i++) {
             if (harbor->cua[i] == harbor->vaixells[index].fd) {
-                treureDeLaCua(harbor, i);
+                HARBOR_treureDeLaCua(harbor, i);
             }
         }
     }
@@ -73,7 +73,7 @@ void treureVaixell (Harbor *harbor, int index) {
 }
 
 
-int buscarVaixell (Harbor *harbor, int fd) {
+int HARBOR_buscarVaixell (Harbor *harbor, int fd) {
     int i;
     int index = ERR_CODI;
 
@@ -86,34 +86,34 @@ int buscarVaixell (Harbor *harbor, int fd) {
     return index;
 }
 
-void atracarSeguent (Harbor *harbor, int capacitat) {
+void HARBOR_atracarSeguent (Harbor *harbor, int capacitat) {
     char *missatge = NULL;
     int fd;
     int index;
 
     while (harbor->n_atracats < capacitat && harbor->n_cua > 0) {
         fd = harbor->cua[0];
-        treureDeLaCua(harbor, 0);
+        HARBOR_treureDeLaCua(harbor, 0);
 
-        index = buscarVaixell(harbor, fd);
+        index = HARBOR_buscarVaixell(harbor, fd);
         if (index != ERR_CODI) {
             harbor->vaixells[index].estat = VAIXELL_ATRACAT;
             harbor->n_atracats++;
-            enviarTrama(fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_DOCKED);
+            TRAMA_enviarTrama(fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_DOCKED);
 
             asprintf(&missatge, MSG_DOCKED_ENVIAT, harbor->vaixells[index].nom);
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         }
     }
 }
 
-int afegirALaCua (Harbor *harbor, int fd) {
+int HARBOR_afegirALaCua (Harbor *harbor, int fd) {
     int *nova_cua = NULL;
 
     nova_cua = realloc(harbor->cua, sizeof(int) * (harbor->n_cua + 1));
     if (nova_cua == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -124,82 +124,82 @@ int afegirALaCua (Harbor *harbor, int fd) {
     return 0;
 }
 
-void atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *config) {
+void HARBOR_atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *config) {
     Vaixell *vaixell = NULL;
     char *missatge = NULL;
 
     vaixell = &harbor->vaixells[index];
 
     if (vaixell->estat != VAIXELL_CONNECTAT) {
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_ESTAT);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_ESTAT);
         return;
     }
 
     if (strlen(dades) == 0) {
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_DADES);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_DADES);
         return;
     }
 
     vaixell->nom = malloc(sizeof(char) * (strlen(dades) + 1));
     if (vaixell->nom == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_SERVIDOR);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_SERVIDOR);
         return;
     }
     strcpy(vaixell->nom, dades);
 
     asprintf(&missatge, MSG_APROXIMANT, vaixell->nom, config->name);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
     if (harbor->n_atracats < config->capacity) {
 
         vaixell->estat = VAIXELL_ATRACAT;
         harbor->n_atracats++;
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_DOCKED);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_DOCKED);
 
         asprintf(&missatge, MSG_ATRACAT, vaixell->nom);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
-    } else if (afegirALaCua(harbor, vaixell->fd) == 0) {
+    } else if (HARBOR_afegirALaCua(harbor, vaixell->fd) == 0) {
 
         vaixell->estat = VAIXELL_ESPERANT;
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_WAIT);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_OK, TEXT_WAIT);
 
         asprintf(&missatge, MSG_PORT_PLE, vaixell->nom);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     } else {
-        enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_SERVIDOR);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_ARRIBADA, FLAG_ERROR, TEXT_ERROR_SERVIDOR);
     }
 }
 
-void ferSortir (Harbor *harbor, int index, IslandConfig *config) {
+void HARBOR_ferSortir (Harbor *harbor, int index, IslandConfig *config) {
     char *missatge = NULL;
 
     if (harbor->vaixells[index].nom != NULL) {
         asprintf(&missatge, MSG_HA_MARXAT, harbor->vaixells[index].nom);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
 
     }
 
-    treureVaixell(harbor, index);
-    atracarSeguent(harbor, config->capacity);
+    HARBOR_treureVaixell(harbor, index);
+    HARBOR_atracarSeguent(harbor, config->capacity);
 }
 
-void atendreSortida (Harbor *harbor, int index, IslandConfig *config) {
+void HARBOR_atendreSortida (Harbor *harbor, int index, IslandConfig *config) {
 
     if (harbor->vaixells[index].estat == VAIXELL_CONNECTAT) {
 
-        enviarTrama(harbor->vaixells[index].fd, TIPUS_SORTIR_ILLA, FLAG_ERROR, TEXT_ERROR_ESTAT);
+        TRAMA_enviarTrama(harbor->vaixells[index].fd, TIPUS_SORTIR_ILLA, FLAG_ERROR, TEXT_ERROR_ESTAT);
     } else {
-        enviarTrama(harbor->vaixells[index].fd, TIPUS_SORTIR_ILLA, FLAG_OK, TEXT_OK);
-        ferSortir(harbor, index, config);
+        TRAMA_enviarTrama(harbor->vaixells[index].fd, TIPUS_SORTIR_ILLA, FLAG_OK, TEXT_OK);
+        HARBOR_ferSortir(harbor, index, config);
     }
 }
 
-int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor) {
+int HARBOR_prepararSet (fd_set *set, int fd_servidor, Harbor *harbor) {
     int i;
     int max_fd = fd_servidor;
 
@@ -216,25 +216,25 @@ int prepararSet (fd_set *set, int fd_servidor, Harbor *harbor) {
     return max_fd;
 }
 
-void atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat) {
+void HARBOR_atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat) {
     Vaixell *vaixell = NULL;
 
     vaixell = &harbor->vaixells[index];
 
     if (vaixell->estat != VAIXELL_ATRACAT) {
-        enviarTrama(vaixell->fd, tipus, FLAG_ERROR, TEXT_ERROR_ESTAT);
+        TRAMA_enviarTrama(vaixell->fd, tipus, FLAG_ERROR, TEXT_ERROR_ESTAT);
     } else if (tipus == TIPUS_LIST_MARKET) {
-        atendreListMarket(vaixell->fd, mercat);
+        MARKET_atendreListMarket(vaixell->fd, mercat);
     } else if (tipus == TIPUS_BUY) {
-        atendreBuy(vaixell->fd, vaixell->nom, dades, mercat);
+        MARKET_atendreBuy(vaixell->fd, vaixell->nom, dades, mercat);
     } else if (tipus == TIPUS_SELL) {
-        atendreSell(vaixell->fd, vaixell->nom, dades, mercat);
+        MARKET_atendreSell(vaixell->fd, vaixell->nom, dades, mercat);
     } else {
-        atendreBuyMap(vaixell->fd, vaixell->nom, dades, config);
+        MARKET_atendreBuyMap(vaixell->fd, vaixell->nom, dades, config);
     }
 }
 
-void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat) {
+void HARBOR_atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat) {
     char *dades = NULL;
     int fd;
     int tipus;
@@ -242,45 +242,45 @@ void atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *merc
 
     fd = harbor->vaixells[index].fd;
 
-    if (rebreTrama(fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
 
-        ferSortir(harbor, index, config);
+        HARBOR_ferSortir(harbor, index, config);
     } else if (flags != FLAG_PETICIO) {
-        enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_NACK_FLAGS);
+        TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_NACK_FLAGS);
     } else if (tipus == TIPUS_ARRIBADA) {
-        atendreArribada(harbor, index, dades, config);
+        HARBOR_atendreArribada(harbor, index, dades, config);
     } else if (tipus == TIPUS_SORTIR_ILLA) {
-        atendreSortida(harbor, index, config);
+        HARBOR_atendreSortida(harbor, index, config);
     } else if (tipus == TIPUS_LIST_MARKET || tipus == TIPUS_BUY || tipus == TIPUS_SELL || tipus == TIPUS_BUY_MAP) {
-        atendreMercat(harbor, index, tipus, dades, config, mercat);
+        HARBOR_atendreMercat(harbor, index, tipus, dades, config, mercat);
 
     } else {
-        enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_NACK_TIPUS);
+        TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_NACK_TIPUS);
     }
 
     free(dades);
 }
 
-void atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat) {
+void HARBOR_atendreVaixells (Harbor *harbor, fd_set *set, IslandConfig *config, Mercat *mercat) {
     int i;
 
     for (i = harbor->n_vaixells - 1; i >= 0; i--) {
         if (FD_ISSET(harbor->vaixells[i].fd, set)) {
-            atendreTrama(harbor, i, config, mercat);
+            HARBOR_atendreTrama(harbor, i, config, mercat);
         }
     }
 }
 
-void alliberarHarbor (Harbor *harbor) {
+void HARBOR_alliberarHarbor (Harbor *harbor) {
     while (harbor->n_vaixells > 0) {
-        treureVaixell(harbor, harbor->n_vaixells - 1);
+        HARBOR_treureVaixell(harbor, harbor->n_vaixells - 1);
     }
 
     free(harbor->vaixells);
     free(harbor->cua);
 }
 
-void mostrarInici (IslandConfig *config, int n_productes) {
+void HARBOR_mostrarInici (IslandConfig *config, int n_productes) {
     char *missatge = NULL;
     char *text_vaixells = TEXT_VAIXELLS;
 
@@ -289,26 +289,26 @@ void mostrarInici (IslandConfig *config, int n_productes) {
     }
 
     asprintf(&missatge, MSG_INICI_ILLA, config->name, config->capacity, text_vaixells, config->n_routes, n_productes);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 }
 
-void executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir) {
+void HARBOR_executarServidor (int fd_servidor, Harbor *harbor, IslandConfig *config, Mercat *mercat, int *sortir) {
     fd_set set;
     int max_fd;
     int fd_vaixell;
 
     while (*sortir == 0) {
-        max_fd = prepararSet(&set, fd_servidor, harbor);
+        max_fd = HARBOR_prepararSet(&set, fd_servidor, harbor);
 
         if (select(max_fd + 1, &set, NULL, NULL, NULL) > 0) {
             if (FD_ISSET(fd_servidor, &set)) {
                 fd_vaixell = accept(fd_servidor, NULL, NULL);
                 if (fd_vaixell != ERR_CODI) {
-                    afegirVaixell(harbor, fd_vaixell);
+                    HARBOR_afegirVaixell(harbor, fd_vaixell);
                 }
             }
-            atendreVaixells(harbor, &set, config, mercat);
+            HARBOR_atendreVaixells(harbor, &set, config, mercat);
         }
     }
 }

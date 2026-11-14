@@ -11,12 +11,12 @@
 #include "commands.h"
 
 //Procediments i funcions
-int parseSenseArguments (int n_trossos, char *us, int codi_valid) {
+int COMMANDS_parseSenseArguments (int n_trossos, char *us, int codi_valid) {
     char *missatge;
 
     if (n_trossos != 1) {
         asprintf(&missatge, "Usage: %s\n", us);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return CMD_ERROR_SINTAXI;
     }
@@ -25,12 +25,12 @@ int parseSenseArguments (int n_trossos, char *us, int codi_valid) {
 }
 
 
-int parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) {
+int COMMANDS_parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) {
     char *missatge;
 
-    if (n_trossos != 3 || esNumeric(trossos[2]) == TEXT_NO_NUMERIC) {
+    if (n_trossos != 3 || UTILS_esNumeric(trossos[2]) == TEXT_NO_NUMERIC) {
         asprintf(&missatge, "Usage: %s <product> <amount>\n", us);
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return CMD_ERROR_SINTAXI;
     }
@@ -39,36 +39,36 @@ int parseAmbQuantitat (char **trossos, int n_trossos, char *us, int codi_valid) 
 }
 
 
-int parseCommand (char *linea) {
+int COMMANDS_parseCommand (char *linea) {
     
     char **trossos;
     int n_trossos;
     int codi;
 
-    trossos = splitString(linea, ' ', &n_trossos);
+    trossos = UTILS_splitString(linea, ' ', &n_trossos);
 
     if (n_trossos == 0) {
-        freeTokens(trossos,n_trossos);
+        UTILS_freeTokens(trossos,n_trossos);
         codi = CMD_DESCONEGUDA;
         return codi;
     }
     if(strcasecmp(trossos[0],"MAP") == 0){
-        codi = parseSenseArguments(n_trossos, "MAP", CMD_MAP);
+        codi = COMMANDS_parseSenseArguments(n_trossos, "MAP", CMD_MAP);
     } else if(strcasecmp(trossos[0],"STATUS") == 0) {
-        codi = parseSenseArguments(n_trossos, "STATUS", CMD_STATUS);
+        codi = COMMANDS_parseSenseArguments(n_trossos, "STATUS", CMD_STATUS);
     } else if(strcasecmp(trossos[0],"DELIVER") == 0) {
-        codi = parseSenseArguments(n_trossos, "DELIVER", CMD_DELIVER);
+        codi = COMMANDS_parseSenseArguments(n_trossos, "DELIVER", CMD_DELIVER);
     } else if(strcasecmp(trossos[0],"CLAIM") == 0) {
-        codi = parseSenseArguments(n_trossos, "CLAIM", CMD_CLAIM);
+        codi = COMMANDS_parseSenseArguments(n_trossos, "CLAIM", CMD_CLAIM);
     } else if(strcasecmp(trossos[0],"BUY") == 0) {
-        codi = parseAmbQuantitat(trossos, n_trossos, "BUY", CMD_BUY);
+        codi = COMMANDS_parseAmbQuantitat(trossos, n_trossos, "BUY", CMD_BUY);
     } else if(strcasecmp(trossos[0],"SELL") == 0) {
-        codi = parseAmbQuantitat(trossos, n_trossos, "SELL", CMD_SELL);
+        codi = COMMANDS_parseAmbQuantitat(trossos, n_trossos, "SELL", CMD_SELL);
     } else if(strcasecmp(trossos[0],"CONNECT") == 0) {
         if (n_trossos == 2 && strcasecmp(trossos[1],"ITHACA") == 0) {
             codi = CMD_CONNECT_ITHACA;
         } else {
-            printF(1, "Usage: CONNECT ITHACA\n");
+            UTILS_printF(1, "Usage: CONNECT ITHACA\n");
             codi = CMD_ERROR_SINTAXI;
         }
     } else if(strcasecmp(trossos[0],"LIST") == 0) {
@@ -77,26 +77,26 @@ int parseCommand (char *linea) {
         } else if (n_trossos == 2 && strcasecmp(trossos[1],"MARKET") == 0) {
             codi = CMD_LIST_MARKET;
         } else {
-            printF(1, "Usage: LIST <VOYAGES|MARKET>\n");
+            UTILS_printF(1, "Usage: LIST <VOYAGES|MARKET>\n");
             codi = CMD_ERROR_SINTAXI;
         }
     } else if(strcasecmp(trossos[0],"ACCEPT") == 0) {
-        if (n_trossos == 2 && esNumeric(trossos[1]) == TEXT_NUMERIC) {
+        if (n_trossos == 2 && UTILS_esNumeric(trossos[1]) == TEXT_NUMERIC) {
             codi = CMD_ACCEPT;
         } else {
-            printF(1, "Usage: ACCEPT <voyage_id>\n");
+            UTILS_printF(1, "Usage: ACCEPT <voyage_id>\n");
             codi = CMD_ERROR_SINTAXI;
         }
     } else if(strcasecmp(trossos[0],"SAIL") == 0) {
         if (n_trossos == 2) {
             codi = CMD_SAIL;
         } else {
-            printF(1, "Usage: SAIL <island>\n");
+            UTILS_printF(1, "Usage: SAIL <island>\n");
             codi = CMD_ERROR_SINTAXI;
         }
     } else {
         codi = CMD_DESCONEGUDA;
     }
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
     return codi;    
 }

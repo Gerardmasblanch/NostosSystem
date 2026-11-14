@@ -12,7 +12,7 @@
 
 //Procediments i funcions
 
-int inicialitzarNavegant (Navegant *navegant) {
+int NAVEGANT_inicialitzarNavegant (Navegant *navegant) {
     navegant->estat = ESTAT_ITHACA;
     navegant->fd_connexio = ERR_CODI;
     navegant->te_viatge = SENSE_VIATGE;
@@ -25,24 +25,24 @@ int inicialitzarNavegant (Navegant *navegant) {
     navegant->n_adreces = 0;
     navegant->mercat_consultat = 0;
 
-    navegant->ubicacio = copiarText(TEXT_ITHACA);
+    navegant->ubicacio = UTILS_copiarText(TEXT_ITHACA);
     if (navegant->ubicacio == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
-    if (afegirIllaMapa(navegant, TEXT_AEAEA) == ERR_CODI) {
+    if (NAVEGANT_afegirIllaMapa(navegant, TEXT_AEAEA) == ERR_CODI) {
         return ERR_CODI;
     }
 
-    if (afegirAdreca(navegant, TEXT_AEAEA, navegant->config.aeaea_ip, navegant->config.aeaea_port) == ERR_CODI) {
+    if (NAVEGANT_afegirAdreca(navegant, TEXT_AEAEA, navegant->config.aeaea_ip, navegant->config.aeaea_port) == ERR_CODI) {
         return ERR_CODI;
     }
     
     return 0;
 }
 
-void alliberarNavegant (Navegant *navegant) {
+void NAVEGANT_alliberarNavegant (Navegant *navegant) {
     int i;
     int j;
 
@@ -69,10 +69,10 @@ void alliberarNavegant (Navegant *navegant) {
     }
     free(navegant->adreces);
 
-    freeOdysseusConfig(&navegant->config);
+    CONFIG_freeOdysseusConfig(&navegant->config);
 }
 
-int totalProvisions (Navegant *navegant) {
+int NAVEGANT_totalProvisions (Navegant *navegant) {
     int i;
     int total = 0;
 
@@ -83,41 +83,41 @@ int totalProvisions (Navegant *navegant) {
     return total;
 }
 
-void mostrarCarrega (Navegant *navegant) {
+void NAVEGANT_mostrarCarrega (Navegant *navegant) {
     char *missatge = NULL;
     int i;
 
-    printF(1, MSG_CARREGA);
+    UTILS_printF(1, MSG_CARREGA);
 
     for (i = 0; i < navegant->config.n_foods; i++) {
         if (navegant->config.foods[i].amount > 0) {
             if (asprintf(&missatge, FORMAT_ALIMENT, navegant->config.foods[i].name, navegant->config.foods[i].amount) < 0) {
-                printF(1, MSG_SENSE_MEMORIA);
+                UTILS_printF(1, MSG_SENSE_MEMORIA);
                 return;
             }
 
-            printF(1, missatge);
+            UTILS_printF(1, missatge);
             free(missatge);
         }
     }
 
-    if (asprintf(&missatge, FORMAT_TOTAL_PROVISIONS, totalProvisions(navegant)) < 0) {
-        printF(1, MSG_SENSE_MEMORIA);
+    if (asprintf(&missatge, FORMAT_TOTAL_PROVISIONS, NAVEGANT_totalProvisions(navegant)) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
 
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 }
 
-void mostrarStatus (Navegant *navegant) {
+void NAVEGANT_mostrarStatus (Navegant *navegant) {
     char *nom = NULL;
     char *missatge = NULL;
     int i;
 
-    nom = copiarText(navegant->config.name);
+    nom = UTILS_copiarText(navegant->config.name);
     if (nom == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
 
@@ -129,50 +129,50 @@ void mostrarStatus (Navegant *navegant) {
 
     if (asprintf(&missatge, FORMAT_CAPCALERA_STATUS, nom, navegant->config.gold) < 0) {
         free(nom);
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
     free(nom);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
-    mostrarCarrega(navegant);
+    NAVEGANT_mostrarCarrega(navegant);
 
     if (navegant->te_viatge == AMB_VIATGE) {
         if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
             return;
         }
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
     } else {
-        printF(1, MSG_STATUS_SENSE_VIATGE);
+        UTILS_printF(1, MSG_STATUS_SENSE_VIATGE);
     }
 
     if (navegant->estat == ESTAT_ITHACA) {
-        printF(1, MSG_UBICACIO_DESCONEGUDA);
+        UTILS_printF(1, MSG_UBICACIO_DESCONEGUDA);
         return;
     }
 
     if (navegant->estat == ESTAT_ESPERANT) {
         if (asprintf(&missatge, FORMAT_UBICACIO_ESPERANT, navegant->ubicacio) < 0) {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
             return;
         }
-        printF(1, missatge);
+        UTILS_printF(1, missatge);
         free(missatge);
         return;
     }
 
     if (asprintf(&missatge, FORMAT_UBICACIO_STATUS, navegant->ubicacio) < 0) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return;
     }
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 }
 
-int buscarAliment (Navegant *navegant, char *nom) {
+int NAVEGANT_buscarAliment (Navegant *navegant, char *nom) {
     int i;
     int index = ERR_CODI;
 
@@ -185,19 +185,19 @@ int buscarAliment (Navegant *navegant, char *nom) {
     return index;
 }
 
-int prepararAliment (Navegant *navegant, char *nom) {
+int NAVEGANT_prepararAliment (Navegant *navegant, char *nom) {
     Food *nous_aliments = NULL;
     char *nom_copia = NULL;
     int index;
 
-    index = buscarAliment(navegant, nom);
+    index = NAVEGANT_buscarAliment(navegant, nom);
     if (index != ERR_CODI) {
         return index;
     }
 
-    nom_copia = copiarText(nom);
+    nom_copia = UTILS_copiarText(nom);
     if (nom_copia == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -205,7 +205,7 @@ int prepararAliment (Navegant *navegant, char *nom) {
 
     if (nous_aliments == NULL) {
         free(nom_copia);
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -218,20 +218,20 @@ int prepararAliment (Navegant *navegant, char *nom) {
     return index;
 }
 
-int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost) {
+int NAVEGANT_guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost) {
     char **trossos = NULL;
     int n_trossos;
     int quantitat_rebuda;
     int cost_rebut;
     int resultat = TRAMA_ERROR;
 
-    trossos = splitString(dades, '&', &n_trossos);
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
 
     if (n_trossos == 4) {
         if (strcmp(trossos[0], TEXT_COMPRA_OK) == 0 &&
             strcasecmp(trossos[1], navegant->config.foods[index].name) == 0 &&
-            esNumeric(trossos[2]) == TEXT_NUMERIC &&
-            esNumeric(trossos[3]) == TEXT_NUMERIC) {
+            UTILS_esNumeric(trossos[2]) == TEXT_NUMERIC &&
+            UTILS_esNumeric(trossos[3]) == TEXT_NUMERIC) {
 
             quantitat_rebuda = atoi(trossos[2]);
             cost_rebut = atoi(trossos[3]);
@@ -248,25 +248,25 @@ int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, in
         }
     }
 
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
 
     return resultat;
 }
 
-int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos) {
+int NAVEGANT_guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos) {
     char **trossos = NULL;
     int n_trossos;
     int quantitat_rebuda;
     int ingressos_rebuts;
     int resultat = TRAMA_ERROR;
 
-    trossos = splitString(dades, '&', &n_trossos);
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
 
     if (n_trossos == 4) {
         if (strcmp(trossos[0], TEXT_VENDA_OK) == 0 &&
             strcasecmp(trossos[1], navegant->config.foods[index].name) == 0 &&
-            esNumeric(trossos[2]) == TEXT_NUMERIC &&
-            esNumeric(trossos[3]) == TEXT_NUMERIC) {
+            UTILS_esNumeric(trossos[2]) == TEXT_NUMERIC &&
+            UTILS_esNumeric(trossos[3]) == TEXT_NUMERIC) {
 
             quantitat_rebuda = atoi(trossos[2]);
             ingressos_rebuts = atoi(trossos[3]);
@@ -281,12 +281,12 @@ int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int
         }
     }
 
-    freeTokens(trossos, n_trossos);
+    UTILS_freeTokens(trossos, n_trossos);
 
     return resultat;
 }
 
-void consumirRacio (Navegant *navegant, int quilos) {
+void NAVEGANT_consumirRacio (Navegant *navegant, int quilos) {
     int i = 0;
     int pendent = quilos;
 
@@ -302,7 +302,7 @@ void consumirRacio (Navegant *navegant, int quilos) {
     }
 }
 
-int buscarAdreca (Navegant *navegant, char *nom) {
+int NAVEGANT_buscarAdreca (Navegant *navegant, char *nom) {
     int i;
     int index = ERR_CODI;
 
@@ -315,7 +315,7 @@ int buscarAdreca (Navegant *navegant, char *nom) {
     return index;
 }
 
-int esRutaDirecta (Navegant *navegant, char *desti) {
+int NAVEGANT_esRutaDirecta (Navegant *navegant, char *desti) {
     int i;
     int j;
     int directa = RUTA_NO_DIRECTA;
@@ -333,14 +333,14 @@ int esRutaDirecta (Navegant *navegant, char *desti) {
     return directa;
 }
 
-int canviarUbicacio (Navegant *navegant, char *nom) {
+int NAVEGANT_canviarUbicacio (Navegant *navegant, char *nom) {
     char *nova = NULL;
     int resultat = ERR_CODI;
 
-    nova = copiarText(nom);
+    nova = UTILS_copiarText(nom);
 
     if (nova == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
     } else {
         free(navegant->ubicacio);
         navegant->ubicacio = nova;
@@ -350,7 +350,7 @@ int canviarUbicacio (Navegant *navegant, char *nom) {
     return resultat;
 }
 
-int buscarIllaMapa (Navegant *navegant, char *nom) {
+int NAVEGANT_buscarIllaMapa (Navegant *navegant, char *nom) {
     int i;
     int index = ERR_CODI;
 
@@ -364,27 +364,27 @@ int buscarIllaMapa (Navegant *navegant, char *nom) {
 }
 
 
-int afegirIllaMapa (Navegant *navegant, char *nom) {
+int NAVEGANT_afegirIllaMapa (Navegant *navegant, char *nom) {
     SPHRAGIS_Island *nou_mapa = NULL;
     int index;
 
-    index = buscarIllaMapa(navegant, nom);
+    index = NAVEGANT_buscarIllaMapa(navegant, nom);
     if (index != ERR_CODI) {
         return index;
     }
 
     nou_mapa = realloc(navegant->mapa, sizeof(SPHRAGIS_Island) * (navegant->n_illes + 1));
     if (nou_mapa == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
     navegant->mapa = nou_mapa;
     index = navegant->n_illes;
 
-    navegant->mapa[index].name = copiarText(nom);
+    navegant->mapa[index].name = UTILS_copiarText(nom);
     if (navegant->mapa[index].name == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
@@ -395,7 +395,7 @@ int afegirIllaMapa (Navegant *navegant, char *nom) {
     return index;
 }
 
-int afegirConnexio (Navegant *navegant, int index, char *desti) {
+int NAVEGANT_afegirConnexio (Navegant *navegant, int index, char *desti) {
     char **noves_connexions = NULL;
     int i;
     int existeix = 0;
@@ -411,14 +411,14 @@ int afegirConnexio (Navegant *navegant, int index, char *desti) {
         noves_connexions = realloc(navegant->mapa[index].known_islands, sizeof(char *) * (navegant->mapa[index].known_island_count + 1));
 
         if (noves_connexions == NULL) {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
             resultat = ERR_CODI;
         } else {
             navegant->mapa[index].known_islands = noves_connexions;
-            navegant->mapa[index].known_islands[navegant->mapa[index].known_island_count] = copiarText(desti);
+            navegant->mapa[index].known_islands[navegant->mapa[index].known_island_count] = UTILS_copiarText(desti);
 
             if (navegant->mapa[index].known_islands[navegant->mapa[index].known_island_count] == NULL) {
-                printF(1, MSG_SENSE_MEMORIA);
+                UTILS_printF(1, MSG_SENSE_MEMORIA);
                 resultat = ERR_CODI;
             } else {
                 navegant->mapa[index].known_island_count++;
@@ -429,16 +429,16 @@ int afegirConnexio (Navegant *navegant, int index, char *desti) {
     return resultat;
 }
 
-int afegirRuta (Navegant *navegant, char *origen, char *desti) {
+int NAVEGANT_afegirRuta (Navegant *navegant, char *origen, char *desti) {
     int index_origen;
     int index_desti;
     int resultat = ERR_CODI;
 
-    index_origen = afegirIllaMapa(navegant, origen);
-    index_desti = afegirIllaMapa(navegant, desti);
+    index_origen = NAVEGANT_afegirIllaMapa(navegant, origen);
+    index_desti = NAVEGANT_afegirIllaMapa(navegant, desti);
 
     if (index_origen != ERR_CODI && index_desti != ERR_CODI) {
-        if (afegirConnexio(navegant, index_origen, desti) == 0 && afegirConnexio(navegant, index_desti, origen) == 0) {
+        if (NAVEGANT_afegirConnexio(navegant, index_origen, desti) == 0 && NAVEGANT_afegirConnexio(navegant, index_desti, origen) == 0) {
             resultat = 0;
         }
     }
@@ -446,30 +446,30 @@ int afegirRuta (Navegant *navegant, char *origen, char *desti) {
     return resultat;
 }
 
-int afegirAdreca (Navegant *navegant, char *nom, char *ip, int port) {
+int NAVEGANT_afegirAdreca (Navegant *navegant, char *nom, char *ip, int port) {
     Route *noves_adreces = NULL;
     int index;
 
-    if (buscarAdreca(navegant, nom) != ERR_CODI) {
+    if (NAVEGANT_buscarAdreca(navegant, nom) != ERR_CODI) {
         return 0;
     }
 
     noves_adreces = realloc(navegant->adreces, sizeof(Route) * (navegant->n_adreces + 1));
     if (noves_adreces == NULL) {
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 
     navegant->adreces = noves_adreces;
     index = navegant->n_adreces;
 
-    navegant->adreces[index].name = copiarText(nom);
-    navegant->adreces[index].ip = copiarText(ip);
+    navegant->adreces[index].name = UTILS_copiarText(nom);
+    navegant->adreces[index].ip = UTILS_copiarText(ip);
 
     if (navegant->adreces[index].name == NULL || navegant->adreces[index].ip == NULL) {
         free(navegant->adreces[index].name);
         free(navegant->adreces[index].ip);
-        printF(1, MSG_SENSE_MEMORIA);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
         return ERR_CODI;
     }
 

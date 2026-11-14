@@ -65,7 +65,7 @@
 * @Retorn: TRAMA_OK si s'ha enviat sencera, TRAMA_ERROR si no.
 *
 ************************************************/
-int enviarTrama (int fd, int tipus, int flags, char *dades);
+int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades);
 
 /***********************************************
 *
@@ -77,7 +77,7 @@ int enviarTrama (int fd, int tipus, int flags, char *dades);
 * @Retorn: TRAMA_OK si s'ha rebut sencera, TRAMA_ERROR si no.
 *
 ************************************************/
-int rebreTrama (int fd, int *tipus, int *flags, char **dades);
+int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
 
 /***********************************************
 *
@@ -87,7 +87,7 @@ int rebreTrama (int fd, int *tipus, int *flags, char **dades);
 * @Retorn: Descriptor del socket, o ERR_CODI si hi ha hagut un error.
 *
 ************************************************/
-int obrirServidor (char *ip, int port);
+int TRAMA_obrirServidor (char *ip, int port);
 
 /***********************************************
 *
@@ -97,6 +97,6 @@ int obrirServidor (char *ip, int port);
 * @Retorn: Descriptor del socket, o ERR_CODI si hi ha hagut un error.
 *
 ************************************************/
-int connectarServidor (char *ip, int port);
+int TRAMA_connectarServidor (char *ip, int port);
 
 #endif

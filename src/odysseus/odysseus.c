@@ -55,23 +55,23 @@ int main (int argc, char *argv[]) {
     char *missatge = NULL;
 
     if (argc != 2) {
-        printF(1, "Us: ./odysseus <config.dat>\n");
+        UTILS_printF(1, "Us: ./odysseus <config.dat>\n");
         return -1;
     }
 
-    if (readOdysseusConfig(argv[1], &navegant.config) < 0) {
-        printF(1, "Error: could not open configuration file.\n");
+    if (CONFIG_readOdysseusConfig(argv[1], &navegant.config) < 0) {
+        UTILS_printF(1, "Error: could not open configuration file.\n");
         return -1;
     }
 
-    if (esPortValid(navegant.config.ithaca_port) == PORT_NO_VALID || esPortValid(navegant.config.aeaea_port) == PORT_NO_VALID) {
-        printF(1, MSG_PORT_NO_VALID);
-        freeOdysseusConfig(&navegant.config);
+    if (UTILS_esPortValid(navegant.config.ithaca_port) == PORT_NO_VALID || UTILS_esPortValid(navegant.config.aeaea_port) == PORT_NO_VALID) {
+        UTILS_printF(1, MSG_PORT_NO_VALID);
+        CONFIG_freeOdysseusConfig(&navegant.config);
         return -1;
     }
 
-    if (inicialitzarNavegant(&navegant) == ERR_CODI) {
-        alliberarNavegant(&navegant);
+    if (NAVEGANT_inicialitzarNavegant(&navegant) == ERR_CODI) {
+        NAVEGANT_alliberarNavegant(&navegant);
         return -1;
     }
 
@@ -80,15 +80,15 @@ int main (int argc, char *argv[]) {
     signal(SIGALRM, handleAlarma);
 
     asprintf(&missatge, "Odysseus %s is ready to sail.\n\n", navegant.config.name);
-    printF(1, missatge);
+    UTILS_printF(1, missatge);
     free(missatge);
 
-    executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
+    TRAVESSIA_executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
 
-    alliberarNavegant(&navegant);
+    NAVEGANT_alliberarNavegant(&navegant);
 
     if (sortirprogram == 1) {
-        printF(1, "\n");
+        UTILS_printF(1, "\n");
         signal(SIGINT, SIG_DFL);
         raise(SIGINT);
     }

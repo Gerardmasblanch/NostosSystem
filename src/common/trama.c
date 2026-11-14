@@ -11,7 +11,7 @@
 //Include del fitxer .h del mateix modul
 #include "trama.h"
 
-int enviarTrama (int fd, int tipus, int flags, char *dades) {
+int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades) {
     unsigned char trama[MIDA_TRAMA];
     int mida_dades;
     int escrits;
@@ -37,7 +37,7 @@ int enviarTrama (int fd, int tipus, int flags, char *dades) {
     return resultat;
 }
 
-int rebreTrama (int fd, int *tipus, int *flags, char **dades) {
+int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     unsigned char trama[MIDA_TRAMA];
     int llegits = 0;
     int resultat_read = 1;
@@ -61,7 +61,7 @@ int rebreTrama (int fd, int *tipus, int *flags, char **dades) {
 
         *dades = malloc(sizeof(char) * (mida_dades + 1));
         if (*dades == NULL) {
-            printF(1, MSG_SENSE_MEMORIA);
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
         } else {
             memcpy(*dades, &trama[POS_DADES], mida_dades);
             (*dades)[mida_dades] = '\0';
@@ -76,7 +76,7 @@ int rebreTrama (int fd, int *tipus, int *flags, char **dades) {
 
 
 
-int obrirServidor (char *ip, int port) {
+int TRAMA_obrirServidor (char *ip, int port) {
     struct sockaddr_in s_addr;
     int fd_socket = ERR_CODI;
 
@@ -109,11 +109,11 @@ int obrirServidor (char *ip, int port) {
 
 
 
-int connectarServidor (char *ip, int port) {
+int TRAMA_connectarServidor (char *ip, int port) {
     struct sockaddr_in s_addr;
     int fd_socket = ERR_CODI;
 
-    if (esPortValid(port) == PORT_NO_VALID) {
+    if (UTILS_esPortValid(port) == PORT_NO_VALID) {
         return ERR_CODI;
     }
 

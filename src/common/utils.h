@@ -41,7 +41,7 @@
 * @Retorn: ----.
 *
 ************************************************/
-void printF (int fd, char *text);
+void UTILS_printF (int fd, char *text);
 
 /***********************************************
 *
@@ -51,7 +51,7 @@ void printF (int fd, char *text);
 * @Retorn: Cadena reservada amb malloc, o NULL si s'ha acabat el fitxer.
 *
 ************************************************/
-char *readUntil (int fd, char delimitador);
+char *UTILS_readUntil (int fd, char delimitador);
 
 /***********************************************
 *
@@ -62,17 +62,17 @@ char *readUntil (int fd, char delimitador);
 * @Retorn: Array de cadenes reservat amb malloc, o NULL si no n'hi ha cap.
 *
 ************************************************/
-char **splitString (char *text, char delimitador, int *n_trossos);
+char **UTILS_splitString (char *text, char delimitador, int *n_trossos);
 
 /***********************************************
 *
-* @Finalitat: Allibera l'array retornat per splitString().
+* @Finalitat: Allibera l'array retornat per UTILS_splitString().
 * @Parametres:  in/out: trossos = array a alliberar.
 *               in: n_trossos = nombre de trossos.
 * @Retorn: ----.
 *
 ************************************************/
-void freeTokens (char **trossos, int n_trossos);
+void UTILS_freeTokens (char **trossos, int n_trossos);
 
 /***********************************************
 *
@@ -81,7 +81,7 @@ void freeTokens (char **trossos, int n_trossos);
 * @Retorn: TEXT_NUMERIC o TEXT_NO_NUMERIC.
 *
 ************************************************/
-int esNumeric (char *text);
+int UTILS_esNumeric (char *text);
 
 /***********************************************
 *
@@ -90,7 +90,7 @@ int esNumeric (char *text);
 * @Retorn: PORT_VALID o PORT_NO_VALID.
 *
 ************************************************/
-int esPortValid (int port);
+int UTILS_esPortValid (int port);
 
 /***********************************************
 *
@@ -99,6 +99,6 @@ int esPortValid (int port);
 * @Retorn: Copia reservada amb malloc, o NULL si no hi ha memoria.
 *
 ************************************************/
-char *copiarText (char *text);
+char *UTILS_copiarText (char *text);
 
 #endif

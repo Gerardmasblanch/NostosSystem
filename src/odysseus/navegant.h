@@ -74,7 +74,7 @@ typedef struct {
 * @Retorn: 0 si s'ha inicialitzat, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int inicialitzarNavegant (Navegant *navegant);
+int NAVEGANT_inicialitzarNavegant (Navegant *navegant);
 
 /***********************************************
 *
@@ -83,7 +83,7 @@ int inicialitzarNavegant (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void alliberarNavegant (Navegant *navegant);
+void NAVEGANT_alliberarNavegant (Navegant *navegant);
 
 /***********************************************
 *
@@ -93,7 +93,7 @@ void alliberarNavegant (Navegant *navegant);
 * @Retorn: Total de quilograms de menjar.
 *
 ************************************************/
-int totalProvisions (Navegant *navegant);
+int NAVEGANT_totalProvisions (Navegant *navegant);
 
 /***********************************************
 *
@@ -103,7 +103,7 @@ int totalProvisions (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void consumirRacio (Navegant *navegant, int quilos);
+void NAVEGANT_consumirRacio (Navegant *navegant, int quilos);
 
 /***********************************************
 *
@@ -113,7 +113,7 @@ void consumirRacio (Navegant *navegant, int quilos);
 * @Retorn: Posicio de l'adreca, o ERR_CODI si no es coneix.
 *
 ************************************************/
-int buscarAdreca (Navegant *navegant, char *nom);
+int NAVEGANT_buscarAdreca (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -124,7 +124,7 @@ int buscarAdreca (Navegant *navegant, char *nom);
 * @Retorn: RUTA_DIRECTA o RUTA_NO_DIRECTA.
 *
 ************************************************/
-int esRutaDirecta (Navegant *navegant, char *desti);
+int NAVEGANT_esRutaDirecta (Navegant *navegant, char *desti);
 
 /***********************************************
 *
@@ -134,7 +134,7 @@ int esRutaDirecta (Navegant *navegant, char *desti);
 * @Retorn: 0 si s'ha canviat, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int canviarUbicacio (Navegant *navegant, char *nom);
+int NAVEGANT_canviarUbicacio (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -143,7 +143,7 @@ int canviarUbicacio (Navegant *navegant, char *nom);
 * @Retorn: ----.
 *
 ************************************************/
-void mostrarCarrega (Navegant *navegant);
+void NAVEGANT_mostrarCarrega (Navegant *navegant);
 
 /***********************************************
 *
@@ -152,7 +152,7 @@ void mostrarCarrega (Navegant *navegant);
 * @Retorn: ----.
 *
 ************************************************/
-void mostrarStatus (Navegant *navegant);
+void NAVEGANT_mostrarStatus (Navegant *navegant);
 
 /***********************************************
 *
@@ -162,7 +162,7 @@ void mostrarStatus (Navegant *navegant);
 * @Retorn: Posicio de l'aliment, o ERR_CODI si no existeix.
 *
 ************************************************/
-int buscarAliment (Navegant *navegant, char *nom);
+int NAVEGANT_buscarAliment (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -172,7 +172,7 @@ int buscarAliment (Navegant *navegant, char *nom);
 * @Retorn: Posicio de l'aliment, o ERR_CODI si falta memoria.
 *
 ************************************************/
-int prepararAliment (Navegant *navegant, char *nom);
+int NAVEGANT_prepararAliment (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -185,7 +185,7 @@ int prepararAliment (Navegant *navegant, char *nom);
 * @Retorn: TRAMA_OK si s'ha aplicat, TRAMA_ERROR si la resposta es incorrecta.
 *
 ************************************************/
-int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost);
+int NAVEGANT_guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, int *cost);
 
 /***********************************************
 *
@@ -198,7 +198,7 @@ int guardarCompra (Navegant *navegant, int index, int quantitat, char *dades, in
 * @Retorn: TRAMA_OK si s'ha aplicat, TRAMA_ERROR si la resposta es incorrecta.
 *
 ************************************************/
-int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos);
+int NAVEGANT_guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int *ingressos);
 
 /***********************************************
 *
@@ -208,7 +208,7 @@ int guardarVenda (Navegant *navegant, int index, int quantitat, char *dades, int
 * @Retorn: Posicio de l'illa al mapa, o ERR_CODI si no hi es.
 *
 ************************************************/
-int buscarIllaMapa (Navegant *navegant, char *nom);
+int NAVEGANT_buscarIllaMapa (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -218,7 +218,7 @@ int buscarIllaMapa (Navegant *navegant, char *nom);
 * @Retorn: Posicio de l'illa al mapa, o ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirIllaMapa (Navegant *navegant, char *nom);
+int NAVEGANT_afegirIllaMapa (Navegant *navegant, char *nom);
 
 /***********************************************
 *
@@ -229,7 +229,7 @@ int afegirIllaMapa (Navegant *navegant, char *nom);
 * @Retorn: 0 si s'ha afegit o ja hi era, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirConnexio (Navegant *navegant, int index, char *desti);
+int NAVEGANT_afegirConnexio (Navegant *navegant, int index, char *desti);
 
 /***********************************************
 *
@@ -240,7 +240,7 @@ int afegirConnexio (Navegant *navegant, int index, char *desti);
 * @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirRuta (Navegant *navegant, char *origen, char *desti);
+int NAVEGANT_afegirRuta (Navegant *navegant, char *origen, char *desti);
 
 /***********************************************
 *
@@ -252,6 +252,6 @@ int afegirRuta (Navegant *navegant, char *origen, char *desti);
 * @Retorn: 0 si s'ha guardat o ja hi era, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int afegirAdreca (Navegant *navegant, char *nom, char *ip, int port);
+int NAVEGANT_afegirAdreca (Navegant *navegant, char *nom, char *ip, int port);
 
 #endif

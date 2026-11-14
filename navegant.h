@@ -42,6 +42,7 @@
 #define FORMAT_VIATGE_STATUS "\nCurrent voyage: %s -> %s\nReward: %d\n"
 #define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
+#define MSG_UBICACIO_DESCONEGUDA "Current location: None\n"
 
 
 #define TEXT_COMPRA_OK "OK"

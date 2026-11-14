@@ -148,6 +148,11 @@ void mostrarStatus (Navegant *navegant) {
         printF(1, MSG_STATUS_SENSE_VIATGE);
     }
 
+    if (navegant->estat == ESTAT_ITHACA) {
+        printF(1, MSG_UBICACIO_DESCONEGUDA);
+        return;
+    }
+
     if (asprintf(&missatge, FORMAT_UBICACIO_STATUS, navegant->ubicacio) < 0) {
         printF(1, MSG_SENSE_MEMORIA);
         return;

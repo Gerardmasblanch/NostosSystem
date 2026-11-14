@@ -18,20 +18,22 @@
 
 //Variables globals
 int sortirprogram = 0;
+int canonada_avis[2];
 
 //Procediments i funcions
 
 /***********************************************
 *
-* @Finalitat: Atendre la senyal SIGINT sense finalitzar el proces de cop i lliurar tota la memoria.
+* @Finalitat: Activar la bandera de sortida en rebre SIGINT i escriure un
+*             byte a la pipe d'avis per despertar tots els select.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
 ************************************************/
-
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
         sortirprogram = 1;
+        write(canonada_avis[1], "x", 1);
     }
 }
 
@@ -50,9 +52,6 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    signal(SIGINT, handleSignal);
-    signal(SIGPIPE, SIG_IGN);
-    
     if (CONFIG_readIslandConfig(argv[1], &config) < 0) {
         UTILS_printF(1, "Error: no s'ha pogut obrir el fitxer de configuracio.\n");
         return -1;
@@ -89,20 +88,33 @@ int main (int argc, char *argv[]) {
 
     HARBOR_mostrarInici(&config, mercat.n_productes);
 
-    HARBOR_inicialitzarHarbor(&harbor);
-    HARBOR_executarServidor(fd_servidor, &harbor, &config, &mercat, &sortirprogram);
+    if (pipe(canonada_avis) < 0) {
+        UTILS_printF(1, MSG_ERROR_PIPE);
+        close(fd_servidor);
+        CONFIG_freeStock(mercat.productes);
+        CONFIG_freeIslandConfig(&config);
+        return -1;
+    }
+
+    signal(SIGINT, handleSignal);
+    signal(SIGPIPE, SIG_IGN);
+
+    MARKET_inicialitzarMercat(&mercat);
+    HARBOR_inicialitzarHarbor(&harbor, &config, &mercat, canonada_avis[0]);
+
+    HARBOR_executarServidor(fd_servidor, &harbor);
 
     asprintf(&missatge, "\n%s closes its port.\n", config.name);
     UTILS_printF(1, missatge);
     free(missatge);
 
     HARBOR_alliberarHarbor(&harbor);
+    MARKET_destruirMercat(&mercat);
+    close(canonada_avis[0]);
+    close(canonada_avis[1]);
     close(fd_servidor);
     CONFIG_freeStock(mercat.productes);
     CONFIG_freeIslandConfig(&config);
-
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT);
 
     return 0;
 

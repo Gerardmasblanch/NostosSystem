@@ -39,6 +39,8 @@
 #define MSG_ATRACAT    ">>> %s entered the port.\n"
 #define MSG_PORT_PLE   ">>> Port full. %s waiting offshore in the FIFO queue.\n"
 #define MSG_HA_MARXAT "\n>>> %s has left.\n"
+#define MSG_ERROR_PIPE   "Error: no s'ha pogut crear la pipe d'avis.\n"
+#define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del vaixell.\n"
 #define MSG_INICI_ILLA "Island %s initialized.\nPort capacity: %d %s.\n%d sea routes loaded.\n%d products available.\n"
 
 //Structs

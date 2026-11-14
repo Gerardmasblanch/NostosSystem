@@ -1,9 +1,12 @@
 /***********************************************
 *
 * @Proposit: Gestio del servidor de l'illa, connexions, port i cua d'espera.
+*            El fil principal accepta vaixells i cada vaixell s'atén en un
+*            thread propi. La llista de vaixells i el port (places, cua i
+*            estat de cada vaixell) es protegeixen amb un mutex cadascun.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -131,17 +134,8 @@ void HARBOR_esperarVaixells (Harbor *harbor);
 
 /***********************************************
 *
-* @Finalitat: Funcio del thread de cada vaixell: atén les seves trames fins
-*             que marxa, cau la connexio o s'avisa la sortida de l'illa.
-* @Parametres:  in/out: arg = punter al Vaixell que atén el thread.
-* @Retorn: NULL.
-*
-************************************************/
-void *HARBOR_atendreVaixell (void *arg);
-
-/***********************************************
-*
-* @Finalitat: Treu de la cua d'espera l'element d'una posicio mantenint l'ordre.
+* @Finalitat: Treu de la cua d'espera l'element d'una posicio mantenint
+*             l'ordre. S'ha de cridar amb mutex_port agafat.
 * @Parametres:  in/out: harbor = port amb la cua.
 *               in: posicio = posicio de la cua que es treu.
 * @Retorn: ----.
@@ -151,109 +145,84 @@ void HARBOR_treureDeLaCua (Harbor *harbor, int posicio);
 
 /***********************************************
 *
-* @Finalitat: Treu un vaixell de la llista, alliberant la seva plaça o el seu
-*             lloc a la cua, i tanca el seu socket.
-* @Parametres:  in/out: harbor = port on es troba el vaixell.
-*               in: index = posicio del vaixell a la llista.
-* @Retorn: ----.
-*
-************************************************/
-void HARBOR_treureVaixell (Harbor *harbor, int index);
-
-/***********************************************
-*
-* @Finalitat: Busca un vaixell de la llista a partir del seu socket.
-* @Parametres:  in: harbor = port on es busca.
-*               in: fd = socket del vaixell.
-* @Retorn: Posicio del vaixell a la llista, o ERR_CODI si no hi es.
-*
-************************************************/
-int HARBOR_buscarVaixell (Harbor *harbor, int fd);
-
-/***********************************************
-*
-* @Finalitat: Fa entrar al port els primers vaixells de la cua mentre hi hagi
-*             places lliures, i els envia DOCKED.
+* @Finalitat: Afegeix un vaixell al final de la cua d'espera. S'ha de
+*             cridar amb mutex_port agafat.
 * @Parametres:  in/out: harbor = port amb la cua.
-*               in: capacitat = places totals del port.
-* @Retorn: ----.
-*
-************************************************/
-void HARBOR_atracarSeguent (Harbor *harbor, int capacitat);
-
-/***********************************************
-*
-* @Finalitat: Afegeix un vaixell al final de la cua d'espera.
-* @Parametres:  in/out: harbor = port amb la cua.
-*               in: fd = socket del vaixell que espera.
+*               in: vaixell = vaixell que espera.
 * @Retorn: 0 si s'ha afegit, ERR_CODI si no hi ha memoria.
 *
 ************************************************/
-int HARBOR_afegirALaCua (Harbor *harbor, int fd);
+int HARBOR_afegirALaCua (Harbor *harbor, Vaixell *vaixell);
 
 /***********************************************
 *
-* @Finalitat: Atén l'arribada d'un vaixell, el deixa TRAVESSIA_atracar si hi ha plaça o
-*             el posa a la cua d'espera si el port es ple.
-* @Parametres:  in/out: harbor = port de l'illa.
-*               in: index = posicio del vaixell a la llista.
+* @Finalitat: Fa entrar al port els primers vaixells de la cua mentre hi
+*             hagi places lliures i els envia DOCKED. S'ha de cridar amb
+*             mutex_port agafat: aixi cap socket de la cua es pot tancar
+*             mentre s'envia el DOCKED.
+* @Parametres:  in/out: harbor = port amb la cua.
+* @Retorn: ----.
+*
+************************************************/
+void HARBOR_atracarSeguent (Harbor *harbor);
+
+/***********************************************
+*
+* @Finalitat: Atén l'arribada d'un vaixell: el deixa atracar si hi ha plaça
+*             o el posa a la cua si el port es ple. Comprovar i ocupar la
+*             plaça i enviar la resposta es fa dins de mutex_port, perque
+*             el WAIT arribi sempre abans d'un possible DOCKED.
+* @Parametres:  in/out: vaixell = vaixell que arriba.
 *               in: dades = nom del vaixell rebut a la trama.
-*               in: config = configuracio de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
-void HARBOR_atendreArribada (Harbor *harbor, int index, char *dades, IslandConfig *config);
+void HARBOR_atendreArribada (Vaixell *vaixell, char *dades);
 
 /***********************************************
 *
-* @Finalitat: Treu un vaixell de l'illa i fa entrar el seguent de la cua si
-*             s'ha alliberat una plaça.
-* @Parametres:  in/out: harbor = port de l'illa.
-*               in: index = posicio del vaixell a la llista.
-*               in: config = configuracio de l'illa.
-* @Retorn: ----.
+* @Finalitat: Atén la peticio de sortida d'un vaixell i li confirma. La
+*             placa l'allibera HARBOR_ferSortir quan acaba el thread.
+* @Parametres:  in/out: vaixell = vaixell que marxa.
+* @Retorn: VAIXELL_ACABA si s'ha confirmat la sortida, VAIXELL_CONTINUA si
+*          el vaixell encara no havia arribat.
 *
 ************************************************/
-void HARBOR_ferSortir (Harbor *harbor, int index, IslandConfig *config);
+int HARBOR_atendreSortida (Vaixell *vaixell);
 
 /***********************************************
 *
-* @Finalitat: Atén la peticio de sortida d'un vaixell i li confirma.
-* @Parametres:  in/out: harbor = port de l'illa.
-*               in: index = posicio del vaixell a la llista.
-*               in: config = configuracio de l'illa.
+* @Finalitat: Allibera la plaça o el lloc a la cua d'un vaixell que marxa o
+*             cau i, si l'illa no s'esta tancant, fa entrar el seguent de
+*             la cua.
+* @Parametres:  in/out: vaixell = vaixell que surt.
+*               in: tancant_illa = 1 si s'esta tancant l'illa amb CTRL+C.
 * @Retorn: ----.
 *
 ************************************************/
-void HARBOR_atendreSortida (Harbor *harbor, int index, IslandConfig *config);
+void HARBOR_ferSortir (Vaixell *vaixell, int tancant_illa);
 
 /***********************************************
 *
 * @Finalitat: Atén una peticio del mercat (LIST MARKET, BUY, SELL o BUY MAP)
 *             si el vaixell esta atracat.
-* @Parametres:  in: harbor = port de l'illa.
-*               in: index = posicio del vaixell a la llista.
+* @Parametres:  in: vaixell = vaixell que fa la peticio.
 *               in: tipus = tipus de la trama rebuda.
 *               in: dades = text de la peticio.
-*               in: config = configuracio de l'illa.
-*               in/out: mercat = mercat de l'illa.
 * @Retorn: ----.
 *
 ************************************************/
-void HARBOR_atendreMercat (Harbor *harbor, int index, int tipus, char *dades, IslandConfig *config, Mercat *mercat);
-
+void HARBOR_atendreMercat (Vaixell *vaixell, int tipus, char *dades);
 
 /***********************************************
 *
 * @Finalitat: Llegeix una trama d'un vaixell i l'atén segons el seu tipus.
-*             Si la lectura falla, considera que el vaixell ha marxat.
-* @Parametres:  in/out: harbor = port de l'illa.
-*               in: index = posicio del vaixell a la llista.
-*               in: config = configuracio de l'illa.
-* @Retorn: ----.
+* @Parametres:  in/out: vaixell = vaixell que ha enviat la trama.
+* @Retorn: VAIXELL_CONTINUA si s'ha de seguir atenent el vaixell,
+*          VAIXELL_ACABA si ha marxat o s'ha perdut la connexio.
 *
 ************************************************/
-void HARBOR_atendreTrama (Harbor *harbor, int index, IslandConfig *config, Mercat *mercat);
+int HARBOR_atendreTrama (Vaixell *vaixell);
 
 /***********************************************
 *
@@ -274,6 +243,16 @@ void HARBOR_alliberarHarbor (Harbor *harbor);
 *
 ************************************************/
 void HARBOR_mostrarInici (IslandConfig *config, int n_productes);
+
+/***********************************************
+*
+* @Finalitat: Funcio del thread de cada vaixell: atén les seves trames fins
+*             que marxa, cau la connexio o s'avisa la sortida de l'illa.
+* @Parametres:  in/out: arg = punter al Vaixell que atén el thread.
+* @Retorn: NULL.
+*
+************************************************/
+void *HARBOR_atendreVaixell (void *arg);
 
 /***********************************************
 *

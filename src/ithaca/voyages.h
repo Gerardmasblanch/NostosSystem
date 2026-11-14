@@ -12,6 +12,7 @@
 #define _VOYAGES_H
 
 #include <sys/select.h>
+#include <pthread.h>
 
 #include "trama.h"
 #include "types.h"
@@ -48,12 +49,17 @@
 #define MSG_VIATGE_ASSIGNAT ">>> Voyage %d assigned to %s.\n"
 #define MSG_VIATGE_FRACASSAT ">>> Voyage %d of %s marked as failed.\n"
 
+typedef struct ServidorIthaca ServidorIthaca;
+
 typedef struct {
+    ServidorIthaca *servidor;
+    pthread_t fil;
     int fd;
     char *nom;
     int viatge_acceptat;
     int *viatges_consultats;
     int n_viatges_consultats;
+    int acabat;
 } ClientIthaca;
 
 typedef struct {
@@ -62,21 +68,36 @@ typedef struct {
     char *nom_odysseus;
 } ViatgeIthaca;
 
-typedef struct {
-    ClientIthaca *clients;
-    int n_clients;
+struct ServidorIthaca {
     ViatgeIthaca *viatges;
     int n_viatges;
-} ServidorIthaca;
+    pthread_mutex_t mutex_viatges;
+    ClientIthaca **clients;
+    int n_clients;
+    pthread_mutex_t mutex_clients;
+    int fd_avis;
+};
 
 /***********************************************
 *
-* @Finalitat: Inicialitzar el servidor sense clients connectats.
+* @Finalitat: Inicialitzar el servidor sense clients ni viatges i crear els
+*             mutex de la taula de viatges i de la llista de clients.
 * @Parametres: out: servidor = estructura del servidor a inicialitzar.
+*              in: fd_avis = extrem de lectura de la pipe d'avis de sortida.
 * @Retorn: ----.
 *
 ************************************************/
-void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor);
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, int fd_avis);
+
+/***********************************************
+*
+* @Finalitat: Alliberar la memoria d'un client. El socket ja l'ha d'haver
+*             tancat el seu thread.
+* @Parametres: in/out: client = client a alliberar.
+* @Retorn: ----.
+*
+************************************************/
+void VOYAGES_alliberarClient (ClientIthaca *client);
 
 /***********************************************
 *
@@ -123,7 +144,9 @@ void VOYAGES_treureClientIthaca (ServidorIthaca *servidor, int index);
 
 /***********************************************
 *
-* @Finalitat: Tancar les connexions dels clients i alliberar la seva llista.
+* @Finalitat: Alliberar els clients, els viatges i els mutex del servidor.
+*             Nomes es pot cridar quan ja s'ha fet el join de tots els
+*             threads.
 * @Parametres: in/out: servidor = servidor que s'ha d'alliberar.
 * @Retorn: ----.
 *

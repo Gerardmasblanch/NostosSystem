@@ -2,9 +2,9 @@
 *.o
 *.exe
 *.out
-odysseus
-ithaca
-island
+/odysseus
+/ithaca
+/island
 
 # Excepcio: sphragis.o ve compilat de l'eStudy i no es pot regenerar
 !sphragis.o

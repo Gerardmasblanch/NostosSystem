@@ -10,11 +10,22 @@
 #include "voyages.h"
 
 
-void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor) {
-    servidor->clients = NULL;
-    servidor->n_clients = 0;
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, int fd_avis) {
     servidor->viatges = NULL;
     servidor->n_viatges = 0;
+    servidor->clients = NULL;
+    servidor->n_clients = 0;
+    servidor->fd_avis = fd_avis;
+
+    pthread_mutex_init(&servidor->mutex_viatges, NULL);
+    pthread_mutex_init(&servidor->mutex_clients, NULL);
+}
+
+
+void VOYAGES_alliberarClient (ClientIthaca *client) {
+    free(client->nom);
+    free(client->viatges_consultats);
+    free(client);
 }
 
 
@@ -356,23 +367,24 @@ void VOYAGES_treureClientIthaca (ServidorIthaca *servidor, int index) {
 
 
 void VOYAGES_alliberarServidorIthaca (ServidorIthaca *servidor) {
-    int i = 0;
+    int i;
 
-    while (servidor->n_clients > 0) {
-        VOYAGES_treureClientIthaca(servidor, servidor->n_clients - 1);
+    for (i = 0; i < servidor->n_clients; i++) {
+        VOYAGES_alliberarClient(servidor->clients[i]);
     }
-
     free(servidor->clients);
     servidor->clients = NULL;
+    servidor->n_clients = 0;
 
     for (i = 0; i < servidor->n_viatges; i++) {
         free(servidor->viatges[i].nom_odysseus);
     }
-
     free(servidor->viatges);
     servidor->viatges = NULL;
     servidor->n_viatges = 0;
 
+    pthread_mutex_destroy(&servidor->mutex_viatges);
+    pthread_mutex_destroy(&servidor->mutex_clients);
 }
 
 

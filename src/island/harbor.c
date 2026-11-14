@@ -118,6 +118,14 @@ void HARBOR_netejarVaixellsAcabats (Harbor *harbor) {
     pthread_mutex_unlock(&harbor->mutex_vaixells);
 }
 
+void HARBOR_esperarVaixells (Harbor *harbor) {
+    int i;
+
+    for (i = 0; i < harbor->n_vaixells; i++) {
+        pthread_join(harbor->vaixells[i]->fil, NULL);
+    }
+}
+
 void HARBOR_treureDeLaCua (Harbor *harbor, int posicio) {
     int i;
 

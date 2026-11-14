@@ -154,6 +154,16 @@ void mostrarStatus (Navegant *navegant) {
         return;
     }
 
+    if (navegant->estat == ESTAT_ESPERANT) {
+        if (asprintf(&missatge, FORMAT_UBICACIO_ESPERANT, navegant->ubicacio) < 0) {
+            printF(1, MSG_SENSE_MEMORIA);
+            return;
+        }
+        printF(1, missatge);
+        free(missatge);
+        return;
+    }
+
     if (asprintf(&missatge, FORMAT_UBICACIO_STATUS, navegant->ubicacio) < 0) {
         printF(1, MSG_SENSE_MEMORIA);
         return;

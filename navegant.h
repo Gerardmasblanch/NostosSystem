@@ -43,6 +43,7 @@
 #define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
 #define MSG_UBICACIO_DESCONEGUDA "Current location: None\n"
+#define FORMAT_UBICACIO_ESPERANT "Current location: Off the coast of %s\n"
 
 
 #define TEXT_COMPRA_OK "OK"

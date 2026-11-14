@@ -20,6 +20,7 @@
 #define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n" 
 
 #define MSG_ERROR_PIPE "Error: no s'ha pogut crear la pipe d'avis.\n"
+#define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del client.\n"
 #define MSG_ERROR_ACCEPT "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
 #define TEXT_ITHACA_OK "OK"
@@ -124,14 +125,33 @@ int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server);
 
 /***********************************************
 *
-* @Finalitat: Preparar el conjunt de sockets que vigilara select.
-* @Parametres: out: conjunt = conjunt de descriptors a preparar.
-*              in: fd_server = socket que escolta connexions.
-*              in: servidor = servidor amb els clients connectats.
-* @Retorn: El descriptor mes gran del conjunt.
+* @Finalitat: Fer el join i alliberar els clients el thread dels quals ja
+*             ha acabat, i treure'ls de la llista.
+* @Parametres: in/out: servidor = servidor amb la llista de clients.
+* @Retorn: ----.
 *
 ************************************************/
-int VOYAGES_prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor);
+void VOYAGES_netejarClientsAcabats (ServidorIthaca *servidor);
+
+/***********************************************
+*
+* @Finalitat: Esperar (join) que acabin els threads de tots els clients
+*             que queden connectats en tancar Ithaca.
+* @Parametres: in/out: servidor = servidor amb la llista de clients.
+* @Retorn: ----.
+*
+************************************************/
+void VOYAGES_esperarClients (ServidorIthaca *servidor);
+
+/***********************************************
+*
+* @Finalitat: Funcio del thread de cada client: atén les seves trames fins
+*             que marxa, cau la connexio o s'avisa la sortida d'Ithaca.
+* @Parametres: in/out: arg = punter al ClientIthaca que atén el thread.
+* @Retorn: NULL.
+*
+************************************************/
+void *VOYAGES_atendreClient (void *arg);
 
 /***********************************************
 *
@@ -177,14 +197,15 @@ void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index);
 
 /***********************************************
 *
-* @Finalitat: Esperar connexions i atendre els clients amb select.
+* @Finalitat: Bucle del fil principal: espera connexions i crea un thread
+*             per a cada client fins que la pipe d'avis indica la sortida.
+*             En acabar, espera tots els threads.
 * @Parametres: in: fd_server = socket que escolta connexions.
 *              in/out: servidor = servidor amb els clients connectats.
-*              in: sortir = bandera activada pel handler de SIGINT.
-* @Retorn: 0 si es tanca per la bandera, ERR_CODI si falla.
+* @Retorn: 0 si es tanca per l'avis de sortida, ERR_CODI si falla.
 *
 ************************************************/
-int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir);
+int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor);
 
 /***********************************************
 *

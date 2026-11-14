@@ -297,11 +297,12 @@ int VOYAGES_atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dade
 
 
 int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
-    ClientIthaca *nous_clients = NULL;
+    ClientIthaca *client = NULL;
+    ClientIthaca **nous_clients = NULL;
     int fd_client;
 
     fd_client = accept(fd_server, NULL, NULL);
-    if (fd_client == ERR_CODI) {
+    if (fd_client < 0) {
         UTILS_printF(1, MSG_ERROR_ACCEPT);
         return ERR_CODI;
     }
@@ -312,42 +313,75 @@ int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server) {
         return ERR_CODI;
     }
 
-    nous_clients = realloc(servidor->clients, sizeof(ClientIthaca) * (servidor->n_clients + 1));
-
-    if (nous_clients == NULL) {
+    client = malloc(sizeof(ClientIthaca));
+    if (client == NULL) {
         UTILS_printF(1, MSG_SENSE_MEMORIA);
         close(fd_client);
         return ERR_CODI;
     }
 
+    client->servidor = servidor;
+    client->fd = fd_client;
+    client->nom = NULL;
+    client->viatge_acceptat = 0;
+    client->viatges_consultats = NULL;
+    client->n_viatges_consultats = 0;
+    client->acabat = 0;
+
+    pthread_mutex_lock(&servidor->mutex_clients);
+
+    nous_clients = realloc(servidor->clients, sizeof(ClientIthaca *) * (servidor->n_clients + 1));
+    if (nous_clients == NULL) {
+        pthread_mutex_unlock(&servidor->mutex_clients);
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        close(fd_client);
+        free(client);
+        return ERR_CODI;
+    }
+
     servidor->clients = nous_clients;
-    servidor->clients[servidor->n_clients].fd = fd_client;
-    servidor->clients[servidor->n_clients].nom = NULL;
-    servidor->clients[servidor->n_clients].viatge_acceptat = 0;
-    servidor->clients[servidor->n_clients].viatges_consultats = NULL;
-    servidor->clients[servidor->n_clients].n_viatges_consultats = 0;
+    servidor->clients[servidor->n_clients] = client;
     servidor->n_clients++;
+
+    if (pthread_create(&client->fil, NULL, VOYAGES_atendreClient, client) != 0) {
+        servidor->n_clients--;
+        pthread_mutex_unlock(&servidor->mutex_clients);
+        UTILS_printF(1, MSG_ERROR_THREAD);
+        close(fd_client);
+        free(client);
+        return ERR_CODI;
+    }
+
+    pthread_mutex_unlock(&servidor->mutex_clients);
 
     return 0;
 }
 
 
-int VOYAGES_prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor) {
-    int i;
-    int max_fd = fd_server;
+void VOYAGES_netejarClientsAcabats (ServidorIthaca *servidor) {
+    ClientIthaca *client = NULL;
+    int i = 0;
+    int j;
 
-    FD_ZERO(conjunt);
-    FD_SET(fd_server, conjunt);
+    pthread_mutex_lock(&servidor->mutex_clients);
 
-    for (i = 0; i < servidor->n_clients; i++) {
-        FD_SET(servidor->clients[i].fd, conjunt);
+    while (i < servidor->n_clients) {
+        if (servidor->clients[i]->acabat == 1) {
+            client = servidor->clients[i];
 
-        if (servidor->clients[i].fd > max_fd) {
-            max_fd = servidor->clients[i].fd;
+            for (j = i; j < servidor->n_clients - 1; j++) {
+                servidor->clients[j] = servidor->clients[j + 1];
+            }
+            servidor->n_clients--;
+
+            pthread_join(client->fil, NULL);
+            VOYAGES_alliberarClient(client);
+        } else {
+            i++;
         }
     }
 
-    return max_fd;
+    pthread_mutex_unlock(&servidor->mutex_clients);
 }
 
 
@@ -495,39 +529,38 @@ void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index) {
     }
 }
 
-int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir) {
+int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor) {
     fd_set conjunt;
     int max_fd;
-    int resultat;
-    int i;
+    int sortir = 0;
 
-    if (fd_server < 0 || fd_server >= FD_SETSIZE) {
+    if (fd_server >= FD_SETSIZE || servidor->fd_avis >= FD_SETSIZE) {
         UTILS_printF(1, MSG_ERROR_DESCRIPTOR);
         return ERR_CODI;
     }
 
-    while (*sortir == 0) {
-        max_fd = VOYAGES_prepararSetIthaca(&conjunt, fd_server, servidor);
+    max_fd = fd_server;
+    if (servidor->fd_avis > max_fd) {
+        max_fd = servidor->fd_avis;
+    }
 
-        resultat = select(max_fd + 1, &conjunt, NULL, NULL, NULL);
+    while (sortir == 0) {
+        FD_ZERO(&conjunt);
+        FD_SET(fd_server, &conjunt);
+        FD_SET(servidor->fd_avis, &conjunt);
 
-        if (resultat < 0) {
-            if (*sortir == 0) {
-                UTILS_printF(1, MSG_ERROR_SELECT);
-                return ERR_CODI;
-            }
-        } else if (*sortir == 0) {
-            for (i = servidor->n_clients - 1; i >= 0; i--) {
-                if (FD_ISSET(servidor->clients[i].fd, &conjunt)) {
-                    VOYAGES_atendreTramaIthaca(servidor, i);
-                }
-            }
-
-            if (FD_ISSET(fd_server, &conjunt)) {
+        if (select(max_fd + 1, &conjunt, NULL, NULL, NULL) > 0) {
+            if (FD_ISSET(servidor->fd_avis, &conjunt)) {
+                sortir = 1;
+            } else if (FD_ISSET(fd_server, &conjunt)) {
                 VOYAGES_acceptarClientIthaca(servidor, fd_server);
             }
         }
+
+        VOYAGES_netejarClientsAcabats(servidor);
     }
+
+    VOYAGES_esperarClients(servidor);
 
     return 0;
 }

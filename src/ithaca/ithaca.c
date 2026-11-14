@@ -108,7 +108,7 @@ int main (int argc, char *argv[]) {
         return ERR_CODI;
     }
 
-    resultat = VOYAGES_executarServidorIthaca(fd_server, &servidor, &sortirprogram);
+    resultat = VOYAGES_executarServidorIthaca(fd_server, &servidor);
 
     if (sortirprogram == 1) {
         UTILS_printF(1, "\nIthaca closes the harbor.\n");

@@ -352,6 +352,45 @@ void HARBOR_mostrarInici (IslandConfig *config, int n_productes) {
     free(missatge);
 }
 
+void *HARBOR_atendreVaixell (void *arg) {
+    Vaixell *vaixell = (Vaixell *) arg;
+    Harbor *harbor = vaixell->harbor;
+    fd_set set;
+    int max_fd;
+    int continuar = VAIXELL_CONTINUA;
+    int tancant_illa = 0;
+
+    max_fd = vaixell->fd;
+    if (harbor->fd_avis > max_fd) {
+        max_fd = harbor->fd_avis;
+    }
+
+    while (continuar == VAIXELL_CONTINUA) {
+        FD_ZERO(&set);
+        FD_SET(vaixell->fd, &set);
+        FD_SET(harbor->fd_avis, &set);
+
+        if (select(max_fd + 1, &set, NULL, NULL, NULL) > 0) {
+            if (FD_ISSET(harbor->fd_avis, &set)) {
+                tancant_illa = 1;
+                continuar = VAIXELL_ACABA;
+            } else if (FD_ISSET(vaixell->fd, &set)) {
+                continuar = HARBOR_atendreTrama(vaixell);
+            }
+        }
+    }
+
+    HARBOR_ferSortir(vaixell, tancant_illa);
+
+    close(vaixell->fd);
+
+    pthread_mutex_lock(&harbor->mutex_vaixells);
+    vaixell->acabat = 1;
+    pthread_mutex_unlock(&harbor->mutex_vaixells);
+
+    return NULL;
+}
+
 void HARBOR_executarServidor (int fd_servidor, Harbor *harbor) {
     fd_set set;
     int max_fd;

@@ -13,7 +13,7 @@ ISLAND   = src/island
 
 # sphragis.o ve compilat des de l'eStudy (objecte ELF de Linux: nomes enllaca
 # a Montserrat, no a Windows). Nomes depen de la libc, no cal cap -l extra.
-OBJECTES_COMUNS = $(COMMON)/utils.o $(COMMON)/config.o $(COMMON)/trama.o $(COMMON)/sphragis.o
+OBJECTES_COMUNS = $(COMMON)/utils.o $(COMMON)/config.o $(COMMON)/trama.o $(COMMON)/fitxer.o $(COMMON)/sphragis.o
 
 OBJECTES_ODYSSEUS = $(ODYSSEUS)/odysseus.o $(ODYSSEUS)/commands.o $(ODYSSEUS)/navegant.o $(ODYSSEUS)/travessia.o
 OBJECTES_ITHACA   = $(ITHACA)/ithaca.o $(ITHACA)/voyages.o
@@ -32,7 +32,7 @@ island: $(OBJECTES_ISLAND) $(OBJECTES_COMUNS)
 
 # Cada .o depen de tots els .h: si es canvia una capcalera (un #define,
 # un struct...) es recompila tot el que la podria fer servir.
-CAPCALERES = $(COMMON)/types.h $(COMMON)/utils.h $(COMMON)/config.h $(COMMON)/trama.h $(COMMON)/sphragis.h \
+CAPCALERES = $(COMMON)/types.h $(COMMON)/utils.h $(COMMON)/config.h $(COMMON)/trama.h $(COMMON)/fitxer.h $(COMMON)/sphragis.h \
              $(ODYSSEUS)/commands.h $(ODYSSEUS)/navegant.h $(ODYSSEUS)/travessia.h \
              $(ITHACA)/voyages.h \
              $(ISLAND)/harbor.h $(ISLAND)/market.h
@@ -42,6 +42,5 @@ CAPCALERES = $(COMMON)/types.h $(COMMON)/utils.h $(COMMON)/config.h $(COMMON)/tr
 
 # sphragis.o no es compila: ja ve fet. Per aixo clean no l'esborra.
 clean:
-	rm -f $(COMMON)/utils.o $(COMMON)/config.o $(COMMON)/trama.o $(OBJECTES_ODYSSEUS) $(OBJECTES_ITHACA) $(OBJECTES_ISLAND) odysseus ithaca island
-
+	rm -f $(COMMON)/utils.o $(COMMON)/config.o $(COMMON)/trama.o $(COMMON)/fitxer.o $(OBJECTES_ODYSSEUS) $(OBJECTES_ITHACA) $(OBJECTES_ISLAND) odysseus ithaca island
 .PHONY: all clean

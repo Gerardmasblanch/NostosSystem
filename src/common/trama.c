@@ -4,7 +4,7 @@
 *            l'obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -183,8 +183,6 @@ int TRAMA_obrirServidor (char *ip, int port) {
 
     return fd_socket;
 }
-
-
 
 int TRAMA_connectarServidor (char *ip, int port) {
     struct sockaddr_in s_addr;

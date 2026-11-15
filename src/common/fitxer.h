@@ -3,66 +3,65 @@
 * @Proposit: Operacions amb fitxers per a les transferencies del sistema.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 14/11/2026
-* @Data ultima modificacio: 14/11/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
+//Define Guards
 #ifndef _FITXER_H
 #define _FITXER_H
 
+//Llibreries del sistema
 #include <sys/wait.h>
 
+//Llibreries propies
 #include "trama.h"
 
-#define FITXER_ERROR -1
+//Constants
+#define FITXER_OK          0
+#define FITXER_ERROR      -1
+#define FITXER_ERROR_MIDA -2
+#define FITXER_ERROR_MD5  -3
+#define FITXER_REBUTJAT   -4
 
-#define N_CAMPS_FITXER 4
+#define FITXER_NOM_NO_VALID 0
+#define FITXER_NOM_VALID    1
 
-#define TEXT_FITXER_OBJECT "OBJECT"
-#define TEXT_FITXER_SIGNED "SIGNED"
+#define N_CAMPS_FITXER  4
+#define MIDA_MD5        32
+#define PERMISOS_FITXER 0644
+#define COMANDA_MD5     "md5sum"
+
+#define FORMAT_FITXER_CAPCALERA "%s&%s&%d&%s"
+#define FORMAT_FITXER_RUTA      "%s/%s%s"
+
+#define TEXT_FITXER_OBJECT      "OBJECT"
+#define TEXT_FITXER_SIGNED      "SIGNED"
+#define TEXT_FITXER_READY       "READY"
+#define TEXT_FITXER_OK          "OK"
+#define TEXT_FITXER_ERROR_MIDA  "SIZE_ERROR"
+#define TEXT_FITXER_ERROR_MD5   "MD5_ERROR"
+#define TEXT_FITXER_ERROR_CREAR "FILE_ERROR"
 
 #define TEXT_FITXER_INVALID_TYPE  "INVALID_TYPE"
 #define TEXT_FITXER_INVALID_FLAGS "INVALID_FLAGS"
 #define TEXT_FITXER_INVALID_DATA  "INVALID_DATA"
 
-#define MIDA_MD5 32
-#define FITXER_OK 0
-#define COMANDA_MD5 "md5sum"
-
-#define MSG_FITXER_ERROR_MD5 "Error: no s'ha pogut calcular l'MD5 del fitxer.\n"
-#define MSG_FITXER_ERROR_OBRIR "Error: no s'ha pogut obrir el fitxer.\n"
-#define MSG_FITXER_ERROR_MIDA "Error: no s'ha pogut obtenir la mida del fitxer.\n"
-
-#define FITXER_ERROR_MIDA -2
-#define FITXER_ERROR_MD5  -3
-#define FITXER_REBUTJAT   -4
-
-#define FORMAT_FITXER_CAPCALERA "%s&%s&%d&%s"
-
-#define MSG_FITXER_CAPCALERA_LLARGA "Error: la capcalera del fitxer supera els 253 bytes.\n"
-#define MSG_FITXER_ERROR_ENVIAR "Error: no s'ha pogut enviar la trama del fitxer.\n"
-
-#define TEXT_FITXER_READY "READY"
-
-#define MSG_FITXER_ERROR_REBRE "Error: no s'ha pogut rebre la trama del fitxer.\n"
+#define MSG_FITXER_ERROR_OBRIR       "Error: no s'ha pogut obrir el fitxer.\n"
+#define MSG_FITXER_ERROR_MIDA        "Error: no s'ha pogut obtenir la mida del fitxer.\n"
+#define MSG_FITXER_ERROR_MD5         "Error: no s'ha pogut calcular l'MD5 del fitxer.\n"
+#define MSG_FITXER_ERROR_LLEGIR      "Error: no s'ha pogut llegir el bloc complet del fitxer.\n"
+#define MSG_FITXER_ERROR_ESCRIURE    "Error: no s'ha pogut escriure el bloc al fitxer.\n"
+#define MSG_FITXER_ERROR_ENVIAR      "Error: no s'ha pogut enviar la trama del fitxer.\n"
+#define MSG_FITXER_ERROR_REBRE       "Error: no s'ha pogut rebre la trama del fitxer.\n"
+#define MSG_FITXER_CAPCALERA_LLARGA  "Error: la capcalera del fitxer supera els 253 bytes.\n"
+#define MSG_FITXER_MIDA_INVALIDA     "Error: la mida del fitxer no pot ser negativa.\n"
 #define MSG_FITXER_RESPOSTA_INVALIDA "Error: resposta de transferencia no valida.\n"
-#define MSG_FITXER_REBUTJAT "Error: el receptor ha rebutjat la transferencia.\n"
-#define MSG_FITXER_ERROR_LLEGIR "Error: no s'ha pogut llegir el bloc complet del fitxer.\n"
-#define MSG_FITXER_MIDA_INVALIDA "Error: la mida del fitxer no pot ser negativa.\n"
+#define MSG_FITXER_REBUTJAT          "Error: el receptor ha rebutjat la transferencia.\n"
+#define MSG_FITXER_MIDA_DIFERENT     "Error: el receptor ha detectat una mida incorrecta.\n"
+#define MSG_FITXER_MD5_DIFERENT      "Error: el receptor ha detectat un MD5 diferent.\n"
 
-#define TEXT_FITXER_OK         "OK"
-#define TEXT_FITXER_ERROR_MIDA "SIZE_ERROR"
-#define TEXT_FITXER_ERROR_MD5  "MD5_ERROR"
-
-#define MSG_FITXER_MIDA_DIFERENT "Error: el receptor ha detectat una mida incorrecta.\n"
-#define MSG_FITXER_MD5_DIFERENT "Error: el receptor ha detectat un MD5 diferent.\n"
-
-#define FORMAT_FITXER_RUTA "%s/%s%s"
-#define TEXT_FITXER_ERROR_CREAR "FILE_ERROR"
-#define PERMISOS_FITXER 0644
-
-#define MSG_FITXER_ERROR_ESCRIURE "Error: no s'ha pogut escriure el bloc al fitxer.\n"
-
+//Procediments i funcions
 
 /***********************************************
 *
@@ -72,7 +71,6 @@
 *
 ************************************************/
 int FITXER_midaFitxer (char *path);
-
 
 /***********************************************
 *
@@ -96,6 +94,7 @@ int FITXER_calcularMD5 (char *path, char *md5);
 *          FITXER_ERROR si hi ha un error local o de comunicacio;
 *          FITXER_ERROR_MIDA o FITXER_ERROR_MD5 segons l'ACK rebut;
 *          FITXER_REBUTJAT si el receptor rebutja la transferencia.
+*          Si retorna un error, el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket.
 *
 ************************************************/
 int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta);
@@ -162,6 +161,7 @@ int FITXER_esperarAck (int fd);
 *          FITXER_ERROR_MIDA si la mida es incorrecta;
 *          FITXER_ERROR_MD5 si l'MD5 es diferent;
 *          FITXER_ERROR si hi ha un altre error.
+*          Si retorna un error, el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket.
 *
 ************************************************/
 int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada,  char *prefix, char **path_rebut);
@@ -180,7 +180,17 @@ char **FITXER_separarCapcalera (char *dades, char *etiqueta_esperada, int *mida)
 
 /***********************************************
 *
-* @Finalitat: Rep i valida la capcalera d'una transferencia.
+* @Finalitat: Comprova que un nom de fitxer rebut es pugui fer servir.
+* @Parametres:  in: nom = nom del fitxer rebut a la capcalera.
+* @Retorn: FITXER_NOM_VALID si no es buit, ni "." ni "..", i no conte
+*          '/' ni '\'; FITXER_NOM_NO_VALID en cas contrari.
+*
+************************************************/
+int FITXER_nomFitxerValid (char *nom);
+
+/***********************************************
+*
+* @Finalitat: Rep i valida la capcalera d'una transferencia. Si no es valida, respon NACK si el tipus no es 0x20, o READY amb 0xC0 si ho es.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
 *               in: etiqueta_esperada = etiqueta que s'espera rebre.
 *               out: mida = mida del fitxer en bytes.

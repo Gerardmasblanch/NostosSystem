@@ -1,23 +1,40 @@
+/***********************************************
+*
+* @Proposit: Implementacio de les operacions amb fitxers: mida, MD5 i enviament i recepcio de fitxers per trames.
+* @Autor/s: Arnau Ricart i Gerard Mas
+* @Data creacio: 14/11/2026
+* @Data ultima modificacio: 15/11/2026
+*
+************************************************/
+
+//Include del fitxer .h del mateix modul
 #include "fitxer.h"
 
 int FITXER_midaFitxer (char *path) {
+    char bloc[MIDA_DADES];
     int fd;
-    int mida;
+    int mida = 0;
+    int llegits = 1;
 
     fd = open(path, O_RDONLY);
-
     if (fd < 0) {
         UTILS_printF(1, MSG_FITXER_ERROR_OBRIR);
         return FITXER_ERROR;
     }
 
-    mida = lseek(fd, 0, SEEK_END);
-
-    if (mida < 0) {
-        UTILS_printF(1, MSG_FITXER_ERROR_MIDA);
+    while (llegits > 0) {
+        llegits = read(fd, bloc, MIDA_DADES);
+        if (llegits > 0) {
+            mida = mida + llegits;
+        }
     }
 
     close(fd);
+
+    if (llegits < 0) {
+        UTILS_printF(1, MSG_FITXER_ERROR_MIDA);
+        return FITXER_ERROR;
+    }
 
     return mida;
 }
@@ -219,7 +236,7 @@ int FITXER_esperarAck (int fd) {
 
 int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta) {
     int mida;
-    char md5[MIDA_MD5 + 1]; // per la cadena \0 final
+    char md5[MIDA_MD5 + 1];
     int fd_fitxer;
     int resultat;
 
@@ -258,7 +275,7 @@ int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_
 }
 
 char **FITXER_separarCapcalera (char *dades, char *etiqueta_esperada, int *mida) {
-    char **camps;
+    char **camps = NULL;
     char lletra;
     int n_camps = 0;
     int i;
@@ -281,11 +298,7 @@ char **FITXER_separarCapcalera (char *dades, char *etiqueta_esperada, int *mida)
         return NULL;
     }
 
-    if (strcmp(camps[0], etiqueta_esperada) != 0 ||
-        strcmp(camps[1], ".") == 0 || strcmp(camps[1], "..") == 0 ||
-        strchr(camps[1], '/') != NULL || strchr(camps[1], '\\') != NULL ||
-        UTILS_esNumeric(camps[2]) != TEXT_NUMERIC ||
-        strlen(camps[3]) != MIDA_MD5) {
+    if (strcmp(camps[0], etiqueta_esperada) != 0 || FITXER_nomFitxerValid(camps[1]) == FITXER_NOM_NO_VALID || UTILS_esNumeric(camps[2]) != TEXT_NUMERIC || strlen(camps[3]) != MIDA_MD5) {
         valid = 0;
     }
     
@@ -309,12 +322,31 @@ char **FITXER_separarCapcalera (char *dades, char *etiqueta_esperada, int *mida)
     return camps;
 }
 
+int FITXER_nomFitxerValid (char *nom) {
+    int i = 0;
+    int valid = FITXER_NOM_VALID;
+
+    if (nom[0] == '\0' || strcmp(nom, ".") == 0 || strcmp(nom, "..") == 0) {
+        return FITXER_NOM_NO_VALID;
+    }
+
+    while (nom[i] != '\0' && valid == FITXER_NOM_VALID) {
+        if (nom[i] == '/' || nom[i] == '\\') {
+            valid = FITXER_NOM_NO_VALID;
+        }
+        i++;
+    }
+
+    return valid;
+}
+
 char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades) {
     int tipus;
     int flags;
     int mida_dades;
     int mida_text;
     int flags_esperats = FLAG_PETICIO;
+    int tipus_resposta = TIPUS_FITXER_READY;
     char *dades = NULL;
     char **camps = NULL;
     char *error = NULL;
@@ -337,6 +369,7 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
     mida_text = strlen(dades);
     if (tipus != TIPUS_FITXER_CAPCALERA) {
         error = TEXT_FITXER_INVALID_TYPE;
+        tipus_resposta = TIPUS_NACK;
     } else if (flags != flags_esperats) {
         error = TEXT_FITXER_INVALID_FLAGS;
     } else if (mida_dades != mida_text) {
@@ -349,10 +382,9 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
     }
     free(dades);
 
-
     if (error != NULL) {
         UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
-        if (TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, error) != TRAMA_OK) {
+        if (TRAMA_enviarTrama(fd, tipus_resposta, FLAG_ERROR, error) != TRAMA_OK) {
             UTILS_printF(1, MSG_FITXER_ERROR_ENVIAR);
         }
         return NULL;
@@ -372,7 +404,6 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
 
     *path_rebut = NULL;
 
-
     if (asprintf(&ruta, FORMAT_FITXER_RUTA, carpeta, prefix, nom_fitxer) < 0) {
         UTILS_printF(1, MSG_SENSE_MEMORIA);
         ruta = NULL;
@@ -382,7 +413,6 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
             UTILS_printF(1, MSG_FITXER_ERROR_OBRIR);
         }
     }
-
 
     if (fd_fitxer < 0) {
         flags = FLAG_ERROR;
@@ -411,7 +441,7 @@ int FITXER_rebreBlocs (int fd, int fd_fitxer, int mida, int flags_dades) {
     int n_blocs, i;
     int escrits, resultat_write;
     char *dades = NULL;
-    char *error;
+    char *error = NULL;
 
     n_blocs = mida / MIDA_DADES;
     if (mida % MIDA_DADES != 0) {
@@ -494,7 +524,7 @@ int FITXER_verificarRecepcio (int fd, char *path, int mida_esperada, char *md5_e
 }
 
 int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, char **path_rebut) {
-    char **camps;
+    char **camps = NULL;
     char *ruta = NULL;
     int mida;
     int flags_dades;

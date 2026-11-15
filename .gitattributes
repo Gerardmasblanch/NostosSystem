@@ -1,0 +1,14 @@
+# Sempre salts de linia de Linux (LF): els .dat i el codi es fan servir a Montserrat
+*.c text eol=lf
+*.h text eol=lf
+*.dat text eol=lf
+Makefile text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Binaris: no es toquen mai
+*.png binary
+*.db binary
+*.o binary

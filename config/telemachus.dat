@@ -1,8 +1,7 @@
 ./telemachus_files
-Telemachus 172.16.214.18 8365
+Telemachus 172.16.214.21 8365
 172.16.214.20 8246
-300
-3
-Barley 25
-OliveOil 30
-DriedFish 20
+250
+2
+Barley 40
+DriedFigs 60

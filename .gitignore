@@ -9,9 +9,11 @@
 # Excepcio: sphragis.o ve compilat de l'eStudy i no es pot regenerar
 !sphragis.o
 
-# Fitxers generats en execucio
-*_files/
-objects/
+# Fitxers generats en execucio: les carpetes es guarden (amb .gitkeep), el que
+# s'hi crea en executar no. A objects/ nomes es guarden les imatges originals.
+*_files/*
+!*_files/.gitkeep
+objects/claim_*
 
 # Editor
 .vscode/

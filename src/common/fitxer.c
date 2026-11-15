@@ -393,7 +393,7 @@ int FITXER_nomFitxerValid (char *nom) {
     return valid;
 }
 
-char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades) {
+char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat) {
     int tipus;
     int flags;
     int mida_dades;
@@ -406,6 +406,7 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
 
     *mida = 0;
     *flags_dades = FLAG_BINARI;
+    *resultat = FITXER_ERROR;
     if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida_dades) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
         return NULL;
@@ -439,12 +440,15 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
         UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
         if (TRAMA_enviarTrama(fd, tipus_resposta, FLAG_ERROR, error) != TRAMA_OK) {
             UTILS_printF(1, MSG_FITXER_ERROR_ENVIAR);
+        } else if (tipus_resposta == TIPUS_FITXER_READY) {
+            *resultat = FITXER_REBUTJAT;
         }
         return NULL;
     }
     if (flags_esperats == FLAG_OK) {
         *flags_dades = FLAG_BINARI_RESPOSTA;
     }
+    *resultat = FITXER_OK;
     return camps;
 }
 
@@ -483,6 +487,9 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
             FITXER_esborrar(ruta);
         }
         free(ruta);
+        if (resultat_trama == TRAMA_OK) {
+            return FITXER_REBUTJAT;
+        }
         return FITXER_ERROR;
     }
 
@@ -587,9 +594,9 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
 
     *path_rebut = NULL;
 
-    camps = FITXER_rebreCapcalera(fd, etiqueta_esperada, &mida, &flags_dades);
+    camps = FITXER_rebreCapcalera(fd, etiqueta_esperada, &mida, &flags_dades, &resultat);
     if (camps == NULL) {
-        return FITXER_ERROR;
+        return resultat;
     }
 
     fd_fitxer = FITXER_prepararRecepcio(fd, carpeta, prefix, camps[1], &ruta);
@@ -601,6 +608,8 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
         if (resultat == FITXER_OK) {
             resultat = FITXER_verificarRecepcio(fd, ruta, mida, camps[3]);
         }
+    } else {
+        resultat = fd_fitxer;
     }
 
     UTILS_freeTokens(camps, N_CAMPS_FITXER);

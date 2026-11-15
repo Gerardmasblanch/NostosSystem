@@ -101,4 +101,14 @@ int UTILS_esPortValid (int port);
 ************************************************/
 char *UTILS_copiarText (char *text);
 
+/***********************************************
+*
+* @Finalitat: Troba el nom d'un fitxer dins d'una ruta (el que hi ha
+*             despres de l'ultima barra).
+* @Parametres:  in: path = ruta del fitxer.
+* @Retorn: Punter dins del mateix text de la ruta; no s'ha d'alliberar.
+*
+************************************************/
+char *UTILS_nomFitxer (char *path);
+
 #endif

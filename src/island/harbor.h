@@ -22,6 +22,7 @@
 #include "trama.h"
 #include "config.h"
 #include "market.h"
+#include "fitxer.h"
 
 //Constants
 #define VAIXELL_CONNECTAT 0
@@ -48,6 +49,18 @@
 #define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del vaixell.\n"
 #define MSG_ERROR_ACCEPT     "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
+#define TEXT_DELIVERY "DELIVERY"
+#define TEXT_ERROR_SEGELL "STAMP_ERROR"
+#define TEXT_ERROR_TRANSFERENCIA "TRANSFER_ERROR"
+#define FORMAT_RUTA_SEGELLADA "%s/signed_%s"
+#define MSG_DELIVER_PETICIO   "\n>>> %s requests delivery of voyage %s.\n"
+#define MSG_DELIVER_REBENT    ">>> Receiving %s...\n"
+#define MSG_DELIVER_REBUT     "\n>>> Object received correctly.\n"
+#define MSG_DELIVER_SEGELLANT "\n>>> Stamping object with the glyph of %s...\n"
+#define MSG_DELIVER_SEGELLAT  ">>> Object stamped successfully.\n"
+#define MSG_DELIVER_ENVIANT   "\n>>> Sending stamped object to %s...\n"
+#define MSG_DELIVER_FET       ">>> Transfer completed.\n"
+#define MSG_DELIVER_ERROR     ">>> Delivery from %s failed.\n"
 #define MSG_INICI_ILLA "Island %s initialized.\nPort capacity: %d %s.\n%d sea routes loaded.\n%d products available.\n"
 
 //Structs
@@ -213,6 +226,32 @@ void HARBOR_ferSortir (Vaixell *vaixell, int tancant_illa);
 *
 ************************************************/
 void HARBOR_atendreMercat (Vaixell *vaixell, int tipus, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Informa d'un DELIVER fallit. Si l'error es de comunicacio
+*             (FITXER_ERROR) el socket pot tenir trames a mitges i el thread
+*             ha d'acabar; si no, es respon 0x15 amb error i es continua.
+* @Parametres:  in: vaixell = vaixell que feia el DELIVER.
+*               in: resultat_fitxer = codi retornat per la transferencia.
+*               in: motiu = text d'error de la resposta.
+* @Retorn: VAIXELL_ACABA o VAIXELL_CONTINUA.
+*
+************************************************/
+int HARBOR_errorDeliver (Vaixell *vaixell, int resultat_fitxer, char *motiu);
+
+/***********************************************
+*
+* @Finalitat: Atén el DELIVER: rep la imatge (DELIVERY), la segella amb el
+*             glif de l'illa i la retorna (SIGNED), i respon 0x15. No fa
+*             servir cap mutex durant les transferencies.
+* @Parametres:  in/out: vaixell = vaixell que entrega l'objecte.
+*               in: dades = VoyageID&Object.
+* @Retorn: VAIXELL_CONTINUA si s'ha de seguir atenent el vaixell,
+*          VAIXELL_ACABA si s'ha de tancar la connexio.
+*
+************************************************/
+int HARBOR_atendreDeliver (Vaixell *vaixell, char *dades);
 
 /***********************************************
 *

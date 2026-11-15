@@ -283,6 +283,99 @@ void HARBOR_atendreMercat (Vaixell *vaixell, int tipus, char *dades) {
     }
 }
 
+int HARBOR_errorDeliver (Vaixell *vaixell, int resultat_fitxer, char *motiu) {
+    char *missatge = NULL;
+
+    asprintf(&missatge, MSG_DELIVER_ERROR, vaixell->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    if (resultat_fitxer == FITXER_ERROR) {
+        return VAIXELL_ACABA;
+    }
+
+    TRAMA_enviarTrama(vaixell->fd, TIPUS_DELIVER, FLAG_ERROR, motiu);
+    return VAIXELL_CONTINUA;
+}
+
+int HARBOR_atendreDeliver (Vaixell *vaixell, char *dades) {
+    Harbor *harbor = vaixell->harbor;
+    char **trossos = NULL;
+    char *path_rebut = NULL;
+    char *path_segellat = NULL;
+    char *nom_fitxer = NULL;
+    char *missatge = NULL;
+    int n_trossos = 0;
+    int estat;
+    int resultat;
+
+    pthread_mutex_lock(&harbor->mutex_port);
+    estat = vaixell->estat;
+    pthread_mutex_unlock(&harbor->mutex_port);
+
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
+
+    if (estat != VAIXELL_ATRACAT) {
+        UTILS_freeTokens(trossos, n_trossos);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_DELIVER, FLAG_ERROR, TEXT_ERROR_ESTAT);
+        return VAIXELL_ACABA;
+    }
+
+    if (n_trossos != 2 || UTILS_esNumeric(trossos[0]) == TEXT_NO_NUMERIC) {
+        UTILS_freeTokens(trossos, n_trossos);
+        TRAMA_enviarTrama(vaixell->fd, TIPUS_DELIVER, FLAG_ERROR, TEXT_ERROR_DADES);
+        return VAIXELL_ACABA;
+    }
+
+    asprintf(&missatge, MSG_DELIVER_PETICIO, vaixell->nom, trossos[0]);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    asprintf(&missatge, MSG_DELIVER_REBENT, trossos[1]);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    UTILS_freeTokens(trossos, n_trossos);
+
+    resultat = FITXER_rebre(vaixell->fd, harbor->config->folder, TEXT_DELIVERY, "", &path_rebut);
+    if (resultat != FITXER_OK) {
+        return HARBOR_errorDeliver(vaixell, resultat, TEXT_ERROR_TRANSFERENCIA);
+    }
+    UTILS_printF(1, MSG_DELIVER_REBUT);
+
+    asprintf(&missatge, MSG_DELIVER_SEGELLANT, harbor->config->name);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    nom_fitxer = UTILS_nomFitxer(path_rebut);
+    if (asprintf(&path_segellat, FORMAT_RUTA_SEGELLADA, harbor->config->folder, nom_fitxer) < 0) {
+        free(path_rebut);
+        return HARBOR_errorDeliver(vaixell, FITXER_OK, TEXT_ERROR_SERVIDOR);
+    }
+
+    if (SPHRAGIS_sign_with_glyph(harbor->config->name, path_rebut, path_segellat) != SPHRAGIS_OK) {
+        free(path_rebut);
+        free(path_segellat);
+        return HARBOR_errorDeliver(vaixell, FITXER_OK, TEXT_ERROR_SEGELL);
+    }
+    UTILS_printF(1, MSG_DELIVER_SEGELLAT);
+
+    asprintf(&missatge, MSG_DELIVER_ENVIANT, vaixell->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    resultat = FITXER_enviar(vaixell->fd, path_segellat, nom_fitxer, TEXT_FITXER_SIGNED, 1);
+    free(path_rebut);
+    free(path_segellat);
+
+    if (resultat != FITXER_OK) {
+        return HARBOR_errorDeliver(vaixell, resultat, TEXT_ERROR_TRANSFERENCIA);
+    }
+    UTILS_printF(1, MSG_DELIVER_FET);
+
+    TRAMA_enviarTrama(vaixell->fd, TIPUS_DELIVER, FLAG_OK, TEXT_OK);
+
+    return VAIXELL_CONTINUA;
+}
+
 int HARBOR_atendreTrama (Vaixell *vaixell) {
     char *dades = NULL;
     int tipus;
@@ -300,6 +393,8 @@ int HARBOR_atendreTrama (Vaixell *vaixell) {
         HARBOR_atendreArribada(vaixell, dades);
     } else if (tipus == TIPUS_SORTIR_ILLA) {
         continuar = HARBOR_atendreSortida(vaixell);
+    } else if (tipus == TIPUS_DELIVER) {
+        continuar = HARBOR_atendreDeliver(vaixell, dades);
     } else if (tipus == TIPUS_LIST_MARKET || tipus == TIPUS_BUY || tipus == TIPUS_SELL || tipus == TIPUS_BUY_MAP) {
         HARBOR_atendreMercat(vaixell, tipus, dades);
     } else {

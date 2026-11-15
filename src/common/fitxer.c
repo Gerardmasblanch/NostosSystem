@@ -134,6 +134,7 @@ int FITXER_esperarReady (int fd) {
     int mida_ready = strlen(TEXT_FITXER_READY);
     char *dades = NULL;
     int resultat = FITXER_ERROR;
+    char *error = NULL;
 
     if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
@@ -145,11 +146,21 @@ int FITXER_esperarReady (int fd) {
     } else if (tipus == TIPUS_FITXER_READY && flags == FLAG_ERROR) {
         UTILS_printF(1, MSG_FITXER_REBUTJAT);
         resultat = FITXER_REBUTJAT;
-    } else {
+    } else if (tipus == TIPUS_NACK) {
         UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
+    } else if (tipus != TIPUS_FITXER_READY) {
+        error = TEXT_FITXER_INVALID_TYPE;
+    } else if (flags != FLAG_OK) {
+        error = TEXT_FITXER_INVALID_FLAGS;
+    } else {
+        error = TEXT_FITXER_INVALID_DATA;
     }
 
     free(dades);
+
+    if (error != NULL) {
+        FITXER_enviarNack(fd, error);
+    }
 
     return resultat;
 }
@@ -207,6 +218,7 @@ int FITXER_esperarAck (int fd) {
     int mida_text;
     char *dades = NULL;
     int resultat = FITXER_ERROR;
+    char *error = NULL;
 
     if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
@@ -215,8 +227,14 @@ int FITXER_esperarAck (int fd) {
 
     mida_text = strlen(dades);
 
-    if (tipus != TIPUS_FITXER_ACK || mida != mida_text) {
+    if (tipus == TIPUS_NACK) {
         UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
+    } else if (tipus != TIPUS_FITXER_ACK) {
+        error = TEXT_FITXER_INVALID_TYPE;
+    } else if (flags != FLAG_OK && flags != FLAG_ERROR) {
+        error = TEXT_FITXER_INVALID_FLAGS;
+    } else if (mida != mida_text) {
+        error = TEXT_FITXER_INVALID_DATA;
     } else if (flags == FLAG_OK && strcmp(dades, TEXT_FITXER_OK) == 0) {
         resultat = FITXER_OK;
     } else if (flags == FLAG_ERROR && strcmp(dades, TEXT_FITXER_ERROR_MIDA) == 0) {
@@ -226,12 +244,24 @@ int FITXER_esperarAck (int fd) {
         UTILS_printF(1, MSG_FITXER_MD5_DIFERENT);
         resultat = FITXER_ERROR_MD5;
     } else {
-        UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
+        error = TEXT_FITXER_INVALID_DATA;
     }
 
     free(dades);
 
+    if (error != NULL) {
+        FITXER_enviarNack(fd, error);
+    }
+
     return resultat;
+}
+
+void FITXER_enviarNack (int fd, char *motiu) {
+    UTILS_printF(1, MSG_FITXER_RESPOSTA_INVALIDA);
+
+    if (TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, motiu) != TRAMA_OK) {
+        UTILS_printF(1, MSG_FITXER_ERROR_ENVIAR);
+    }
 }
 
 int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta) {

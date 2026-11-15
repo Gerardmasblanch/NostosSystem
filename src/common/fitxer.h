@@ -115,7 +115,7 @@ int FITXER_enviarCapcalera (int fd, char *nom_fitxer, char *etiqueta, int mida, 
 
 /***********************************************
 *
-* @Finalitat: Espera la resposta READY del receptor d'un fitxer.
+* @Finalitat: Espera la resposta READY del receptor d'un fitxer. Si la trama rebuda no es valida i no es un NACK, respon amb un NACK amb el motiu.
 * @Parametres:  in: fd = socket connectat amb el receptor.
 * @Retorn: FITXER_OK si el receptor esta preparat;
 *          FITXER_REBUTJAT si rebutja la transferencia;
@@ -138,7 +138,7 @@ int FITXER_enviarBlocs (int fd, int fd_fitxer, int mida, int es_resposta);
 
 /***********************************************
 *
-* @Finalitat: Espera la confirmacio final d'una transferencia.
+* @Finalitat: Espera la confirmacio final d'una transferencia. Si la trama rebuda no es valida i no es un NACK, respon amb un NACK amb el motiu.
 * @Parametres:  in: fd = socket connectat amb el receptor.
 * @Retorn: FITXER_OK si el receptor confirma la transferencia;
 *          FITXER_ERROR_MIDA si informa d'una mida incorrecta;
@@ -147,6 +147,16 @@ int FITXER_enviarBlocs (int fd, int fd_fitxer, int mida, int es_resposta);
 *
 ************************************************/
 int FITXER_esperarAck (int fd);
+
+/***********************************************
+*
+* @Finalitat: Informa per pantalla d'una trama no valida i envia un NACK amb el motiu.
+* @Parametres:  in: fd = socket on s'envia el NACK.
+*               in: motiu = INVALID_TYPE, INVALID_FLAGS, INVALID_DATA o INVALID_LENGTH.
+* @Retorn: ----.
+*
+************************************************/
+void FITXER_enviarNack (int fd, char *motiu);
 
 /***********************************************
 *

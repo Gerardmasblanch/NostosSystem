@@ -44,4 +44,13 @@ CAPCALERES = $(COMMON)/types.h $(COMMON)/utils.h $(COMMON)/config.h $(COMMON)/tr
 clean:
 	rm -f $(COMMON)/utils.o $(COMMON)/config.o $(COMMON)/trama.o $(OBJECTES_ODYSSEUS) $(OBJECTES_ITHACA) $(OBJECTES_ISLAND) odysseus ithaca island
 
-.PHONY: all clean
+valgrind-ithaca: ithaca
+	valgrind --leak-check=full ./ithaca config/ithaca.dat config/voyages.dat
+
+valgrind-island: island
+	valgrind --leak-check=full ./island config/aeaea.dat stock/Aeaea.db
+
+valgrind-odysseus: odysseus
+	valgrind --leak-check=full ./odysseus config/polyphemus.dat
+
+.PHONY: all clean valgrind-ithaca valgrind-island valgrind-odysseus

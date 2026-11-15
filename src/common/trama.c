@@ -4,7 +4,7 @@
 *            l'obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -30,6 +30,38 @@ int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades) {
     memcpy(&trama[POS_DADES], dades, mida_dades);
 
     escrits = write(fd, trama, MIDA_TRAMA);
+    if (escrits == MIDA_TRAMA) {
+        resultat = TRAMA_OK;
+    }
+
+    return resultat;
+}
+
+int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mida) {
+    unsigned char trama[MIDA_TRAMA];
+    int escrits;
+    int resultat = TRAMA_ERROR;
+
+    if (mida < 0 || mida > MIDA_DADES) {
+        return TRAMA_ERROR;
+    }
+
+    if (mida > 0 && dades == NULL) {
+        return TRAMA_ERROR;
+    }
+
+    memset(trama, 0, MIDA_TRAMA);
+
+    trama[POS_TIPUS] = tipus;
+    trama[POS_FLAGS] = flags;
+    trama[POS_MIDA] = mida;
+
+    if (mida > 0) {
+        memcpy(&trama[POS_DADES], dades, mida);
+    }
+
+    escrits = write(fd, trama, MIDA_TRAMA);
+
     if (escrits == MIDA_TRAMA) {
         resultat = TRAMA_OK;
     }
@@ -74,7 +106,52 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     return resultat;
 }
 
+int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida) {
+    unsigned char trama[MIDA_TRAMA];
+    int llegits = 0;
+    int resultat_read = 1;
+    int mida_dades;
 
+    *dades = NULL;
+    *mida = 0;
+
+    while (llegits < MIDA_TRAMA && resultat_read > 0) {
+        resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+
+        if (resultat_read > 0) {
+            llegits = llegits + resultat_read;
+        }
+    }
+
+    if (llegits != MIDA_TRAMA) {
+        return TRAMA_ERROR;
+    }
+
+    mida_dades = trama[POS_MIDA];
+
+    if (mida_dades > MIDA_DADES) {
+        if (TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_TRAMA_INVALID_LENGTH) != TRAMA_OK) {
+            UTILS_printF(1, MSG_TRAMA_ERROR_NACK);
+        }
+        return TRAMA_ERROR;
+    }
+
+    *dades = malloc(sizeof(char) * (mida_dades + 1));
+
+    if (*dades == NULL) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return TRAMA_ERROR;
+    }
+
+    memcpy(*dades, &trama[POS_DADES], mida_dades);
+    (*dades)[mida_dades] = '\0';
+
+    *tipus = trama[POS_TIPUS];
+    *flags = trama[POS_FLAGS];
+    *mida = mida_dades;
+
+    return TRAMA_OK;
+}
 
 int TRAMA_obrirServidor (char *ip, int port) {
     struct sockaddr_in s_addr;
@@ -106,8 +183,6 @@ int TRAMA_obrirServidor (char *ip, int port) {
 
     return fd_socket;
 }
-
-
 
 int TRAMA_connectarServidor (char *ip, int port) {
     struct sockaddr_in s_addr;

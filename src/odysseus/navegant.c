@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de l'estat del navegant Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -19,6 +19,8 @@ int NAVEGANT_inicialitzarNavegant (Navegant *navegant) {
     navegant->viatge.object = NULL;
     navegant->viatge.file = NULL;
     navegant->viatge.destination = NULL;
+    navegant->viatge_lliurat = VIATGE_NO_LLIURAT;
+    navegant->fitxer_segellat = NULL;
     navegant->mapa = NULL;
     navegant->n_illes = 0;
     navegant->adreces = NULL;
@@ -51,8 +53,7 @@ void NAVEGANT_alliberarNavegant (Navegant *navegant) {
     }
 
     free(navegant->ubicacio);
-    free(navegant->viatge.object);
-    free(navegant->viatge.destination);
+    NAVEGANT_esborrarViatge(navegant);
 
     for (i = 0; i < navegant->n_illes; i++) {
         for (j = 0; j < navegant->mapa[i].known_island_count; j++) {
@@ -70,6 +71,20 @@ void NAVEGANT_alliberarNavegant (Navegant *navegant) {
     free(navegant->adreces);
 
     CONFIG_freeOdysseusConfig(&navegant->config);
+}
+
+void NAVEGANT_esborrarViatge (Navegant *navegant) {
+    free(navegant->viatge.object);
+    free(navegant->viatge.destination);
+    free(navegant->viatge.file);
+    free(navegant->fitxer_segellat);
+
+    navegant->viatge.object = NULL;
+    navegant->viatge.destination = NULL;
+    navegant->viatge.file = NULL;
+    navegant->fitxer_segellat = NULL;
+    navegant->te_viatge = SENSE_VIATGE;
+    navegant->viatge_lliurat = VIATGE_NO_LLIURAT;
 }
 
 int NAVEGANT_totalProvisions (Navegant *navegant) {
@@ -110,6 +125,33 @@ void NAVEGANT_mostrarCarrega (Navegant *navegant) {
     free(missatge);
 }
 
+void NAVEGANT_mostrarViatge (Navegant *navegant) {
+    char *missatge = NULL;
+
+    if (navegant->te_viatge != AMB_VIATGE) {
+        UTILS_printF(1, MSG_STATUS_SENSE_VIATGE);
+        return;
+    }
+
+    if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    if (navegant->viatge.file == NULL) {
+        return;
+    }
+
+    if (asprintf(&missatge, FORMAT_OBJECTE_STATUS, navegant->viatge.file + strlen(navegant->config.folder) + 1) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    UTILS_printF(1, missatge);
+    free(missatge);
+}
+
 void NAVEGANT_mostrarStatus (Navegant *navegant) {
     char *nom = NULL;
     char *missatge = NULL;
@@ -137,17 +179,7 @@ void NAVEGANT_mostrarStatus (Navegant *navegant) {
     free(missatge);
 
     NAVEGANT_mostrarCarrega(navegant);
-
-    if (navegant->te_viatge == AMB_VIATGE) {
-        if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
-            UTILS_printF(1, MSG_SENSE_MEMORIA);
-            return;
-        }
-        UTILS_printF(1, missatge);
-        free(missatge);
-    } else {
-        UTILS_printF(1, MSG_STATUS_SENSE_VIATGE);
-    }
+    NAVEGANT_mostrarViatge(navegant);
 
     if (navegant->estat == ESTAT_ITHACA) {
         UTILS_printF(1, MSG_UBICACIO_DESCONEGUDA);
@@ -477,4 +509,225 @@ int NAVEGANT_afegirAdreca (Navegant *navegant, char *nom, char *ip, int port) {
     navegant->n_adreces++;
 
     return 0;
+}
+
+void NAVEGANT_alliberarAliments (Food *aliments, int n_aliments) {
+    int i;
+
+    for (i = 0; i < n_aliments; i++) {
+        free(aliments[i].name);
+    }
+    free(aliments);
+}
+
+int NAVEGANT_escriureLinia (int fd, char *linia) {
+    int llargada;
+    int resultat = ERR_CODI;
+
+    if (linia != NULL) {
+        llargada = strlen(linia);
+        if (write(fd, linia, llargada) == llargada) {
+            resultat = 0;
+        }
+        free(linia);
+    }
+
+    return resultat;
+}
+
+int NAVEGANT_escriureViatge (int fd, Navegant *navegant) {
+    char *linia = NULL;
+
+    if (navegant->te_viatge != AMB_VIATGE || navegant->viatge.file == NULL) {
+        return NAVEGANT_escriureLinia(fd, UTILS_copiarText(TEXT_ESTAT_SENSE_VIATGE));
+    }
+
+    if (asprintf(&linia, FORMAT_ESTAT_VIATGE, AMB_VIATGE, navegant->viatge.id, navegant->viatge.object, navegant->viatge.file, navegant->viatge.destination, navegant->viatge.reward, navegant->viatge_lliurat) < 0) {
+        linia = NULL;
+    }
+
+    return NAVEGANT_escriureLinia(fd, linia);
+}
+
+int NAVEGANT_guardarEstat (Navegant *navegant) {
+    char *ruta = NULL;
+    char *linia = NULL;
+    int fd;
+    int i;
+    int resultat;
+
+    if (asprintf(&ruta, FORMAT_RUTA_ESTAT, navegant->config.folder) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+    fd = open(ruta, O_WRONLY | O_CREAT | O_TRUNC, PERMISOS_FITXER);
+    free(ruta);
+    if (fd < 0) {
+        UTILS_printF(1, MSG_ERROR_GUARDAR_ESTAT);
+        return ERR_CODI;
+    }
+
+    if (asprintf(&linia, FORMAT_ESTAT_RECURSOS, navegant->config.gold, navegant->config.n_foods) < 0) {
+        linia = NULL;
+    }
+    resultat = NAVEGANT_escriureLinia(fd, linia);
+
+    for (i = 0; i < navegant->config.n_foods && resultat == 0; i++) {
+        if (asprintf(&linia, FORMAT_ESTAT_ALIMENT, navegant->config.foods[i].name, navegant->config.foods[i].amount) < 0) {
+            linia = NULL;
+        }
+        resultat = NAVEGANT_escriureLinia(fd, linia);
+    }
+
+    if (resultat == 0) {
+        resultat = NAVEGANT_escriureViatge(fd, navegant);
+    }
+    close(fd);
+
+    if (resultat == ERR_CODI) {
+        UTILS_printF(1, MSG_ERROR_GUARDAR_ESTAT);
+    }
+
+    return resultat;
+}
+
+void NAVEGANT_reiniciarEstat (Navegant *navegant) {
+    char *ruta = NULL;
+    int fd;
+
+    if (asprintf(&ruta, FORMAT_RUTA_ESTAT, navegant->config.folder) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    fd = open(ruta, O_WRONLY | O_CREAT | O_TRUNC, PERMISOS_FITXER);
+    free(ruta);
+
+    if (fd < 0) {
+        UTILS_printF(1, MSG_ERROR_GUARDAR_ESTAT);
+    } else {
+        close(fd);
+    }
+}
+
+int NAVEGANT_carregarAliments (Navegant *navegant, int fd, int n_aliments) {
+    Food *aliments = NULL;
+    char *linia = NULL;
+    char **camps = NULL;
+    int n_camps = 0;
+    int i = 0;
+    int correcte = 1;
+
+    if (n_aliments > 0) {
+        aliments = malloc(sizeof(Food) * n_aliments);
+        if (aliments == NULL) {
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
+            return ERR_CODI;
+        }
+    }
+
+    while (i < n_aliments && correcte == 1) {
+        correcte = 0;
+        linia = UTILS_readUntil(fd, '\n');
+        camps = UTILS_splitString(linia, '&', &n_camps);
+        if (n_camps == N_CAMPS_ESTAT_ALIMENT && UTILS_esNumeric(camps[1]) == TEXT_NUMERIC) {
+            aliments[i].name = UTILS_copiarText(camps[0]);
+            aliments[i].amount = atoi(camps[1]);
+            if (aliments[i].name != NULL) {
+                correcte = 1;
+                i++;
+            }
+        }
+        UTILS_freeTokens(camps, n_camps);
+        free(linia);
+    }
+
+    if (correcte == 0) {
+        NAVEGANT_alliberarAliments(aliments, i);
+        return ERR_CODI;
+    }
+
+    NAVEGANT_alliberarAliments(navegant->config.foods, navegant->config.n_foods);
+    navegant->config.foods = aliments;
+    navegant->config.n_foods = n_aliments;
+
+    return 0;
+}
+
+void NAVEGANT_carregarViatge (Navegant *navegant, int fd) {
+    char *linia = NULL;
+    char **camps = NULL;
+    int n_camps = 0;
+
+    linia = UTILS_readUntil(fd, '\n');
+    camps = UTILS_splitString(linia, '&', &n_camps);
+
+    if (n_camps == N_CAMPS_ESTAT_VIATGE && atoi(camps[0]) == AMB_VIATGE && UTILS_esNumeric(camps[1]) == TEXT_NUMERIC && UTILS_esNumeric(camps[5]) == TEXT_NUMERIC && strlen(camps[3]) > strlen(navegant->config.folder) + 1) {
+        navegant->te_viatge = AMB_VIATGE;
+        navegant->viatge.id = atoi(camps[1]);
+        navegant->viatge.object = UTILS_copiarText(camps[2]);
+        navegant->viatge.file = UTILS_copiarText(camps[3]);
+        navegant->viatge.destination = UTILS_copiarText(camps[4]);
+        navegant->viatge.reward = atoi(camps[5]);
+
+        if (atoi(camps[6]) == VIATGE_LLIURAT) {
+            if (asprintf(&navegant->fitxer_segellat, FORMAT_FITXER_RUTA, navegant->config.folder, TEXT_PREFIX_SEGELLAT, camps[3] + strlen(navegant->config.folder) + 1) < 0) {
+                navegant->fitxer_segellat = NULL;
+            } else {
+                navegant->viatge_lliurat = VIATGE_LLIURAT;
+            }
+        }
+
+        if (navegant->viatge.object == NULL || navegant->viatge.file == NULL || navegant->viatge.destination == NULL || (atoi(camps[6]) == VIATGE_LLIURAT && navegant->fitxer_segellat == NULL)) {
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
+            NAVEGANT_esborrarViatge(navegant);
+        }
+    }
+
+    UTILS_freeTokens(camps, n_camps);
+    free(linia);
+}
+
+int NAVEGANT_carregarEstat (Navegant *navegant) {
+    char *ruta = NULL;
+    char *linia = NULL;
+    char **camps = NULL;
+    int n_camps = 0;
+    int fd;
+    int resultat = ERR_CODI;
+
+    if (asprintf(&ruta, FORMAT_RUTA_ESTAT, navegant->config.folder) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return ERR_CODI;
+    }
+    fd = open(ruta, O_RDONLY);
+    free(ruta);
+    if (fd < 0) {
+        return ERR_CODI;
+    }
+
+    linia = UTILS_readUntil(fd, '\n');
+    camps = UTILS_splitString(linia, '&', &n_camps);
+
+    if (n_camps == N_CAMPS_ESTAT_RECURSOS && UTILS_esNumeric(camps[0]) == TEXT_NUMERIC && UTILS_esNumeric(camps[1]) == TEXT_NUMERIC && NAVEGANT_carregarAliments(navegant, fd, atoi(camps[1])) == 0) {
+        navegant->config.gold = atoi(camps[0]);
+        NAVEGANT_carregarViatge(navegant, fd);
+        resultat = 0;
+    }
+
+    UTILS_freeTokens(camps, n_camps);
+    free(linia);
+    close(fd);
+
+    return resultat;
+}
+
+int NAVEGANT_senseSortida (Navegant *navegant) {
+    int resultat = AMB_SORTIDA;
+
+    if (navegant->config.gold < OR_MINIM_SORTIDA && NAVEGANT_totalProvisions(navegant) == 0 && navegant->viatge_lliurat != VIATGE_LLIURAT && (navegant->te_viatge != AMB_VIATGE || navegant->estat != ESTAT_ATRACAT || strcasecmp(navegant->ubicacio, navegant->viatge.destination) != 0)) {
+        resultat = SENSE_SORTIDA;
+    }
+
+    return resultat;
 }

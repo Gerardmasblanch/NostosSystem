@@ -18,6 +18,8 @@
 
 #include "trama.h"
 #include "types.h"
+#include "fitxer.h"
+#include "sphragis.h"
 
 #define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"
 
@@ -30,6 +32,7 @@
 #define TEXT_ITHACA_ERROR_DADES "INVALID_DATA"
 #define TEXT_ITHACA_ERROR_SERVIDOR "SERVER_ERROR"
 #define MSG_CLIENT_CONNECTAT ">>> %s connected to Ithaca.\n"
+#define MSG_CLIENT_TORNAT ">>> %s returned to Ithaca.\n"
 
 #define TEXT_ITHACA_ERROR_FLAGS "INVALID_FLAGS"
 #define TEXT_ITHACA_ERROR_TIPUS "INVALID_TYPE"
@@ -41,6 +44,19 @@
 #define VIATGE_DISPONIBLE 0
 #define VIATGE_ASSIGNAT 1
 #define VIATGE_FRACASSAT 2
+#define VIATGE_COMPLETAT 3
+
+#define PREFIX_CLAIM "claim_"
+#define FORMAT_CLAIM_OK "OK&%d"
+#define TEXT_ITHACA_ERROR_GLIF "INVALID_GLYPH"
+#define TEXT_ITHACA_ERROR_TRANSFERENCIA "TRANSFER_ERROR"
+#define MSG_CLAIM_PETICIO    ">>> %s claims voyage %s.\n"
+#define MSG_CLAIM_REBENT     "\n>>> Receiving stamped %s...\n"
+#define MSG_CLAIM_REBUT      ">>> Object received correctly.\n"
+#define MSG_CLAIM_GLIF       "\n>>> Glyph of %s verified.\n"
+#define MSG_CLAIM_COMPLETAT  ">>> Voyage %d completed by %s.\n"
+#define MSG_CLAIM_RECOMPENSA ">>> Reward granted: %d gold.\n"
+#define MSG_CLAIM_REBUTJAT   ">>> Claim of voyage %s by %s rejected.\n"
 
 #define FORMAT_VIATGE_DISPONIBLE "%d&%d&%d&%s&%s&%d"
 #define TEXT_ITHACA_SENSE_VIATGES "0"
@@ -54,6 +70,9 @@
 
 #define MSG_VIATGE_ASSIGNAT ">>> Voyage %d assigned to %s.\n"
 #define MSG_VIATGE_FRACASSAT ">>> Voyage %d of %s marked as failed.\n"
+#define MSG_ENVIANT_OBJECTE ">>> Sending %s to %s...\n"
+#define MSG_OBJECTE_ENVIAT  "\n>>> Object transferred successfully.\n"
+#define MSG_OBJECTE_FALLAT  ">>> Object transfer to %s failed. Voyage %d marked as failed.\n"
 
 typedef struct ServidorIthaca ServidorIthaca;
 
@@ -82,6 +101,7 @@ struct ServidorIthaca {
     int n_clients;
     pthread_mutex_t mutex_clients;
     int fd_avis;
+    char *carpeta;
 };
 
 /***********************************************
@@ -89,11 +109,12 @@ struct ServidorIthaca {
 * @Finalitat: Inicialitzar el servidor sense clients ni viatges i crear els
 *             mutex de la taula de viatges i de la llista de clients.
 * @Parametres: out: servidor = estructura del servidor a inicialitzar.
+*              in: carpeta = carpeta d'Ithaca on es desen les imatges del CLAIM.
 *              in: fd_avis = extrem de lectura de la pipe d'avis de sortida.
 * @Retorn: ----.
 *
 ************************************************/
-void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, int fd_avis);
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, char *carpeta, int fd_avis);
 
 /***********************************************
 *
@@ -229,6 +250,45 @@ int VOYAGES_atendreListVoyages (ClientIthaca *client, char *dades);
 *
 ************************************************/
 int VOYAGES_atendreAcceptIthaca (ClientIthaca *client, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Envia la imatge de l'objecte (transferencia OBJECT) just
+*             despres d'un ACCEPT correcte. Si falla, el viatge passa a
+*             fracassat i el client pot acceptar-ne un altre.
+* @Parametres:  in/out: client = client que ha acceptat el viatge.
+*               in: index_viatge = posicio del viatge acceptat.
+* @Retorn: TRAMA_OK si s'ha de seguir atenent el client; TRAMA_ERROR si
+*          la transferencia ha fallat per comunicacio i s'ha de tancar.
+*
+************************************************/
+int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge);
+
+/***********************************************
+*
+* @Finalitat: Informa d'un CLAIM rebutjat i respon 0x04 amb l'error.
+* @Parametres:  in: client = client que ha fet el CLAIM.
+*               in: id_text = identificador del viatge rebut.
+*               in: motiu = text d'error de la resposta.
+* @Retorn: TRAMA_OK o TRAMA_ERROR.
+*
+************************************************/
+int VOYAGES_rebutjarClaim (ClientIthaca *client, char *id_text, char *motiu);
+
+/***********************************************
+*
+* @Finalitat: Atén el CLAIM: rep la imatge segellada, comprova que es
+*             l'objecte del viatge, que te el glif de l'illa de desti i que
+*             el viatge esta assignat a l'Odysseus, el marca com a
+*             completat i respon OK&Reward. Comprovar l'assignacio i
+*             marcar-lo completat es fa en un sol lock: mai es paga dos cops.
+* @Parametres:  in/out: client = client que reclama la recompensa.
+*               in: dades = identificador del viatge.
+* @Retorn: TRAMA_OK si s'ha de seguir atenent el client; TRAMA_ERROR si
+*          s'ha de tancar la connexio.
+*
+************************************************/
+int VOYAGES_atendreClaim (ClientIthaca *client, char *dades);
 
 /***********************************************
 *

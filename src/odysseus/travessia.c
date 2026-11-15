@@ -4,7 +4,7 @@
 *            comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -88,6 +88,12 @@ void TRAVESSIA_ferConnectIthaca (Navegant *navegant) {
         return;
     }
 
+    if (navegant->viatge_lliurat == VIATGE_LLIURAT && (navegant->estat == ESTAT_ATRACAT || navegant->estat == ESTAT_DESCONNECTAT)) {
+        if (TRAVESSIA_tornarAIthaca(navegant) == ERR_CODI) {
+            return;
+        }
+    }
+
     if (navegant->estat != ESTAT_ITHACA) {
         UTILS_printF(1, MSG_NOMES_A_ITHACA);
         return;
@@ -122,6 +128,19 @@ void TRAVESSIA_ferConnectIthaca (Navegant *navegant) {
     }
 
     free(dades);
+}
+
+int TRAVESSIA_tornarAIthaca (Navegant *navegant) {
+    TRAVESSIA_marxarUbicacio(navegant);
+    UTILS_printF(1, MSG_TORNANT_ITHACA);
+
+    if (NAVEGANT_canviarUbicacio(navegant, TEXT_ITHACA) == ERR_CODI) {
+        navegant->estat = ESTAT_DESCONNECTAT;
+        return ERR_CODI;
+    }
+
+    navegant->estat = ESTAT_ITHACA;
+    return 0;
 }
 
 int TRAVESSIA_mostrarViatge (char *dades, int *total) {
@@ -249,9 +268,255 @@ void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge) {
             asprintf(&missatge, MSG_VIATGE_ACCEPTAT, navegant->viatge.id, navegant->viatge.destination);
             UTILS_printF(1, missatge);
             free(missatge);
+            TRAVESSIA_rebreObjecte(navegant);
         } else {
             UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
         }
+    }
+
+    free(dades);
+}
+
+void TRAVESSIA_rebreObjecte (Navegant *navegant) {
+    char *path = NULL;
+    char *missatge = NULL;
+    int resultat;
+
+    resultat = FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_OBJECT, "", &path);
+
+    if (resultat != FITXER_OK) {
+        UTILS_printF(1, MSG_ERROR_OBJECTE);
+        NAVEGANT_esborrarViatge(navegant);
+        if (resultat == FITXER_ERROR) {
+            TRAVESSIA_perdreConnexio(navegant);
+        }
+        return;
+    }
+
+    navegant->viatge.file = path;
+
+    if (asprintf(&missatge, MSG_OBJECTE_REBUT, path + strlen(navegant->config.folder) + 1) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+    }
+
+    NAVEGANT_guardarEstat(navegant);
+}
+
+int TRAVESSIA_comprovarDeliver (Navegant *navegant) {
+    char *missatge = NULL;
+    int resultat = TRAMA_ERROR;
+
+    if (navegant->te_viatge != AMB_VIATGE || navegant->viatge.file == NULL) {
+        UTILS_printF(1, MSG_SENSE_VIATGE_DELIVER);
+    } else if (navegant->viatge_lliurat == VIATGE_LLIURAT) {
+        UTILS_printF(1, MSG_JA_LLIURAT);
+    } else if (navegant->estat != ESTAT_ATRACAT) {
+        UTILS_printF(1, MSG_NO_ATRACAT);
+    } else if (strcasecmp(navegant->ubicacio, navegant->viatge.destination) != 0) {
+        if (asprintf(&missatge, MSG_NO_ES_DESTI, navegant->viatge.destination) >= 0) {
+            UTILS_printF(1, missatge);
+            free(missatge);
+        } else {
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
+        }
+    } else {
+        resultat = TRAMA_OK;
+    }
+
+    return resultat;
+}
+
+int TRAVESSIA_transferirLliurament (Navegant *navegant, char **path_segellat) {
+    char *missatge = NULL;
+    int resultat;
+
+    *path_segellat = NULL;
+
+    resultat = FITXER_enviar(navegant->fd_connexio, navegant->viatge.file, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_DELIVERY, 0);
+    if (resultat != FITXER_OK) {
+        return resultat;
+    }
+    UTILS_printF(1, MSG_OBJECTE_TRANSFERIT);
+
+    if (asprintf(&missatge, MSG_SEGELLANT, navegant->viatge.destination) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+    }
+
+    resultat = FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_SIGNED, TEXT_PREFIX_SEGELLAT, path_segellat);
+    if (resultat == FITXER_OK) {
+        UTILS_printF(1, MSG_SEGELLAT_REBUT);
+    }
+
+    return resultat;
+}
+
+void TRAVESSIA_acabarDeliver (Navegant *navegant, int resultat_fitxer, char *path_segellat) {
+    char *dades = NULL;
+    char *missatge = NULL;
+    int resultat;
+
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_DELIVER, &dades);
+
+    if (resultat == RESPOSTA_OK && resultat_fitxer == FITXER_OK) {
+        free(navegant->fitxer_segellat);
+        navegant->fitxer_segellat = path_segellat;
+        navegant->viatge_lliurat = VIATGE_LLIURAT;
+        NAVEGANT_guardarEstat(navegant);
+        if (asprintf(&missatge, MSG_LLIURAMENT_FET, navegant->viatge.destination) >= 0) {
+            UTILS_printF(1, missatge);
+            free(missatge);
+        } else {
+            UTILS_printF(1, MSG_SENSE_MEMORIA);
+        }
+    } else {
+        free(path_segellat);
+        if (resultat == RESPOSTA_ERROR && asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
+            UTILS_printF(1, missatge);
+            free(missatge);
+        } else if (resultat == RESPOSTA_OK) {
+            UTILS_printF(1, MSG_ERROR_LLIURAMENT);
+        }
+    }
+
+    free(dades);
+}
+
+void TRAVESSIA_ferDeliver (Navegant *navegant) {
+    char *peticio = NULL;
+    char *missatge = NULL;
+    char *path_segellat = NULL;
+    int resultat;
+
+    if (TRAVESSIA_comprovarDeliver(navegant) == TRAMA_ERROR) {
+        return;
+    }
+
+    if (asprintf(&peticio, FORMAT_PETICIO_DELIVER, navegant->viatge.id, navegant->viatge.object) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    if (asprintf(&missatge, MSG_LLIURANT, navegant->viatge.object, navegant->viatge.destination) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+    }
+
+    resultat = TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_DELIVER, FLAG_PETICIO, peticio);
+    free(peticio);
+    if (resultat == TRAMA_ERROR) {
+        TRAVESSIA_perdreConnexio(navegant);
+        return;
+    }
+
+    resultat = TRAVESSIA_transferirLliurament(navegant, &path_segellat);
+    if (resultat == FITXER_ERROR) {
+        UTILS_printF(1, MSG_ERROR_LLIURAMENT);
+        TRAVESSIA_perdreConnexio(navegant);
+        return;
+    }
+
+    TRAVESSIA_acabarDeliver(navegant, resultat, path_segellat);
+}
+
+int TRAVESSIA_comprovarClaim (Navegant *navegant) {
+    int resultat = TRAMA_ERROR;
+
+    if (navegant->estat != ESTAT_CONNECTAT_ITHACA) {
+        UTILS_printF(1, MSG_NO_CONNECTAT_ITHACA);
+    } else if (navegant->te_viatge != AMB_VIATGE || navegant->viatge_lliurat != VIATGE_LLIURAT || navegant->fitxer_segellat == NULL) {
+        UTILS_printF(1, MSG_SENSE_LLIURAMENT);
+    } else {
+        resultat = TRAMA_OK;
+    }
+
+    return resultat;
+}
+
+void TRAVESSIA_cobrarRecompensa (Navegant *navegant, char *dades) {
+    char **trossos = NULL;
+    char *missatge = NULL;
+    int n_trossos = 0;
+    int recompensa;
+
+    trossos = UTILS_splitString(dades, '&', &n_trossos);
+
+    if (n_trossos != N_CAMPS_CLAIM || strcmp(trossos[0], TEXT_CLAIM_OK) != 0 || UTILS_esNumeric(trossos[1]) == TEXT_NO_NUMERIC) {
+        UTILS_freeTokens(trossos, n_trossos);
+        UTILS_printF(1, MSG_RESPOSTA_INCORRECTA);
+        return;
+    }
+
+    recompensa = atoi(trossos[1]);
+    UTILS_freeTokens(trossos, n_trossos);
+    navegant->config.gold = navegant->config.gold + recompensa;
+
+    if (asprintf(&missatge, MSG_CLAIM_FET, navegant->viatge.destination, navegant->viatge.id, recompensa) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+    }
+
+    NAVEGANT_esborrarViatge(navegant);
+    NAVEGANT_guardarEstat(navegant);
+}
+
+void TRAVESSIA_ferClaim (Navegant *navegant) {
+    char *peticio = NULL;
+    char *dades = NULL;
+    char *missatge = NULL;
+    int resultat;
+    int resultat_fitxer;
+
+    if (TRAVESSIA_comprovarClaim(navegant) == TRAMA_ERROR) {
+        return;
+    }
+
+    if (asprintf(&peticio, FORMAT_PETICIO_CLAIM, navegant->viatge.id) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+
+    if (asprintf(&missatge, MSG_PRESENTANT, navegant->viatge.object) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+    }
+
+    resultat = TRAMA_enviarTrama(navegant->fd_connexio, TIPUS_CLAIM, FLAG_PETICIO, peticio);
+    free(peticio);
+    if (resultat == TRAMA_ERROR) {
+        TRAVESSIA_perdreConnexio(navegant);
+        return;
+    }
+
+    resultat_fitxer = FITXER_enviar(navegant->fd_connexio, navegant->fitxer_segellat, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_CLAIM, 0);
+    if (resultat_fitxer == FITXER_ERROR) {
+        UTILS_printF(1, MSG_ERROR_CLAIM);
+        TRAVESSIA_perdreConnexio(navegant);
+        return;
+    }
+    if (resultat_fitxer == FITXER_OK) {
+        UTILS_printF(1, MSG_OBJECTE_TRANSFERIT);
+    }
+
+    resultat = TRAVESSIA_rebreResposta(navegant, TIPUS_CLAIM, &dades);
+    if (resultat == RESPOSTA_OK && resultat_fitxer == FITXER_OK) {
+        TRAVESSIA_cobrarRecompensa(navegant, dades);
+    } else if (resultat == RESPOSTA_ERROR && asprintf(&missatge, MSG_ERROR_RESPOSTA, dades) >= 0) {
+        UTILS_printF(1, missatge);
+        free(missatge);
+    } else if (resultat == RESPOSTA_OK) {
+        UTILS_printF(1, MSG_ERROR_CLAIM);
     }
 
     free(dades);
@@ -306,6 +571,8 @@ int TRAVESSIA_gestionarRacio (Navegant *navegant) {
         asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
         UTILS_printF(1, missatge);
         free(missatge);
+        NAVEGANT_esborrarViatge(navegant);
+        navegant->estat = ESTAT_PERDUT;
         final = FINAL_SI;
     } else {
         NAVEGANT_consumirRacio(navegant, RACIO_KG);
@@ -394,6 +661,11 @@ void TRAVESSIA_ferSail (Navegant *navegant, char *illa) {
 
     if (navegant->estat == ESTAT_ESPERANT) {
         UTILS_printF(1, MSG_ESPERANT_PORT);
+        return;
+    }
+
+    if (strcasecmp(illa, TEXT_ITHACA) == 0 && navegant->viatge_lliurat == VIATGE_LLIURAT && (navegant->estat == ESTAT_ATRACAT || navegant->estat == ESTAT_DESCONNECTAT)) {
+        TRAVESSIA_tornarAIthaca(navegant);
         return;
     }
 
@@ -733,6 +1005,10 @@ void TRAVESSIA_executarComanda (Navegant *navegant, char *linea) {
         NAVEGANT_mostrarStatus(navegant);
     } else if (codi == CMD_MAP) {
         TRAVESSIA_ferMap(navegant);
+    } else if (codi == CMD_DELIVER) {
+        TRAVESSIA_ferDeliver(navegant);
+    } else if (codi == CMD_CLAIM) {
+        TRAVESSIA_ferClaim(navegant);
     } else if (codi != CMD_ERROR_SINTAXI) {
         UTILS_printF(1, MSG_COMANDA_OK);
     }

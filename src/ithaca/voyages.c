@@ -10,12 +10,13 @@
 #include "voyages.h"
 
 
-void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, int fd_avis) {
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, char *carpeta, int fd_avis) {
     servidor->viatges = NULL;
     servidor->n_viatges = 0;
     servidor->clients = NULL;
     servidor->n_clients = 0;
     servidor->fd_avis = fd_avis;
+    servidor->carpeta = carpeta;
 
     pthread_mutex_init(&servidor->mutex_viatges, NULL);
     pthread_mutex_init(&servidor->mutex_clients, NULL);
@@ -337,12 +338,156 @@ int VOYAGES_atendreAcceptIthaca (ClientIthaca *client, char *dades) {
     resultat = TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_OK, text);
     free(text);
 
+    if (resultat == TRAMA_ERROR) {
+        return TRAMA_ERROR;
+    }
+
     if (asprintf(&missatge, MSG_VIATGE_ASSIGNAT, viatge->id, client->nom) >= 0) {
         UTILS_printF(1, missatge);
         free(missatge);
+        missatge = NULL;
     } else {
         UTILS_printF(1, MSG_SENSE_MEMORIA);
     }
+
+    return VOYAGES_enviarObjecte(client, index_viatge);
+}
+
+
+int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge) {
+    ServidorIthaca *servidor = client->servidor;
+    Voyage *viatge = servidor->viatges[index_viatge].viatge;
+    char *missatge = NULL;
+    int resultat;
+
+    asprintf(&missatge, MSG_ENVIANT_OBJECTE, viatge->object, client->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    missatge = NULL;
+
+    resultat = FITXER_enviar(client->fd, viatge->file, UTILS_nomFitxer(viatge->file), TEXT_FITXER_OBJECT, 1);
+
+    if (resultat == FITXER_OK) {
+        UTILS_printF(1, MSG_OBJECTE_ENVIAT);
+        return TRAMA_OK;
+    }
+
+    pthread_mutex_lock(&servidor->mutex_viatges);
+    servidor->viatges[index_viatge].estat = VIATGE_FRACASSAT;
+    pthread_mutex_unlock(&servidor->mutex_viatges);
+
+    client->viatge_acceptat = 0;
+
+    asprintf(&missatge, MSG_OBJECTE_FALLAT, client->nom, viatge->id);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    if (resultat == FITXER_ERROR) {
+        return TRAMA_ERROR;
+    }
+
+    return TRAMA_OK;
+}
+
+
+int VOYAGES_rebutjarClaim (ClientIthaca *client, char *id_text, char *motiu) {
+    char *missatge = NULL;
+
+    asprintf(&missatge, MSG_CLAIM_REBUTJAT, id_text, client->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    return TRAMA_enviarTrama(client->fd, TIPUS_CLAIM, FLAG_ERROR, motiu);
+}
+
+
+int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
+    ServidorIthaca *servidor = client->servidor;
+    Voyage *viatge = NULL;
+    char *path_rebut = NULL;
+    char *missatge = NULL;
+    char *text = NULL;
+    char *error = NULL;
+    int index_viatge;
+    int resultat;
+
+    if (client->nom == NULL) {
+        TRAMA_enviarTrama(client->fd, TIPUS_CLAIM, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);
+        return TRAMA_ERROR;
+    }
+    if (UTILS_esNumeric(dades) == TEXT_NO_NUMERIC) {
+        TRAMA_enviarTrama(client->fd, TIPUS_CLAIM, FLAG_ERROR, TEXT_ITHACA_ERROR_DADES);
+        return TRAMA_ERROR;
+    }
+
+    asprintf(&missatge, MSG_CLAIM_PETICIO, client->nom, dades);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    missatge = NULL;
+
+    pthread_mutex_lock(&servidor->mutex_viatges);
+    index_viatge = VOYAGES_buscarViatgePerId(servidor, atoi(dades));
+    pthread_mutex_unlock(&servidor->mutex_viatges);
+
+    if (index_viatge != ERR_CODI) {
+        viatge = servidor->viatges[index_viatge].viatge;
+        asprintf(&missatge, MSG_CLAIM_REBENT, viatge->object);
+        UTILS_printF(1, missatge);
+        free(missatge);
+        missatge = NULL;
+    }
+
+    resultat = FITXER_rebre(client->fd, servidor->carpeta, TEXT_FITXER_CLAIM, PREFIX_CLAIM, &path_rebut);
+    if (resultat == FITXER_ERROR) {
+        return TRAMA_ERROR;
+    }
+    if (resultat != FITXER_OK) {
+        return VOYAGES_rebutjarClaim(client, dades, TEXT_ITHACA_ERROR_TRANSFERENCIA);
+    }
+    UTILS_printF(1, MSG_CLAIM_REBUT);
+
+    if (viatge == NULL) {
+        error = TEXT_ITHACA_ERROR_DADES;
+    } else if (strcmp(UTILS_nomFitxer(path_rebut) + strlen(PREFIX_CLAIM), UTILS_nomFitxer(viatge->file)) != 0) {
+        error = TEXT_ITHACA_ERROR_DADES;
+    } else if (SPHRAGIS_has_glyph(viatge->destination, path_rebut) != 1) {
+        error = TEXT_ITHACA_ERROR_GLIF;
+    } else {
+        pthread_mutex_lock(&servidor->mutex_viatges);
+        if (servidor->viatges[index_viatge].estat == VIATGE_ASSIGNAT &&
+            strcmp(servidor->viatges[index_viatge].nom_odysseus, client->nom) == 0) {
+            servidor->viatges[index_viatge].estat = VIATGE_COMPLETAT;
+        } else {
+            error = TEXT_ITHACA_ERROR_ESTAT;
+        }
+        pthread_mutex_unlock(&servidor->mutex_viatges);
+    }
+
+    free(path_rebut);
+
+    if (error != NULL) {
+        return VOYAGES_rebutjarClaim(client, dades, error);
+    }
+
+    asprintf(&missatge, MSG_CLAIM_GLIF, viatge->destination);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    missatge = NULL;
+
+    asprintf(&text, FORMAT_CLAIM_OK, viatge->reward);
+    resultat = TRAMA_enviarTrama(client->fd, TIPUS_CLAIM, FLAG_OK, text);
+    free(text);
+
+    asprintf(&missatge, MSG_CLAIM_COMPLETAT, viatge->id, client->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    missatge = NULL;
+
+    asprintf(&missatge, MSG_CLAIM_RECOMPENSA, viatge->reward);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    client->viatge_acceptat = 0;
 
     return resultat;
 }
@@ -488,7 +633,9 @@ int VOYAGES_atendreConnectIthaca (ClientIthaca *client, char *dades) {
     ServidorIthaca *servidor = client->servidor;
     char *nom = NULL;
     char *missatge = NULL;
+    char *format = NULL;
     int existeix;
+    int index_viatge;
     int resultat;
 
     if (client->nom != NULL) {
@@ -521,7 +668,16 @@ int VOYAGES_atendreConnectIthaca (ClientIthaca *client, char *dades) {
     resultat = TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_OK, TEXT_ITHACA_OK);
 
     if (resultat == TRAMA_OK) {
-        if (asprintf(&missatge, MSG_CLIENT_CONNECTAT, client->nom) >= 0) {
+        pthread_mutex_lock(&servidor->mutex_viatges);
+        index_viatge = VOYAGES_buscarViatgeAssignat(servidor, client->nom);
+        pthread_mutex_unlock(&servidor->mutex_viatges);
+
+        format = MSG_CLIENT_CONNECTAT;
+        if (index_viatge != ERR_CODI) {
+            format = MSG_CLIENT_TORNAT;
+        }
+
+        if (asprintf(&missatge, format, client->nom) >= 0) {
             UTILS_printF(1, missatge);
             free(missatge);
         } else {
@@ -554,6 +710,8 @@ int VOYAGES_atendreTramaIthaca (ClientIthaca *client) {
         resultat = VOYAGES_atendreListVoyages(client, dades);
     } else if (tipus == TIPUS_ACCEPT) {
         resultat = VOYAGES_atendreAcceptIthaca(client, dades);
+    } else if (tipus == TIPUS_CLAIM) {
+        resultat = VOYAGES_atendreClaim(client, dades);
     } else if (tipus == TIPUS_SORTIR_ITHACA) {
         if (client->nom == NULL) {
             resultat = TRAMA_enviarTrama(client->fd, tipus, FLAG_ERROR, TEXT_ITHACA_ERROR_ESTAT);

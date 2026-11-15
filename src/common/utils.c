@@ -173,3 +173,16 @@ char *UTILS_copiarText (char *text) {
 
     return copia;
 }
+
+char *UTILS_nomFitxer (char *path) {
+    int i;
+    int inici = 0;
+
+    for (i = 0; path[i] != '\0'; i++) {
+        if (path[i] == '/') {
+            inici = i + 1;
+        }
+    }
+
+    return &path[inici];
+}

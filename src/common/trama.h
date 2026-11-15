@@ -3,7 +3,7 @@
 * @Proposit: Enviament i recepcio de trames del protocol i obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -47,11 +47,19 @@
 #define TIPUS_SORTIR_ILLA   0x16
 #define TIPUS_NACK          0x7F
 
+#define TIPUS_FITXER_CAPCALERA 0x20
+#define TIPUS_FITXER_DADES     0x21
+#define TIPUS_FITXER_READY     0x22
+#define TIPUS_FITXER_ACK       0x23
+
 #define FLAG_PETICIO         0x00
 #define FLAG_OK              0x80
 #define FLAG_ERROR           0xC0
 #define FLAG_BINARI          0x20
 #define FLAG_BINARI_RESPOSTA 0xA0
+
+#define TEXT_TRAMA_INVALID_LENGTH "INVALID_LENGTH"
+#define MSG_TRAMA_ERROR_NACK "Error: no s'ha pogut enviar el NACK.\n"
 
 //Procediments i funcions
 
@@ -69,6 +77,19 @@ int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades);
 
 /***********************************************
 *
+* @Finalitat: Munta i envia una trama amb dades binaries i mida explicita.
+* @Parametres:  in: fd = socket on s'envia.
+*               in: tipus = camp TYPE de la trama.
+*               in: flags = camp FLAGS de la trama.
+*               in: dades = bytes del camp DATA.
+*               in: mida = nombre de bytes utils, entre 0 i MIDA_DADES.
+* @Retorn: TRAMA_OK si s'ha enviat sencera, TRAMA_ERROR si no.
+*
+************************************************/
+int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mida);
+
+/***********************************************
+*
 * @Finalitat: Llegeix una trama de 256 bytes amb un sol read i en separa els camps.
 * @Parametres:  in: fd = socket d'on es llegeix.
 *               out: tipus = camp TYPE rebut.
@@ -78,6 +99,19 @@ int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades);
 *
 ************************************************/
 int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
+
+/***********************************************
+*
+* @Finalitat: Rep una trama i extreu les dades binaries i la seva mida.
+* @Parametres:  in: fd = socket d'on es llegeix.
+*               out: tipus = camp TYPE rebut.
+*               out: flags = camp FLAGS rebut.
+*               out: dades = bytes rebuts, reservats amb malloc .
+*               out: mida = nombre de bytes utils del camp DATA.
+* @Retorn: TRAMA_OK si s'ha rebut correctament, TRAMA_ERROR si no.
+*
+************************************************/
+int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida);
 
 /***********************************************
 *

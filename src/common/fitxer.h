@@ -109,7 +109,7 @@ int FITXER_esborrar (char *path);
 *          FITXER_ERROR si hi ha un error local o de comunicacio;
 *          FITXER_ERROR_MIDA o FITXER_ERROR_MD5 segons l'ACK rebut;
 *          FITXER_REBUTJAT si el receptor rebutja la transferencia.
-*          Si retorna un error, el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket.
+*          Nomes amb FITXER_ERROR el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket; amb els altres errors el protocol s'ha tancat be.
 *
 ************************************************/
 int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta);
@@ -185,8 +185,9 @@ void FITXER_enviarNack (int fd, char *motiu);
 * @Retorn: FITXER_OK si rep i verifica el fitxer;
 *          FITXER_ERROR_MIDA si la mida es incorrecta;
 *          FITXER_ERROR_MD5 si l'MD5 es diferent;
+*          FITXER_REBUTJAT si ha respost READY amb 0xC0 (capcalera incorrecta o no es pot crear el fitxer);
 *          FITXER_ERROR si hi ha un altre error.
-*          Si retorna un error, el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket.
+*          Nomes amb FITXER_ERROR el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket; amb els altres errors el protocol s'ha tancat be.
 *
 ************************************************/
 int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada,  char *prefix, char **path_rebut);
@@ -220,11 +221,12 @@ int FITXER_nomFitxerValid (char *nom);
 *               in: etiqueta_esperada = etiqueta que s'espera rebre.
 *               out: mida = mida del fitxer en bytes.
 *               out: flags_dades = flags esperats als blocs de dades.
+*               out: resultat = FITXER_OK si es valida, FITXER_REBUTJAT si s'ha respost READY amb 0xC0, FITXER_ERROR en qualsevol altre cas.
 * @Retorn: Array de quatre cadenes si es valid, NULL si falla.
 *          El cridant l'ha d'alliberar amb UTILS_freeTokens.
 *
 ************************************************/
-char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades);
+char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat);
 
 /***********************************************
 *
@@ -234,7 +236,7 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
 *               in: prefix = text afegit davant del nom.
 *               in: nom_fitxer = nom rebut a la capcalera.
 *               out: path_rebut = ruta reservada, o NULL si falla.
-* @Retorn: Descriptor del fitxer obert, o FITXER_ERROR si falla.
+* @Retorn: Descriptor del fitxer obert; FITXER_REBUTJAT si no es pot crear el fitxer i s'ha respost READY amb 0xC0; FITXER_ERROR si falla l'enviament del READY.
 *          El cridant ha de tancar el fitxer i alliberar la ruta.
 *
 ************************************************/

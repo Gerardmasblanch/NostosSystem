@@ -106,8 +106,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     return resultat;
 }
 
-int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags,
-                            char **dades, int *mida) {
+int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida) {
     unsigned char trama[MIDA_TRAMA];
     int llegits = 0;
     int resultat_read = 1;
@@ -131,6 +130,9 @@ int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags,
     mida_dades = trama[POS_MIDA];
 
     if (mida_dades > MIDA_DADES) {
+        if (TRAMA_enviarTrama(fd, TIPUS_NACK, FLAG_ERROR, TEXT_TRAMA_INVALID_LENGTH) != TRAMA_OK) {
+            UTILS_printF(1, MSG_TRAMA_ERROR_NACK);
+        }
         return TRAMA_ERROR;
     }
 

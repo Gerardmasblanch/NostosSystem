@@ -47,11 +47,19 @@
 #define TIPUS_SORTIR_ILLA   0x16
 #define TIPUS_NACK          0x7F
 
+#define TIPUS_FITXER_CAPCALERA 0x20
+#define TIPUS_FITXER_DADES     0x21
+#define TIPUS_FITXER_READY     0x22
+#define TIPUS_FITXER_ACK       0x23
+
 #define FLAG_PETICIO         0x00
 #define FLAG_OK              0x80
 #define FLAG_ERROR           0xC0
 #define FLAG_BINARI          0x20
 #define FLAG_BINARI_RESPOSTA 0xA0
+
+#define TEXT_TRAMA_INVALID_LENGTH "INVALID_LENGTH"
+#define MSG_TRAMA_ERROR_NACK "Error: no s'ha pogut enviar el NACK.\n"
 
 //Procediments i funcions
 

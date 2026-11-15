@@ -96,7 +96,7 @@ int main (int argc, char *argv[]) {
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
 
-    VOYAGES_inicialitzarServidorIthaca(&servidor, canonada_avis[0]);
+    VOYAGES_inicialitzarServidorIthaca(&servidor, ithaca_config.folder, canonada_avis[0]);
 
     if (VOYAGES_prepararViatgesIthaca(&servidor, viatges, n_viatges) == ERR_CODI) {
         VOYAGES_alliberarServidorIthaca(&servidor);

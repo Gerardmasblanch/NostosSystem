@@ -488,7 +488,9 @@ int VOYAGES_atendreConnectIthaca (ClientIthaca *client, char *dades) {
     ServidorIthaca *servidor = client->servidor;
     char *nom = NULL;
     char *missatge = NULL;
+    char *format = NULL;
     int existeix;
+    int index_viatge;
     int resultat;
 
     if (client->nom != NULL) {
@@ -521,7 +523,16 @@ int VOYAGES_atendreConnectIthaca (ClientIthaca *client, char *dades) {
     resultat = TRAMA_enviarTrama(client->fd, TIPUS_CONNECT, FLAG_OK, TEXT_ITHACA_OK);
 
     if (resultat == TRAMA_OK) {
-        if (asprintf(&missatge, MSG_CLIENT_CONNECTAT, client->nom) >= 0) {
+        pthread_mutex_lock(&servidor->mutex_viatges);
+        index_viatge = VOYAGES_buscarViatgeAssignat(servidor, client->nom);
+        pthread_mutex_unlock(&servidor->mutex_viatges);
+
+        format = MSG_CLIENT_CONNECTAT;
+        if (index_viatge != ERR_CODI) {
+            format = MSG_CLIENT_TORNAT;
+        }
+
+        if (asprintf(&missatge, format, client->nom) >= 0) {
             UTILS_printF(1, missatge);
             free(missatge);
         } else {

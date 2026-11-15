@@ -171,7 +171,7 @@ void TRAVESSIA_ferConnectIthaca (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Despres del DELIVER, abandona l'illa de desti i torna directament a Ithaca sense passar per illes intermedies, encara sense connectar-s'hi.
+* @Finalitat: Despres del DELIVER, abandona l'illa de desti i torna directament a Ithaca sense passar per illes intermedies, encara sense connectar-s'hi. La fan servir SAIL Ithaca i CONNECT ITHACA.
 * @Parametres:  in/out: navegant = estat del navegant, amb el viatge ja lliurat.
 * @Retorn: 0 si ja es a Ithaca, ERR_CODI si no hi ha memoria.
 *
@@ -349,7 +349,7 @@ void TRAVESSIA_tornarAIlla (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Navega fins a una illa connectada amb la ubicacio actual.
+* @Finalitat: Navega fins a una illa connectada amb la ubicacio actual. Despres del DELIVER, SAIL Ithaca torna directament a Ithaca sense connectar-s'hi.
 * @Parametres:  in/out: navegant = estat del navegant.
 *               in: illa = nom de l'illa escrit per l'usuari.
 * @Retorn: ----.

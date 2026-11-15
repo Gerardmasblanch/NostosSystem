@@ -664,6 +664,11 @@ void TRAVESSIA_ferSail (Navegant *navegant, char *illa) {
         return;
     }
 
+    if (strcasecmp(illa, TEXT_ITHACA) == 0 && navegant->viatge_lliurat == VIATGE_LLIURAT && (navegant->estat == ESTAT_ATRACAT || navegant->estat == ESTAT_DESCONNECTAT)) {
+        TRAVESSIA_tornarAIthaca(navegant);
+        return;
+    }
+
     if (navegant->estat == ESTAT_DESCONNECTAT && strcasecmp(illa, navegant->ubicacio) == 0) {
         TRAVESSIA_tornarAIlla(navegant);
         return;

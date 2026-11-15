@@ -98,7 +98,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
 * @Parametres:  in: fd = socket d'on es llegeix.
 *               out: tipus = camp TYPE rebut.
 *               out: flags = camp FLAGS rebut.
-*               out: dades = bytes rebuts, reservats amb malloc.
+*               out: dades = bytes rebuts, reservats amb malloc .
 *               out: mida = nombre de bytes utils del camp DATA.
 * @Retorn: TRAMA_OK si s'ha rebut correctament, TRAMA_ERROR si no.
 *

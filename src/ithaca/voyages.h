@@ -18,6 +18,7 @@
 
 #include "trama.h"
 #include "types.h"
+#include "fitxer.h"
 
 #define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"
 
@@ -55,6 +56,9 @@
 
 #define MSG_VIATGE_ASSIGNAT ">>> Voyage %d assigned to %s.\n"
 #define MSG_VIATGE_FRACASSAT ">>> Voyage %d of %s marked as failed.\n"
+#define MSG_ENVIANT_OBJECTE ">>> Sending %s to %s...\n"
+#define MSG_OBJECTE_ENVIAT  "\n>>> Object transferred successfully.\n"
+#define MSG_OBJECTE_FALLAT  ">>> Object transfer to %s failed. Voyage %d marked as failed.\n"
 
 typedef struct ServidorIthaca ServidorIthaca;
 
@@ -230,6 +234,19 @@ int VOYAGES_atendreListVoyages (ClientIthaca *client, char *dades);
 *
 ************************************************/
 int VOYAGES_atendreAcceptIthaca (ClientIthaca *client, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Envia la imatge de l'objecte (transferencia OBJECT) just
+*             despres d'un ACCEPT correcte. Si falla, el viatge passa a
+*             fracassat i el client pot acceptar-ne un altre.
+* @Parametres:  in/out: client = client que ha acceptat el viatge.
+*               in: index_viatge = posicio del viatge acceptat.
+* @Retorn: TRAMA_OK si s'ha de seguir atenent el client; TRAMA_ERROR si
+*          la transferencia ha fallat per comunicacio i s'ha de tancar.
+*
+************************************************/
+int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge);
 
 /***********************************************
 *

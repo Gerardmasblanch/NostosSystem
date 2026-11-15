@@ -337,14 +337,55 @@ int VOYAGES_atendreAcceptIthaca (ClientIthaca *client, char *dades) {
     resultat = TRAMA_enviarTrama(client->fd, TIPUS_ACCEPT, FLAG_OK, text);
     free(text);
 
+    if (resultat == TRAMA_ERROR) {
+        return TRAMA_ERROR;
+    }
+
     if (asprintf(&missatge, MSG_VIATGE_ASSIGNAT, viatge->id, client->nom) >= 0) {
         UTILS_printF(1, missatge);
         free(missatge);
+        missatge = NULL;
     } else {
         UTILS_printF(1, MSG_SENSE_MEMORIA);
     }
 
-    return resultat;
+    return VOYAGES_enviarObjecte(client, index_viatge);
+}
+
+
+int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge) {
+    ServidorIthaca *servidor = client->servidor;
+    Voyage *viatge = servidor->viatges[index_viatge].viatge;
+    char *missatge = NULL;
+    int resultat;
+
+    asprintf(&missatge, MSG_ENVIANT_OBJECTE, viatge->object, client->nom);
+    UTILS_printF(1, missatge);
+    free(missatge);
+    missatge = NULL;
+
+    resultat = FITXER_enviar(client->fd, viatge->file, UTILS_nomFitxer(viatge->file), TEXT_FITXER_OBJECT, 1);
+
+    if (resultat == FITXER_OK) {
+        UTILS_printF(1, MSG_OBJECTE_ENVIAT);
+        return TRAMA_OK;
+    }
+
+    pthread_mutex_lock(&servidor->mutex_viatges);
+    servidor->viatges[index_viatge].estat = VIATGE_FRACASSAT;
+    pthread_mutex_unlock(&servidor->mutex_viatges);
+
+    client->viatge_acceptat = 0;
+
+    asprintf(&missatge, MSG_OBJECTE_FALLAT, client->nom, viatge->id);
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    if (resultat == FITXER_ERROR) {
+        return TRAMA_ERROR;
+    }
+
+    return TRAMA_OK;
 }
 
 

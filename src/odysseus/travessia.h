@@ -221,7 +221,7 @@ void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge);
 
 /***********************************************
 *
-* @Finalitat: Rep l'objecte del viatge que Ithaca envia despres de l'ACCEPT i el desa a la carpeta del navegant. Si falla, mostra l'error, esborra el viatge i tanca la connexio amb Ithaca.
+* @Finalitat: Rep l'objecte del viatge que Ithaca envia despres de l'ACCEPT i el desa a la carpeta del navegant. Si falla, mostra l'error i esborra el viatge; nomes tanca la connexio amb Ithaca si l'error es de comunicacio (amb un error de mida o MD5 hi continua connectat i pot acceptar un altre viatge).
 * @Parametres:  in/out: navegant = estat del navegant, amb el viatge ja guardat.
 * @Retorn: ----.
 *

@@ -31,6 +31,8 @@
 #define MIDA_MD5        32
 #define PERMISOS_FITXER 0644
 #define COMANDA_MD5     "md5sum"
+#define COMANDA_ESBORRAR "rm"
+#define OPCIO_FORCAR     "-f"
 
 #define FORMAT_FITXER_CAPCALERA "%s&%s&%d&%s"
 #define FORMAT_FITXER_RUTA      "%s/%s%s"
@@ -62,6 +64,7 @@
 #define MSG_FITXER_REBUTJAT          "Error: el receptor ha rebutjat la transferencia.\n"
 #define MSG_FITXER_MIDA_DIFERENT     "Error: el receptor ha detectat una mida incorrecta.\n"
 #define MSG_FITXER_MD5_DIFERENT      "Error: el receptor ha detectat un MD5 diferent.\n"
+#define MSG_FITXER_ERROR_ESBORRAR    "Error: no s'ha pogut esborrar el fitxer.\n"
 
 //Procediments i funcions
 
@@ -83,6 +86,16 @@ int FITXER_midaFitxer (char *path);
 *
 ************************************************/
 int FITXER_calcularMD5 (char *path, char *md5);
+
+/***********************************************
+*
+* @Finalitat: Esborra un fitxer executant la comanda rm -f amb fork + execlp
+*             + waitpid (el mateix patro que md5sum).
+* @Parametres:  in: path = ruta del fitxer a esborrar.
+* @Retorn: FITXER_OK si s'ha esborrat, FITXER_ERROR si no.
+*
+************************************************/
+int FITXER_esborrar (char *path);
 
 /***********************************************
 *

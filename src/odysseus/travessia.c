@@ -280,11 +280,16 @@ void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge) {
 void TRAVESSIA_rebreObjecte (Navegant *navegant) {
     char *path = NULL;
     char *missatge = NULL;
+    int resultat;
 
-    if (FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_OBJECT, "", &path) != FITXER_OK) {
+    resultat = FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_OBJECT, "", &path);
+
+    if (resultat != FITXER_OK) {
         UTILS_printF(1, MSG_ERROR_OBJECTE);
         NAVEGANT_esborrarViatge(navegant);
-        TRAVESSIA_perdreConnexio(navegant);
+        if (resultat == FITXER_ERROR) {
+            TRAVESSIA_perdreConnexio(navegant);
+        }
         return;
     }
 

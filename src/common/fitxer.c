@@ -96,6 +96,29 @@ int FITXER_calcularMD5 (char *path, char *md5) {
     return resultat;
 }
 
+int FITXER_esborrar (char *path) {
+    int pid;
+    int estat_fill;
+
+    pid = fork();
+    if (pid < 0) {
+        UTILS_printF(1, MSG_FITXER_ERROR_ESBORRAR);
+        return FITXER_ERROR;
+    }
+
+    if (pid == 0) {
+        execlp(COMANDA_ESBORRAR, COMANDA_ESBORRAR, OPCIO_FORCAR, path, NULL);
+        exit(1);
+    }
+
+    if (waitpid(pid, &estat_fill, 0) != pid || estat_fill != 0) {
+        UTILS_printF(1, MSG_FITXER_ERROR_ESBORRAR);
+        return FITXER_ERROR;
+    }
+
+    return FITXER_OK;
+}
+
 int FITXER_enviarCapcalera (int fd, char *nom_fitxer, char *etiqueta, int mida, char *md5, int es_resposta) {
     char *dades = NULL;
     int flags = FLAG_PETICIO;
@@ -457,7 +480,7 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
     if (fd_fitxer < 0 || resultat_trama != TRAMA_OK) {
         if (fd_fitxer >= 0) {
             close(fd_fitxer);
-            unlink(ruta);
+            FITXER_esborrar(ruta);
         }
         free(ruta);
         return FITXER_ERROR;
@@ -586,7 +609,7 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
         *path_rebut = ruta;
     } else {
         if (ruta != NULL) {
-            unlink(ruta);
+            FITXER_esborrar(ruta);
         }
         free(ruta);
     }

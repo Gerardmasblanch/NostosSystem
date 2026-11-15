@@ -18,6 +18,7 @@
 //Llibreries propies
 #include "trama.h"
 #include "config.h"
+#include "fitxer.h"
 #include "sphragis.h"
 
 //Constants
@@ -26,6 +27,7 @@
 #define ESTAT_ATRACAT          2
 #define ESTAT_DESCONNECTAT     3
 #define ESTAT_ESPERANT         4
+#define ESTAT_PERDUT           5
 #define SENSE_VIATGE 0
 #define AMB_VIATGE   1
 #define VIATGE_NO_LLIURAT 0
@@ -48,6 +50,22 @@
 #define MSG_UBICACIO_DESCONEGUDA "Current location: None\n"
 #define FORMAT_UBICACIO_ESPERANT "Current location: Off the coast of %s\n"
 
+
+#define TEXT_PREFIX_SEGELLAT "signed_"
+
+#define AMB_SORTIDA      0
+#define SENSE_SORTIDA    1
+#define OR_MINIM_SORTIDA 50
+
+#define FORMAT_RUTA_ESTAT       "%s/estat.db"
+#define FORMAT_ESTAT_RECURSOS   "%d&%d\n"
+#define FORMAT_ESTAT_ALIMENT    "%s&%d\n"
+#define FORMAT_ESTAT_VIATGE     "%d&%d&%s&%s&%s&%d&%d\n"
+#define TEXT_ESTAT_SENSE_VIATGE "0\n"
+#define N_CAMPS_ESTAT_RECURSOS  2
+#define N_CAMPS_ESTAT_ALIMENT   2
+#define N_CAMPS_ESTAT_VIATGE    7
+#define MSG_ERROR_GUARDAR_ESTAT "Error: the state could not be saved.\n"
 
 #define TEXT_COMPRA_OK "OK"
 #define TEXT_VENDA_OK "OK"
@@ -276,5 +294,92 @@ int NAVEGANT_afegirRuta (Navegant *navegant, char *origen, char *desti);
 *
 ************************************************/
 int NAVEGANT_afegirAdreca (Navegant *navegant, char *nom, char *ip, int port);
+
+/***********************************************
+*
+* @Finalitat: Allibera una llista d'aliments i els seus noms.
+* @Parametres:  in: aliments = llista d'aliments, pot ser NULL.
+*               in: n_aliments = nombre d'aliments de la llista.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_alliberarAliments (Food *aliments, int n_aliments);
+
+/***********************************************
+*
+* @Finalitat: Escriu una linia al fitxer d'estat i l'allibera.
+* @Parametres:  in: fd = fitxer d'estat obert per escriptura.
+*               in: linia = text reservat amb malloc, o NULL si no s'ha pogut crear.
+* @Retorn: 0 si s'ha escrit sencera, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_escriureLinia (int fd, char *linia);
+
+/***********************************************
+*
+* @Finalitat: Escriu al fitxer d'estat la linia del viatge actual, o 0 si no n'hi ha.
+* @Parametres:  in: fd = fitxer d'estat obert per escriptura.
+*               in: navegant = navegant amb el viatge.
+* @Retorn: 0 si s'ha escrit, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_escriureViatge (int fd, Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Desa a <carpeta>/estat.db l'or, la carrega i el viatge actual amb l'objecte i si s'ha lliurat.
+* @Parametres:  in: navegant = navegant amb l'estat a desar.
+* @Retorn: 0 si s'ha desat, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_guardarEstat (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Buida el fitxer d'estat perque la propera execucio comenci amb els valors del fitxer de configuracio.
+* @Parametres:  in: navegant = navegant amb la carpeta de l'estat.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_reiniciarEstat (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Llegeix els aliments del fitxer d'estat i, si tots son correctes, substitueixen la carrega de la configuracio.
+* @Parametres:  in/out: navegant = navegant amb la carrega.
+*               in: fd = fitxer d'estat obert per lectura.
+*               in: n_aliments = nombre d'aliments que s'han de llegir.
+* @Retorn: 0 si s'han carregat, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_carregarAliments (Navegant *navegant, int fd, int n_aliments);
+
+/***********************************************
+*
+* @Finalitat: Llegeix el viatge del fitxer d'estat i el recupera, amb la ruta de la imatge segellada si ja s'havia lliurat.
+* @Parametres:  in/out: navegant = navegant sense viatge.
+*               in: fd = fitxer d'estat obert per lectura.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_carregarViatge (Navegant *navegant, int fd);
+
+/***********************************************
+*
+* @Finalitat: Recupera l'estat desat a <carpeta>/estat.db. Si no existeix, esta buit o no es correcte, es mantenen els valors de la configuracio.
+* @Parametres:  in/out: navegant = navegant ja inicialitzat.
+* @Retorn: 0 si s'ha recuperat, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_carregarEstat (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Comprova si el navegant s'ha quedat sense sortida: menys de 50 d'or, sense menjar, sense lliurament fet i sense estar atracat al desti.
+* @Parametres:  in: navegant = navegant a comprovar.
+* @Retorn: SENSE_SORTIDA o AMB_SORTIDA.
+*
+************************************************/
+int NAVEGANT_senseSortida (Navegant *navegant);
 
 #endif

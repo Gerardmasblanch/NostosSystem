@@ -4,7 +4,7 @@
 *            terminal interactiu de comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -75,6 +75,8 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
+    NAVEGANT_carregarEstat(&navegant);
+
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGALRM, handleAlarma);
@@ -84,6 +86,12 @@ int main (int argc, char *argv[]) {
     free(missatge);
 
     TRAVESSIA_executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
+
+    if (navegant.estat == ESTAT_PERDUT || NAVEGANT_senseSortida(&navegant) == SENSE_SORTIDA) {
+        NAVEGANT_reiniciarEstat(&navegant);
+    } else {
+        NAVEGANT_guardarEstat(&navegant);
+    }
 
     NAVEGANT_alliberarNavegant(&navegant);
 

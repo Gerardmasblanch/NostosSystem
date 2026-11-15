@@ -39,6 +39,7 @@
 #define MSG_ERROR_RESPOSTA "Error: %s.\n"
 #define MSG_JA_CONNECTAT   "You are already connected to Ithaca.\n"
 #define MSG_NOMES_A_ITHACA "You can only connect to Ithaca from Ithaca.\n"
+#define MSG_TORNANT_ITHACA "Returning directly to Ithaca...\n"
 #define TEXT_SENSE_VIATGES "0"
 #define MSG_CAPCALERA_VIATGES "\n--- AVAILABLE VOYAGES ---\n\n"
 #define FORMAT_VIATGE "%s. %-20s -> %-12s [%s]\n"
@@ -50,7 +51,6 @@
 #define MSG_OBJECTE_REBUT   "Object received: %s.\n"
 #define MSG_ERROR_OBJECTE   "Error: the object could not be received. The voyage has been cancelled.\n"
 #define FORMAT_PETICIO_DELIVER  "%d&%s"
-#define TEXT_PREFIX_SEGELLAT    "signed_"
 #define MSG_LLIURANT            "Delivering %s to %s...\n"
 #define MSG_OBJECTE_TRANSFERIT  "Object transferred correctly.\n"
 #define MSG_SEGELLANT           "\n%s is stamping the object...\n"
@@ -60,6 +60,13 @@
 #define MSG_JA_LLIURAT          "The object has already been delivered. Return to Ithaca and CLAIM the reward.\n"
 #define MSG_NO_ES_DESTI         "You must be docked at %s, the destination of your voyage.\n"
 #define MSG_ERROR_LLIURAMENT    "Error: the delivery could not be completed.\n"
+#define FORMAT_PETICIO_CLAIM   "%d"
+#define TEXT_CLAIM_OK          "OK"
+#define N_CAMPS_CLAIM          2
+#define MSG_PRESENTANT         "Presenting the stamped %s...\n"
+#define MSG_CLAIM_FET          "Glyph of %s verified.\n\nVoyage %d completed.\nReward received: %d gold.\n"
+#define MSG_SENSE_LLIURAMENT   "You have no delivered voyage to claim.\n"
+#define MSG_ERROR_CLAIM        "Error: the claim could not be completed.\n"
 #define TEXT_ATRACAT "DOCKED"
 #define TEXT_ESPERA  "WAIT"
 #define MSG_NO_ES_POT_NAVEGAR "We can't sail to %s from here...\n"
@@ -162,6 +169,15 @@ void TRAVESSIA_atendreServidor (Navegant *navegant);
 ************************************************/
 void TRAVESSIA_ferConnectIthaca (Navegant *navegant);
 
+/***********************************************
+*
+* @Finalitat: Despres del DELIVER, abandona l'illa de desti i torna directament a Ithaca sense passar per illes intermedies, encara sense connectar-s'hi.
+* @Parametres:  in/out: navegant = estat del navegant, amb el viatge ja lliurat.
+* @Retorn: 0 si ja es a Ithaca, ERR_CODI si no hi ha memoria.
+*
+************************************************/
+int TRAVESSIA_tornarAIthaca (Navegant *navegant);
+
 
 /***********************************************
 *
@@ -250,6 +266,34 @@ void TRAVESSIA_acabarDeliver (Navegant *navegant, int resultat_fitxer, char *pat
 *
 ************************************************/
 void TRAVESSIA_ferDeliver (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Comprova que es pot fer el CLAIM: connectat a Ithaca i amb el viatge actiu ja lliurat i la imatge segellada. Si no es pot, mostra el motiu.
+* @Parametres:  in: navegant = estat del navegant.
+* @Retorn: TRAMA_OK si es pot reclamar, TRAMA_ERROR si no.
+*
+************************************************/
+int TRAVESSIA_comprovarClaim (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Valida la resposta OK&Reward del CLAIM, suma la recompensa a l'or, mostra el resultat i esborra el viatge completat.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: dades = dades de la resposta correcta d'Ithaca.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_cobrarRecompensa (Navegant *navegant, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Executa la comanda CLAIM: envia a Ithaca la imatge segellada amb el nom original de l'objecte i, si la valida, cobra la recompensa.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_ferClaim (Navegant *navegant);
 
 /***********************************************
 *

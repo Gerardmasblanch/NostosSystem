@@ -437,7 +437,7 @@ int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
         missatge = NULL;
     }
 
-    resultat = FITXER_rebre(client->fd, servidor->carpeta, TEXT_CLAIM, PREFIX_CLAIM, &path_rebut);
+    resultat = FITXER_rebre(client->fd, servidor->carpeta, TEXT_FITXER_CLAIM, PREFIX_CLAIM, &path_rebut);
     if (resultat == FITXER_ERROR) {
         return TRAMA_ERROR;
     }

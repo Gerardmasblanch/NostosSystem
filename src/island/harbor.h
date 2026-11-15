@@ -49,7 +49,6 @@
 #define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del vaixell.\n"
 #define MSG_ERROR_ACCEPT     "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
-#define TEXT_DELIVERY "DELIVERY"
 #define TEXT_ERROR_SEGELL "STAMP_ERROR"
 #define TEXT_ERROR_TRANSFERENCIA "TRANSFER_ERROR"
 #define FORMAT_RUTA_SEGELLADA "%s/signed_%s"

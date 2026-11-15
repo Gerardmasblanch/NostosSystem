@@ -335,7 +335,7 @@ int HARBOR_atendreDeliver (Vaixell *vaixell, char *dades) {
     free(missatge);
     UTILS_freeTokens(trossos, n_trossos);
 
-    resultat = FITXER_rebre(vaixell->fd, harbor->config->folder, TEXT_DELIVERY, "", &path_rebut);
+    resultat = FITXER_rebre(vaixell->fd, harbor->config->folder, TEXT_FITXER_DELIVERY, "", &path_rebut);
     if (resultat != FITXER_OK) {
         return HARBOR_errorDeliver(vaixell, resultat, TEXT_ERROR_TRANSFERENCIA);
     }

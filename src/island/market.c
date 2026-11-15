@@ -13,6 +13,14 @@
 
 //Procediments i funcions
 
+void MARKET_inicialitzarMercat (Mercat *mercat) {
+    pthread_mutex_init(&mercat->mutex_stock, NULL);
+}
+
+void MARKET_destruirMercat (Mercat *mercat) {
+    pthread_mutex_destroy(&mercat->mutex_stock);
+}
+
 int MARKET_guardarStock (Mercat *mercat) {
     int fd;
     int i;
@@ -48,14 +56,26 @@ int MARKET_buscarProducte (Mercat *mercat, char *nom) {
 }
 
 void MARKET_atendreListMarket (int fd, Mercat *mercat) {
+    Product *copia = NULL;
     char *text = NULL;
     int total;
     int i;
 
+    copia = malloc(sizeof(Product) * mercat->n_productes);
+    if (copia == NULL) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        TRAMA_enviarTrama(fd, TIPUS_LIST_MARKET, FLAG_ERROR, TEXT_ERROR_SERVIDOR_MERCAT);
+        return;
+    }
+
+    pthread_mutex_lock(&mercat->mutex_stock);
+    memcpy(copia, mercat->productes, sizeof(Product) * mercat->n_productes);
+    pthread_mutex_unlock(&mercat->mutex_stock);
+
     total = mercat->n_productes + 1;
 
     for (i = 0; i < mercat->n_productes; i++) {
-        asprintf(&text, FORMAT_PRODUCTE, i + 1, total, mercat->productes[i].name, mercat->productes[i].amount, mercat->productes[i].price);
+        asprintf(&text, FORMAT_PRODUCTE, i + 1, total, copia[i].name, copia[i].amount, copia[i].price);
         TRAMA_enviarTrama(fd, TIPUS_LIST_MARKET, FLAG_OK, text);
         free(text);
     }
@@ -63,6 +83,8 @@ void MARKET_atendreListMarket (int fd, Mercat *mercat) {
     asprintf(&text, FORMAT_MAPA_LLISTA, total, total, PREU_MAPA);
     TRAMA_enviarTrama(fd, TIPUS_LIST_MARKET, FLAG_OK, text);
     free(text);
+
+    free(copia);
 }
 
 int MARKET_validarPeticio (int fd, int tipus, char *dades, Mercat *mercat, int *index, int *quantitat) {
@@ -95,7 +117,8 @@ void MARKET_atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat) 
     char *text = NULL;
     int index;
     int quantitat;
-    int cost;
+    int cost = 0;
+    int hi_ha_stock = 0;
 
     if (MARKET_validarPeticio(fd, TIPUS_BUY, dades, mercat, &index, &quantitat) == PETICIO_NO_VALIDA) {
         return;
@@ -103,14 +126,19 @@ void MARKET_atendreBuy (int fd, char *nom_vaixell, char *dades, Mercat *mercat) 
 
     producte = &mercat->productes[index];
 
-    if (quantitat > producte->amount) {
+    pthread_mutex_lock(&mercat->mutex_stock);
+    if (quantitat <= producte->amount) {
+        producte->amount = producte->amount - quantitat;
+        cost = quantitat * producte->price;
+        MARKET_guardarStock(mercat);
+        hi_ha_stock = 1;
+    }
+    pthread_mutex_unlock(&mercat->mutex_stock);
+
+    if (hi_ha_stock == 0) {
         TRAMA_enviarTrama(fd, TIPUS_BUY, FLAG_ERROR, TEXT_ERROR_STOCK);
         return;
     }
-
-    producte->amount = producte->amount - quantitat;
-    cost = quantitat * producte->price;
-    MARKET_guardarStock(mercat);
 
     asprintf(&text, FORMAT_OPERACIO, producte->name, quantitat, cost);
     TRAMA_enviarTrama(fd, TIPUS_BUY, FLAG_OK, text);
@@ -134,9 +162,11 @@ void MARKET_atendreSell (int fd, char *nom_vaixell, char *dades, Mercat *mercat)
 
     producte = &mercat->productes[index];
 
+    pthread_mutex_lock(&mercat->mutex_stock);
     producte->amount = producte->amount + quantitat;
     ingressos = quantitat * producte->price;
     MARKET_guardarStock(mercat);
+    pthread_mutex_unlock(&mercat->mutex_stock);
 
     asprintf(&text, FORMAT_OPERACIO, producte->name, quantitat, ingressos);
     TRAMA_enviarTrama(fd, TIPUS_SELL, FLAG_OK, text);

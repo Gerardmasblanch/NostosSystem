@@ -12,6 +12,9 @@
 #ifndef _MARKET_H
 #define _MARKET_H
 
+//Llibreries
+#include <pthread.h>
+
 //Llibreries propies
 #include "trama.h"
 #include "config.h"
@@ -26,6 +29,7 @@
 #define TEXT_ERROR_PETICIO  "INVALID_DATA"
 #define TEXT_ERROR_PRODUCTE "UNKNOWN_PRODUCT"
 #define TEXT_ERROR_STOCK    "NOT_ENOUGH_STOCK"
+#define TEXT_ERROR_SERVIDOR_MERCAT "SERVER_ERROR"
 #define FORMAT_OPERACIO "OK&%s&%d&%d"
 #define MSG_COMPRA ">>> %s bought %d kg of %s.\n"
 #define MSG_VENDA  ">>> %s sold %d kg of %s.\n"
@@ -39,13 +43,35 @@ typedef struct {
     Product *productes;
     int n_productes;
     char *fitxer;
+    pthread_mutex_t mutex_stock;
 } Mercat;
 
 //Procediments i funcions
 
 /***********************************************
 *
+* @Finalitat: Crea el mutex que protegeix el stock del mercat. Es crida
+*             abans de crear cap thread.
+* @Parametres:  in/out: mercat = mercat ja carregat.
+* @Retorn: ----.
+*
+************************************************/
+void MARKET_inicialitzarMercat (Mercat *mercat);
+
+/***********************************************
+*
+* @Finalitat: Destrueix el mutex del stock. Es crida despres del join de
+*             tots els threads.
+* @Parametres:  in/out: mercat = mercat de l'illa.
+* @Retorn: ----.
+*
+************************************************/
+void MARKET_destruirMercat (Mercat *mercat);
+
+/***********************************************
+*
 * @Finalitat: Sobreescriu el fitxer de stock amb l'estat actual del mercat.
+*             S'ha de cridar amb mutex_stock agafat.
 * @Parametres:  in: mercat = mercat a guardar.
 * @Retorn: 0 si s'ha guardat, ERR_CODI si hi ha hagut un error.
 *

@@ -1,10 +1,12 @@
 /***********************************************
 *
 * @Proposit: Declaracio dels tipus i funcions del servidor de viatges
-*            d'Ithaca.
+*            d'Ithaca. El fil principal accepta connexions i cada client
+*            s'atén en un thread propi; la taula de viatges i la llista de
+*            clients es protegeixen amb un mutex cadascuna.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 14/11/2026
 *
 ************************************************/
 
@@ -12,12 +14,15 @@
 #define _VOYAGES_H
 
 #include <sys/select.h>
+#include <pthread.h>
 
 #include "trama.h"
 #include "types.h"
 
-#define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n" 
+#define MSG_ERROR_SERVIDOR "Error: no s'ha pogut obrir el servidor d'Ithaca.\n"
 
+#define MSG_ERROR_PIPE "Error: no s'ha pogut crear la pipe d'avis.\n"
+#define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del client.\n"
 #define MSG_ERROR_ACCEPT "Error: no s'ha pogut acceptar la connexio.\n"
 #define MSG_ERROR_DESCRIPTOR "Error: el socket supera el limit de select.\n"
 #define TEXT_ITHACA_OK "OK"
@@ -28,8 +33,10 @@
 
 #define TEXT_ITHACA_ERROR_FLAGS "INVALID_FLAGS"
 #define TEXT_ITHACA_ERROR_TIPUS "INVALID_TYPE"
-#define MSG_ERROR_SELECT "Error: ha fallat el select d'Ithaca.\n"
 #define MSG_CLIENT_MARXA ">>> %s has left Ithaca. Fair winds!\n"
+
+#define CLIENT_CONTINUA 1
+#define CLIENT_ACABA    0
 
 #define VIATGE_DISPONIBLE 0
 #define VIATGE_ASSIGNAT 1
@@ -48,12 +55,17 @@
 #define MSG_VIATGE_ASSIGNAT ">>> Voyage %d assigned to %s.\n"
 #define MSG_VIATGE_FRACASSAT ">>> Voyage %d of %s marked as failed.\n"
 
+typedef struct ServidorIthaca ServidorIthaca;
+
 typedef struct {
+    ServidorIthaca *servidor;
+    pthread_t fil;
     int fd;
     char *nom;
     int viatge_acceptat;
     int *viatges_consultats;
     int n_viatges_consultats;
+    int acabat;
 } ClientIthaca;
 
 typedef struct {
@@ -62,25 +74,41 @@ typedef struct {
     char *nom_odysseus;
 } ViatgeIthaca;
 
-typedef struct {
-    ClientIthaca *clients;
-    int n_clients;
+struct ServidorIthaca {
     ViatgeIthaca *viatges;
     int n_viatges;
-} ServidorIthaca;
+    pthread_mutex_t mutex_viatges;
+    ClientIthaca **clients;
+    int n_clients;
+    pthread_mutex_t mutex_clients;
+    int fd_avis;
+};
 
 /***********************************************
 *
-* @Finalitat: Inicialitzar el servidor sense clients connectats.
+* @Finalitat: Inicialitzar el servidor sense clients ni viatges i crear els
+*             mutex de la taula de viatges i de la llista de clients.
 * @Parametres: out: servidor = estructura del servidor a inicialitzar.
+*              in: fd_avis = extrem de lectura de la pipe d'avis de sortida.
 * @Retorn: ----.
 *
 ************************************************/
-void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor);
+void VOYAGES_inicialitzarServidorIthaca (ServidorIthaca *servidor, int fd_avis);
+
+/***********************************************
+*
+* @Finalitat: Alliberar la memoria d'un client. El socket ja l'ha d'haver
+*             tancat el seu thread.
+* @Parametres: in/out: client = client a alliberar.
+* @Retorn: ----.
+*
+************************************************/
+void VOYAGES_alliberarClient (ClientIthaca *client);
 
 /***********************************************
 *
 * @Finalitat: Preparar l'estat dels viatges en un servidor inicialitzat.
+*             Es crida abans de crear cap thread.
 * @Parametres: in/out: servidor = servidor amb la llista de viatges buida.
 *              in: viatges = array de viatges carregats del fitxer.
 *              in: n_viatges = nombre de viatges carregats.
@@ -91,7 +119,121 @@ int VOYAGES_prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, in
 
 /***********************************************
 *
-* @Finalitat: Acceptar una connexio i afegir el client al servidor.
+* @Finalitat: Buscar el viatge assignat a un Odysseus. S'ha de cridar amb
+*             mutex_viatges agafat.
+* @Parametres: in: servidor = servidor amb els viatges.
+*              in: nom = nom de l'Odysseus.
+* @Retorn: Posicio del viatge o ERR_CODI si no en te cap d'assignat.
+*
+************************************************/
+int VOYAGES_buscarViatgeAssignat (ServidorIthaca *servidor, char *nom);
+
+/***********************************************
+*
+* @Finalitat: Buscar un viatge pel seu identificador. L'identificador no
+*             canvia mai, pero es crida amb mutex_viatges agafat perque
+*             forma part de la regio de l'ACCEPT.
+* @Parametres: in: servidor = servidor amb els viatges.
+*              in: id_viatge = identificador a buscar.
+* @Retorn: Posicio del viatge o ERR_CODI si no existeix.
+*
+************************************************/
+int VOYAGES_buscarViatgePerId (ServidorIthaca *servidor, int id_viatge);
+
+/***********************************************
+*
+* @Finalitat: Comptar els viatges disponibles. S'ha de cridar amb
+*             mutex_viatges agafat.
+* @Parametres: in: servidor = servidor amb els viatges.
+* @Retorn: Nombre de viatges disponibles.
+*
+************************************************/
+int VOYAGES_comptarViatgesDisponibles (ServidorIthaca *servidor);
+
+/***********************************************
+*
+* @Finalitat: Desar els identificadors dels viatges disponibles que ha vist
+*             el client al seu ultim LIST VOYAGES. S'ha de cridar amb
+*             mutex_viatges agafat.
+* @Parametres: in: servidor = servidor amb els viatges.
+*              in/out: client = client que ha fet la consulta.
+* @Retorn: 0 si s'han desat, ERR_CODI si falta memoria.
+*
+************************************************/
+int VOYAGES_guardarViatgesConsultats (ServidorIthaca *servidor, ClientIthaca *client);
+
+/***********************************************
+*
+* @Finalitat: Comprovar si un viatge era a l'ultim LIST VOYAGES del client.
+*             Nomes ho fa servir el thread del mateix client.
+* @Parametres: in: client = client que vol acceptar el viatge.
+*              in: id_viatge = identificador del viatge.
+* @Retorn: 1 si l'havia consultat, 0 si no.
+*
+************************************************/
+int VOYAGES_haConsultatViatge (ClientIthaca *client, int id_viatge);
+
+/***********************************************
+*
+* @Finalitat: Copiar el text de cada viatge disponible amb el format del
+*             protocol. S'ha de cridar amb mutex_viatges agafat; els textos
+*             s'envien despres de deixar-lo.
+* @Parametres: in: servidor = servidor amb els viatges.
+*              out: textos = array de textos creat (NULL si no n'hi ha).
+* @Retorn: Nombre de textos, o ERR_CODI si falta memoria.
+*
+************************************************/
+int VOYAGES_copiarViatgesDisponibles (ServidorIthaca *servidor, char ***textos);
+
+/***********************************************
+*
+* @Finalitat: Enviar els textos dels viatges disponibles, o "0" si no n'hi
+*             ha cap. Es crida sense cap mutex agafat.
+* @Parametres: in: fd = socket del client.
+*              in: textos = textos a enviar.
+*              in: n_textos = nombre de textos.
+* @Retorn: TRAMA_OK o TRAMA_ERROR.
+*
+************************************************/
+int VOYAGES_enviarViatges (int fd, char **textos, int n_textos);
+
+/***********************************************
+*
+* @Finalitat: Alliberar un array de textos.
+* @Parametres: in/out: textos = array a alliberar (pot ser NULL).
+*              in: n_textos = nombre de textos de l'array.
+* @Retorn: ----.
+*
+************************************************/
+void VOYAGES_alliberarTextos (char **textos, int n_textos);
+
+/***********************************************
+*
+* @Finalitat: Atendre LIST VOYAGES: marcar com a fracassat el viatge que
+*             encara tingues assignat l'Odysseus, desar els consultats i
+*             enviar els disponibles.
+* @Parametres: in/out: client = client que fa la peticio.
+*              in: dades = camp DATA de la trama rebuda.
+* @Retorn: TRAMA_OK o TRAMA_ERROR.
+*
+************************************************/
+int VOYAGES_atendreListVoyages (ClientIthaca *client, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Atendre ACCEPT: comprovar que el viatge esta disponible i
+*             assignar-lo a l'Odysseus dins d'una mateixa regio critica.
+* @Parametres: in/out: client = client que fa la peticio.
+*              in: dades = identificador del viatge.
+* @Retorn: TRAMA_OK o TRAMA_ERROR.
+*
+************************************************/
+int VOYAGES_atendreAcceptIthaca (ClientIthaca *client, char *dades);
+
+/***********************************************
+*
+* @Finalitat: Acceptar una connexio, afegir el client a la llista i crear
+*             el seu thread.
 * @Parametres: in/out: servidor = servidor que guardara el client.
 *              in: fd_server = socket que escolta connexions.
 * @Retorn: 0 si s'ha afegit el client, ERR_CODI si hi ha un error.
@@ -99,31 +241,32 @@ int VOYAGES_prepararViatgesIthaca (ServidorIthaca *servidor, Voyage *viatges, in
 ************************************************/
 int VOYAGES_acceptarClientIthaca (ServidorIthaca *servidor, int fd_server);
 
-
 /***********************************************
 *
-* @Finalitat: Preparar el conjunt de sockets que vigilara select.
-* @Parametres: out: conjunt = conjunt de descriptors a preparar.
-*              in: fd_server = socket que escolta connexions.
-*              in: servidor = servidor amb els clients connectats.
-* @Retorn: El descriptor mes gran del conjunt.
-*
-************************************************/
-int VOYAGES_prepararSetIthaca (fd_set *conjunt, int fd_server, ServidorIthaca *servidor);
-
-/***********************************************
-*
-* @Finalitat: Tancar la connexio d'un client i treure'l de la llista.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que s'ha de treure.
+* @Finalitat: Fer el join i alliberar els clients el thread dels quals ja
+*             ha acabat, i treure'ls de la llista.
+* @Parametres: in/out: servidor = servidor amb la llista de clients.
 * @Retorn: ----.
 *
 ************************************************/
-void VOYAGES_treureClientIthaca (ServidorIthaca *servidor, int index);
+void VOYAGES_netejarClientsAcabats (ServidorIthaca *servidor);
 
 /***********************************************
 *
-* @Finalitat: Tancar les connexions dels clients i alliberar la seva llista.
+* @Finalitat: Esperar (join) que acabin els threads de tots els clients
+*             que queden connectats en tancar Ithaca. No agafa el mutex de
+*             clients perque els threads el necessiten per acabar.
+* @Parametres: in/out: servidor = servidor amb la llista de clients.
+* @Retorn: ----.
+*
+************************************************/
+void VOYAGES_esperarClients (ServidorIthaca *servidor);
+
+/***********************************************
+*
+* @Finalitat: Alliberar els clients, els viatges i els mutex del servidor.
+*             Nomes es pot cridar quan ja s'ha fet el join de tots els
+*             threads.
 * @Parametres: in/out: servidor = servidor que s'ha d'alliberar.
 * @Retorn: ----.
 *
@@ -132,125 +275,56 @@ void VOYAGES_alliberarServidorIthaca (ServidorIthaca *servidor);
 
 /***********************************************
 *
-* @Finalitat: Identificar un client amb el nom rebut i confirmar la connexio.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que s'identifica.
-*              in: dades = nom rebut al camp DATA de la trama.
-* @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
-*
-************************************************/
-int VOYAGES_atendreConnectIthaca (ServidorIthaca *servidor, int index, char *dades);
-
-/***********************************************
-*
-* @Finalitat: Llegir una trama d'un client i atendre la peticio rebuda.
-* @Parametres: in/out: servidor = servidor amb els clients connectats.
-*              in: index = posicio del client que te activitat.
-* @Retorn: ----.
-*
-************************************************/
-void VOYAGES_atendreTramaIthaca (ServidorIthaca *servidor, int index);
-
-/***********************************************
-*
-* @Finalitat: Esperar connexions i atendre els clients amb select.
-* @Parametres: in: fd_server = socket que escolta connexions.
-*              in/out: servidor = servidor amb els clients connectats.
-*              in: sortir = bandera activada pel handler de SIGINT.
-* @Retorn: 0 si es tanca per la bandera, ERR_CODI si falla.
-*
-************************************************/
-int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor, int *sortir);
-
-/***********************************************
-*
-* @Finalitat: Comptar els viatges que estan disponibles.
-* @Parametres: in: servidor = servidor amb els estats dels viatges.
-* @Retorn: Nombre de viatges disponibles.
-*
-************************************************/
-int VOYAGES_comptarViatgesDisponibles (ServidorIthaca *servidor);
-
-/***********************************************
-*
-* @Finalitat: Enviar una trama per cada viatge disponible.
-* @Parametres: in: servidor = servidor amb els viatges i els seus estats.
-*              in: fd = socket del client que rebra la llista.
-* @Retorn: TRAMA_OK si s'han enviat les respostes, TRAMA_ERROR si falla.
-*
-************************************************/
-int VOYAGES_enviarViatgesDisponibles (ServidorIthaca *servidor, int fd);
-
-/***********************************************
-*
-* @Finalitat: Buscar el viatge assignat a un navegant.
-* @Parametres: in: servidor = servidor amb els estats dels viatges.
-*              in: nom = nom del navegant que es busca.
-* @Retorn: Posicio del viatge assignat, o ERR_CODI si no en te cap.
-*
-************************************************/
-int VOYAGES_buscarViatgeAssignat (ServidorIthaca *servidor, char *nom);
-
-/***********************************************
-*
-* @Finalitat: Guardar els IDs dels viatges disponibles per a un client.
-* @Parametres: in: servidor = servidor amb els viatges disponibles.
-*              in: index = posicio del client que consulta els viatges.
-* @Retorn: 0 si s'han guardat, ERR_CODI si falta memoria.
-*
-************************************************/
-int VOYAGES_guardarViatgesConsultats (ServidorIthaca *servidor, int index);
-
-/***********************************************
-*
-* @Finalitat: Validar i atendre una consulta dels viatges disponibles.
-* @Parametres: in/out: servidor = servidor amb els clients i viatges.
-*              in: index = posicio del client que fa la consulta.
-*              in: dades = camp DATA de la peticio, que ha de ser buit.
-* @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
-*
-************************************************/
-int VOYAGES_atendreListVoyages (ServidorIthaca *servidor, int index, char *dades);
-
-/***********************************************
-*
-* @Finalitat: Comprovar si un nom ja pertany a un client connectat.
+* @Finalitat: Comprovar si un nom ja el fa servir un client connectat que
+*             no ha acabat. S'ha de cridar amb mutex_clients agafat.
 * @Parametres: in: servidor = servidor amb els clients connectats.
 *              in: nom = nom que es vol comprovar.
-* @Retorn: 1 si el nom ja existeix, 0 si no existeix.
+* @Retorn: 1 si el nom ja existeix, 0 si no.
 *
 ************************************************/
 int VOYAGES_existeixNomIthaca (ServidorIthaca *servidor, char *nom);
 
 /***********************************************
 *
-* @Finalitat: Comprovar si un viatge apareix a l'ultima consulta del client.
-* @Parametres: in: client = client amb els IDs dels viatges consultats.
-*              in: id_viatge = identificador del viatge que es comprova.
-* @Retorn: 1 si el viatge apareix a la consulta, 0 si no hi apareix.
+* @Finalitat: Atendre CONNECT: comprovar que el nom no existeix i desar-lo
+*             dins d'una mateixa regio critica, i confirmar la connexio.
+* @Parametres: in/out: client = client que s'identifica.
+*              in: dades = nom de l'Odysseus.
+* @Retorn: TRAMA_OK o TRAMA_ERROR.
 *
 ************************************************/
-int VOYAGES_haConsultatViatge (ClientIthaca *client, int id_viatge);
+int VOYAGES_atendreConnectIthaca (ClientIthaca *client, char *dades);
 
 /***********************************************
 *
-* @Finalitat: Buscar un viatge a partir del seu identificador.
-* @Parametres: in: servidor = servidor amb la llista de viatges.
-*              in: id_viatge = identificador del viatge que es busca.
-* @Retorn: Posicio del viatge, o ERR_CODI si no existeix.
+* @Finalitat: Rebre una trama del client i respondre-la.
+* @Parametres: in/out: client = client que ha enviat la trama.
+* @Retorn: CLIENT_CONTINUA si s'ha de seguir atenent el client,
+*          CLIENT_ACABA si ha marxat o s'ha perdut la connexio.
 *
 ************************************************/
-int VOYAGES_buscarViatgePerId (ServidorIthaca *servidor, int id_viatge);
+int VOYAGES_atendreTramaIthaca (ClientIthaca *client);
 
 /***********************************************
 *
-* @Finalitat: Validar una peticio ACCEPT i assignar el viatge al client.
-* @Parametres: in/out: servidor = servidor amb els clients i viatges.
-*              in: index = posicio del client que accepta.
-*              in: dades = identificador del viatge en format de text.
-* @Retorn: TRAMA_OK si s'ha enviat la resposta, TRAMA_ERROR si falla.
+* @Finalitat: Funcio del thread de cada client: atén les seves trames fins
+*             que marxa, cau la connexio o s'avisa la sortida d'Ithaca.
+* @Parametres: in/out: arg = punter al ClientIthaca que atén el thread.
+* @Retorn: NULL.
 *
 ************************************************/
-int VOYAGES_atendreAcceptIthaca (ServidorIthaca *servidor, int index, char *dades);
+void *VOYAGES_atendreClient (void *arg);
+
+/***********************************************
+*
+* @Finalitat: Bucle del fil principal: espera connexions i crea un thread
+*             per a cada client fins que la pipe d'avis indica la sortida.
+*             En acabar, espera tots els threads.
+* @Parametres: in: fd_server = socket que escolta connexions.
+*              in/out: servidor = servidor amb els clients connectats.
+* @Retorn: 0 si es tanca per l'avis de sortida, ERR_CODI si falla.
+*
+************************************************/
+int VOYAGES_executarServidorIthaca (int fd_server, ServidorIthaca *servidor);
 
 #endif

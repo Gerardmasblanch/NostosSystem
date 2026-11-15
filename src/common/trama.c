@@ -11,6 +11,41 @@
 //Include del fitxer .h del mateix modul
 #include "trama.h"
 
+//Variables del modul: extrem de lectura de la pipe d'avis, nomes s'escriu un cop al main
+static int fd_avis = ERR_CODI;
+
+void TRAMA_establirAvis (int fd) {
+    fd_avis = fd;
+}
+
+int TRAMA_esperarDades (int fd) {
+    fd_set set;
+    int max_fd;
+    int final = 0;
+    int resultat = TRAMA_ERROR;
+
+    while (final == 0) {
+        FD_ZERO(&set);
+        FD_SET(fd, &set);
+        max_fd = fd;
+        if (fd_avis != ERR_CODI) {
+            FD_SET(fd_avis, &set);
+            if (fd_avis > max_fd) {
+                max_fd = fd_avis;
+            }
+        }
+
+        if (select(max_fd + 1, &set, NULL, NULL, NULL) > 0) {
+            final = 1;
+            if (fd_avis == ERR_CODI || FD_ISSET(fd_avis, &set) == 0) {
+                resultat = TRAMA_OK;
+            }
+        }
+    }
+
+    return resultat;
+}
+
 int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades) {
     unsigned char trama[MIDA_TRAMA];
     int mida_dades;
@@ -79,7 +114,10 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     *dades = NULL;
 
     while (llegits < MIDA_TRAMA && resultat_read > 0) {
-        resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+        resultat_read = ERR_CODI;
+        if (TRAMA_esperarDades(fd) == TRAMA_OK) {
+            resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+        }
         if (resultat_read > 0) {
             llegits = llegits + resultat_read;
         }
@@ -116,7 +154,10 @@ int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *
     *mida = 0;
 
     while (llegits < MIDA_TRAMA && resultat_read > 0) {
-        resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+        resultat_read = ERR_CODI;
+        if (TRAMA_esperarDades(fd) == TRAMA_OK) {
+            resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
+        }
 
         if (resultat_read > 0) {
             llegits = llegits + resultat_read;

@@ -14,6 +14,7 @@
 //Llibreries del sistema
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 
 //Llibreries propies
 #include "utils.h"
@@ -59,7 +60,7 @@
 #define FLAG_BINARI_RESPOSTA 0xA0
 
 #define TEXT_TRAMA_INVALID_LENGTH "INVALID_LENGTH"
-#define MSG_TRAMA_ERROR_NACK "Error: no s'ha pogut enviar el NACK.\n"
+#define MSG_TRAMA_ERROR_NACK "Error: the NACK could not be sent.\n"
 
 //Procediments i funcions
 
@@ -90,12 +91,30 @@ int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mid
 
 /***********************************************
 *
+* @Finalitat: Guarda la pipe d'avis de sortida (CTRL+C) perque les lectures de trames deixin d'esperar quan s'hi escriu. S'ha de cridar un sol cop al main, abans de crear threads. El byte de la pipe no es llegeix mai, aixi tots els select el veuen.
+* @Parametres:  in: fd = extrem de lectura de la pipe d'avis.
+* @Retorn: ----.
+*
+************************************************/
+void TRAMA_establirAvis (int fd);
+
+/***********************************************
+*
+* @Finalitat: Espera fins que el socket te dades o fins que arriba l'avis de sortida. Si el select s'interromp per una senyal (per exemple SIGALRM), torna a esperar.
+* @Parametres:  in: fd = socket d'on es vol llegir.
+* @Retorn: TRAMA_OK si el socket te dades, TRAMA_ERROR si ha arribat l'avis de sortida.
+*
+************************************************/
+int TRAMA_esperarDades (int fd);
+
+/***********************************************
+*
 * @Finalitat: Llegeix una trama de 256 bytes amb un sol read i en separa els camps.
 * @Parametres:  in: fd = socket d'on es llegeix.
 *               out: tipus = camp TYPE rebut.
 *               out: flags = camp FLAGS rebut.
 *               out: dades = text del camp DATA, reservat amb malloc.
-* @Retorn: TRAMA_OK si s'ha rebut sencera, TRAMA_ERROR si no.
+* @Retorn: TRAMA_OK si s'ha rebut sencera, TRAMA_ERROR si no o si arriba l'avis de sortida.
 *
 ************************************************/
 int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
@@ -108,7 +127,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
 *               out: flags = camp FLAGS rebut.
 *               out: dades = bytes rebuts, reservats amb malloc .
 *               out: mida = nombre de bytes utils del camp DATA.
-* @Retorn: TRAMA_OK si s'ha rebut correctament, TRAMA_ERROR si no.
+* @Retorn: TRAMA_OK si s'ha rebut correctament, TRAMA_ERROR si no o si arriba l'avis de sortida.
 *
 ************************************************/
 int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida);

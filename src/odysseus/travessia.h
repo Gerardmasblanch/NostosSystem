@@ -34,6 +34,7 @@
 #define MSG_DESCONEGUDA "Unknown command\n"
 #define MSG_COMANDA_OK  "Command Available in Phase 3\n"
 #define MSG_CONNEXIO_PERDUDA "\nLost connection with %s.\n"
+#define MSG_ERROR_PIPE       "Error: the alert pipe could not be created.\n"
 #define MSG_CONNECTAT      "Connected to %s.\n"
 #define MSG_ERROR_CONNEXIO "Error: could not reach %s.\n"
 #define MSG_ERROR_RESPOSTA "Error: %s.\n"

@@ -92,6 +92,7 @@ int main (int argc, char *argv[]) {
         CONFIG_freeIthacaConfig(&ithaca_config);
         return -1;
     }
+    TRAMA_establirAvis(canonada_avis[0]);
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);

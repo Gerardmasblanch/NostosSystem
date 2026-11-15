@@ -252,7 +252,7 @@ void HARBOR_ferSortir (Vaixell *vaixell, int tancant_illa) {
 
     if (tancant_illa == 0) {
         if (vaixell->nom != NULL) {
-            asprintf(&missatge, MSG_HA_MARXAT, vaixell->nom);
+            asprintf(&missatge, MSG_HA_MARXAT, vaixell->nom, harbor->config->name);
             UTILS_printF(1, missatge);
             free(missatge);
         }

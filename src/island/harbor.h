@@ -43,7 +43,7 @@
 #define MSG_APROXIMANT "\n>>> %s approaching %s.\n"
 #define MSG_ATRACAT    ">>> %s entered the port.\n"
 #define MSG_PORT_PLE   ">>> Port full. %s waiting offshore in the FIFO queue.\n"
-#define MSG_HA_MARXAT "\n>>> %s has left.\n"
+#define MSG_HA_MARXAT "\n>>> %s has left %s.\n"
 #define MSG_ERROR_PIPE   "Error: no s'ha pogut crear la pipe d'avis.\n"
 #define MSG_ERROR_THREAD "Error: no s'ha pogut crear el thread del vaixell.\n"
 #define MSG_ERROR_ACCEPT     "Error: no s'ha pogut acceptar la connexio.\n"

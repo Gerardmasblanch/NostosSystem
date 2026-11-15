@@ -37,6 +37,8 @@
 
 #define TEXT_FITXER_OBJECT      "OBJECT"
 #define TEXT_FITXER_SIGNED      "SIGNED"
+#define TEXT_FITXER_DELIVERY    "DELIVERY"
+#define TEXT_FITXER_CLAIM       "CLAIM"
 #define TEXT_FITXER_READY       "READY"
 #define TEXT_FITXER_OK          "OK"
 #define TEXT_FITXER_ERROR_MIDA  "SIZE_ERROR"
@@ -160,7 +162,7 @@ void FITXER_enviarNack (int fd, char *motiu);
 
 /***********************************************
 *
-* @Finalitat: Rep un fitxer seguint el protocol de transferencia.
+* @Finalitat: Rep un fitxer seguint el protocol de transferencia. Si la recepcio falla despres de crear el fitxer de desti, l'esborra perque no quedi un fitxer parcial o corrupte.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
 *               in: carpeta = carpeta on es desara el fitxer.
 *               in: etiqueta_esperada = OBJECT, DELIVERY, SIGNED o CLAIM.
@@ -213,7 +215,7 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
 
 /***********************************************
 *
-* @Finalitat: Prepara el fitxer de desti i envia la resposta READY.
+* @Finalitat: Prepara el fitxer de desti i envia la resposta READY. Si no es pot enviar el READY, tanca i esborra el fitxer creat.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
 *               in: carpeta = carpeta de desti, que ha d'existir.
 *               in: prefix = text afegit davant del nom.

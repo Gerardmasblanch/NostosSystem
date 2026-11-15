@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de l'estat del navegant Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -19,6 +19,8 @@ int NAVEGANT_inicialitzarNavegant (Navegant *navegant) {
     navegant->viatge.object = NULL;
     navegant->viatge.file = NULL;
     navegant->viatge.destination = NULL;
+    navegant->viatge_lliurat = VIATGE_NO_LLIURAT;
+    navegant->fitxer_segellat = NULL;
     navegant->mapa = NULL;
     navegant->n_illes = 0;
     navegant->adreces = NULL;
@@ -51,8 +53,7 @@ void NAVEGANT_alliberarNavegant (Navegant *navegant) {
     }
 
     free(navegant->ubicacio);
-    free(navegant->viatge.object);
-    free(navegant->viatge.destination);
+    NAVEGANT_esborrarViatge(navegant);
 
     for (i = 0; i < navegant->n_illes; i++) {
         for (j = 0; j < navegant->mapa[i].known_island_count; j++) {
@@ -70,6 +71,20 @@ void NAVEGANT_alliberarNavegant (Navegant *navegant) {
     free(navegant->adreces);
 
     CONFIG_freeOdysseusConfig(&navegant->config);
+}
+
+void NAVEGANT_esborrarViatge (Navegant *navegant) {
+    free(navegant->viatge.object);
+    free(navegant->viatge.destination);
+    free(navegant->viatge.file);
+    free(navegant->fitxer_segellat);
+
+    navegant->viatge.object = NULL;
+    navegant->viatge.destination = NULL;
+    navegant->viatge.file = NULL;
+    navegant->fitxer_segellat = NULL;
+    navegant->te_viatge = SENSE_VIATGE;
+    navegant->viatge_lliurat = VIATGE_NO_LLIURAT;
 }
 
 int NAVEGANT_totalProvisions (Navegant *navegant) {
@@ -110,6 +125,33 @@ void NAVEGANT_mostrarCarrega (Navegant *navegant) {
     free(missatge);
 }
 
+void NAVEGANT_mostrarViatge (Navegant *navegant) {
+    char *missatge = NULL;
+
+    if (navegant->te_viatge != AMB_VIATGE) {
+        UTILS_printF(1, MSG_STATUS_SENSE_VIATGE);
+        return;
+    }
+
+    if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    UTILS_printF(1, missatge);
+    free(missatge);
+
+    if (navegant->viatge.file == NULL) {
+        return;
+    }
+
+    if (asprintf(&missatge, FORMAT_OBJECTE_STATUS, navegant->viatge.file + strlen(navegant->config.folder) + 1) < 0) {
+        UTILS_printF(1, MSG_SENSE_MEMORIA);
+        return;
+    }
+    UTILS_printF(1, missatge);
+    free(missatge);
+}
+
 void NAVEGANT_mostrarStatus (Navegant *navegant) {
     char *nom = NULL;
     char *missatge = NULL;
@@ -137,17 +179,7 @@ void NAVEGANT_mostrarStatus (Navegant *navegant) {
     free(missatge);
 
     NAVEGANT_mostrarCarrega(navegant);
-
-    if (navegant->te_viatge == AMB_VIATGE) {
-        if (asprintf(&missatge, FORMAT_VIATGE_STATUS, navegant->viatge.object, navegant->viatge.destination, navegant->viatge.reward) < 0) {
-            UTILS_printF(1, MSG_SENSE_MEMORIA);
-            return;
-        }
-        UTILS_printF(1, missatge);
-        free(missatge);
-    } else {
-        UTILS_printF(1, MSG_STATUS_SENSE_VIATGE);
-    }
+    NAVEGANT_mostrarViatge(navegant);
 
     if (navegant->estat == ESTAT_ITHACA) {
         UTILS_printF(1, MSG_UBICACIO_DESCONEGUDA);

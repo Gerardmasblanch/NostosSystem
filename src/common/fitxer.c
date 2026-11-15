@@ -457,6 +457,7 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
     if (fd_fitxer < 0 || resultat_trama != TRAMA_OK) {
         if (fd_fitxer >= 0) {
             close(fd_fitxer);
+            unlink(ruta);
         }
         free(ruta);
         return FITXER_ERROR;
@@ -584,6 +585,9 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
     if (resultat == FITXER_OK) {
         *path_rebut = ruta;
     } else {
+        if (ruta != NULL) {
+            unlink(ruta);
+        }
         free(ruta);
     }
 

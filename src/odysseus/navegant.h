@@ -4,7 +4,7 @@
 *            actual i mapa conegut.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -28,6 +28,8 @@
 #define ESTAT_ESPERANT         4
 #define SENSE_VIATGE 0
 #define AMB_VIATGE   1
+#define VIATGE_NO_LLIURAT 0
+#define VIATGE_LLIURAT    1
 #define RUTA_NO_DIRECTA 0
 #define RUTA_DIRECTA    1
 
@@ -40,6 +42,7 @@
 
 #define FORMAT_CAPCALERA_STATUS "\n--- %s ---\nGold: %d\n"
 #define FORMAT_VIATGE_STATUS "\nCurrent voyage: %s -> %s\nReward: %d\n"
+#define FORMAT_OBJECTE_STATUS "Object: %s\n"
 #define MSG_STATUS_SENSE_VIATGE "\nCurrent voyage: None\n"
 #define FORMAT_UBICACIO_STATUS "Current location: %s\n"
 #define MSG_UBICACIO_DESCONEGUDA "Current location: None\n"
@@ -57,6 +60,8 @@ typedef struct {
     char *ubicacio;
     int te_viatge;
     Voyage viatge;
+    int viatge_lliurat;
+    char *fitxer_segellat;
     SPHRAGIS_Island *mapa;
     int n_illes;
     Route *adreces;
@@ -84,6 +89,15 @@ int NAVEGANT_inicialitzarNavegant (Navegant *navegant);
 *
 ************************************************/
 void NAVEGANT_alliberarNavegant (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Allibera les dades del viatge actual (objecte, desti, ruta del fitxer i ruta de la imatge segellada) i deixa el navegant sense viatge i sense lliurament.
+* @Parametres:  in/out: navegant = navegant amb el viatge a esborrar.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_esborrarViatge (Navegant *navegant);
 
 /***********************************************
 *
@@ -144,6 +158,15 @@ int NAVEGANT_canviarUbicacio (Navegant *navegant, char *nom);
 *
 ************************************************/
 void NAVEGANT_mostrarCarrega (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Mostrar el viatge actual amb la recompensa i el fitxer de l'objecte, o que no n'hi ha cap.
+* @Parametres: in: navegant = navegant amb el viatge actual.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_mostrarViatge (Navegant *navegant);
 
 /***********************************************
 *

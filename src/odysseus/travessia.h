@@ -4,7 +4,7 @@
 *            de les comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
@@ -19,6 +19,7 @@
 //Llibreries propies
 #include "commands.h"
 #include "navegant.h"
+#include "fitxer.h"
 
 //Constants
 #define FINAL_NO 0
@@ -46,6 +47,19 @@
 #define MSG_RESPOSTA_INCORRECTA "Error: unexpected response from the server.\n"
 #define MSG_VIATGE_ACCEPTAT "Voyage %d accepted.\nDestination: %s.\n"
 #define MSG_JA_TE_VIATGE    "You already have a voyage assigned.\n"
+#define MSG_OBJECTE_REBUT   "Object received: %s.\n"
+#define MSG_ERROR_OBJECTE   "Error: the object could not be received. The voyage has been cancelled.\n"
+#define FORMAT_PETICIO_DELIVER  "%d&%s"
+#define TEXT_PREFIX_SEGELLAT    "signed_"
+#define MSG_LLIURANT            "Delivering %s to %s...\n"
+#define MSG_OBJECTE_TRANSFERIT  "Object transferred correctly.\n"
+#define MSG_SEGELLANT           "\n%s is stamping the object...\n"
+#define MSG_SEGELLAT_REBUT      "\nStamped object received.\n"
+#define MSG_LLIURAMENT_FET      "\nDelivery completed.\nThe mark of %s has been obtained.\n"
+#define MSG_SENSE_VIATGE_DELIVER "You don't have any object to deliver.\n"
+#define MSG_JA_LLIURAT          "The object has already been delivered. Return to Ithaca and CLAIM the reward.\n"
+#define MSG_NO_ES_DESTI         "You must be docked at %s, the destination of your voyage.\n"
+#define MSG_ERROR_LLIURAMENT    "Error: the delivery could not be completed.\n"
 #define TEXT_ATRACAT "DOCKED"
 #define TEXT_ESPERA  "WAIT"
 #define MSG_NO_ES_POT_NAVEGAR "We can't sail to %s from here...\n"
@@ -189,6 +203,53 @@ int TRAVESSIA_guardarViatge (Navegant *navegant, char *dades);
 ************************************************/
 void TRAVESSIA_ferAccept (Navegant *navegant, char *id_viatge);
 
+/***********************************************
+*
+* @Finalitat: Rep l'objecte del viatge que Ithaca envia despres de l'ACCEPT i el desa a la carpeta del navegant. Si falla, mostra l'error, esborra el viatge i tanca la connexio amb Ithaca.
+* @Parametres:  in/out: navegant = estat del navegant, amb el viatge ja guardat.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_rebreObjecte (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Comprova que es pot fer el DELIVER: atracat a l'illa de desti, amb un viatge actiu amb objecte i sense haver-lo lliurat encara. Si no es pot, mostra el motiu.
+* @Parametres:  in: navegant = estat del navegant.
+* @Retorn: TRAMA_OK si es pot lliurar, TRAMA_ERROR si no.
+*
+************************************************/
+int TRAVESSIA_comprovarDeliver (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Envia l'objecte a l'illa (DELIVERY) i rep la imatge segellada (SIGNED) amb el prefix signed_.
+* @Parametres:  in: navegant = estat del navegant, connectat a l'illa de desti.
+*               out: path_segellat = ruta de la imatge segellada reservada amb malloc si te exit, NULL si no.
+* @Retorn: FITXER_OK si les dues transferencies es completen; FITXER_ERROR si cal tancar la connexio; un altre codi FITXER_ si l'illa encara respondra el DELIVER amb error.
+*
+************************************************/
+int TRAVESSIA_transferirLliurament (Navegant *navegant, char **path_segellat);
+
+/***********************************************
+*
+* @Finalitat: Rep la resposta final del DELIVER. Si tot ha anat be, guarda la imatge segellada i marca el viatge com a lliurat; si no, mostra l'error i allibera la ruta.
+* @Parametres:  in/out: navegant = estat del navegant.
+*               in: resultat_fitxer = resultat de les transferencies.
+*               in: path_segellat = ruta de la imatge segellada o NULL.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_acabarDeliver (Navegant *navegant, int resultat_fitxer, char *path_segellat);
+
+/***********************************************
+*
+* @Finalitat: Executa la comanda DELIVER: lliura l'objecte a l'illa de desti i rep la imatge segellada que servira de comprovant a Ithaca.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_ferDeliver (Navegant *navegant);
 
 /***********************************************
 *

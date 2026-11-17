@@ -95,6 +95,7 @@ int main (int argc, char *argv[]) {
     free(missatge);
 
     TRAVESSIA_executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
+    TRAVESSIA_acomiadarSortida(&navegant);
 
     if (navegant.estat == ESTAT_PERDUT || NAVEGANT_senseSortida(&navegant) == SENSE_SORTIDA) {
         NAVEGANT_reiniciarEstat(&navegant);

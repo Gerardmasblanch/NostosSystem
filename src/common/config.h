@@ -3,7 +3,7 @@
 * @Proposit: Lectura dels fitxers de configuracio del sistema.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 04/10/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -16,14 +16,30 @@
 #include "types.h"
 #include "sphragis.h"
 
+//Constants
+#define LECTURA_OK    0
+#define LECTURA_ERROR 1
+#define LECTURA_FINAL 2
+
 //Procediments i funcions
+
+/***********************************************
+*
+* @Finalitat: Llegeix un camp numeric d'un fitxer fins al delimitador.
+* @Parametres:  in: fd = fitxer d'on es llegeix.
+*               in: delimitador = caracter que acaba el camp.
+*               out: valor = enter llegit.
+* @Retorn: 0 si va be, -1 si el fitxer s'ha acabat abans del camp.
+*
+************************************************/
+int CONFIG_llegirEnter (int fd, char delimitador, int *valor);
 
 /***********************************************
 *
 * @Finalitat: Llegeix el fitxer de configuracio d'Ithaca.
 * @Parametres:  in: nom_fitxer = ruta del fitxer.
 *               out: config = configuracio llegida.
-* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
+* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer o li falta algun camp.
 *
 ************************************************/
 int CONFIG_readIthacaConfig (char *nom_fitxer, IthacaConfig *config);
@@ -44,7 +60,7 @@ void CONFIG_freeIthacaConfig (IthacaConfig *config);
 * @Parametres:  in: nom_fitxer = ruta del fitxer.
 *               out: viatges = array de viatges llegits.
 *               out: n_viatges = nombre de viatges.
-* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
+* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer o li falta algun camp.
 *
 ************************************************/
 int CONFIG_readVoyages (char *nom_fitxer, Voyage **viatges, int *n_viatges);
@@ -64,7 +80,7 @@ void CONFIG_freeVoyages (Voyage *viatges, int n_viatges);
 * @Finalitat: Llegeix el fitxer de configuracio d'una illa i les seves rutes.
 * @Parametres:  in: nom_fitxer = ruta del fitxer.
 *               out: config = configuracio llegida.
-* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
+* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer o li falta algun camp.
 *
 ************************************************/
 int CONFIG_readIslandConfig (char *nom_fitxer, IslandConfig *config);
@@ -113,7 +129,7 @@ int CONFIG_filterIslandRoutes (IslandConfig *config);
 * @Finalitat: Llegeix el fitxer de configuracio d'un Odysseus.
 * @Parametres:  in: nom_fitxer = ruta del fitxer.
 *               out: config = configuracio llegida.
-* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer.
+* @Retorn: 0 si va be, -1 si no s'ha pogut obrir el fitxer o li falta algun camp.
 *
 ************************************************/
 int CONFIG_readOdysseusConfig (char *nom_fitxer, OdysseusConfig *config);

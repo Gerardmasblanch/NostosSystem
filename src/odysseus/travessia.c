@@ -546,6 +546,31 @@ void TRAVESSIA_marxarUbicacio (Navegant *navegant) {
     }
 }
 
+void TRAVESSIA_acomiadarSortida (Navegant *navegant) {
+    char *dades = NULL;
+    int tipus;
+    int flags;
+    int tipus_sortida = ERR_CODI;
+
+    if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
+        tipus_sortida = TIPUS_SORTIR_ITHACA;
+    } else if (navegant->estat == ESTAT_ATRACAT) {
+        tipus_sortida = TIPUS_SORTIR_ILLA;
+    }
+
+    if (tipus_sortida != ERR_CODI && TRAMA_enviarTrama(navegant->fd_connexio, tipus_sortida, FLAG_PETICIO, "") == TRAMA_OK) {
+        TRAMA_rebreTrama(navegant->fd_connexio, ERR_CODI, &tipus, &flags, &dades);
+        free(dades);
+    }
+
+    alarm(0);
+
+    if (navegant->fd_connexio != ERR_CODI) {
+        close(navegant->fd_connexio);
+        navegant->fd_connexio = ERR_CODI;
+    }
+}
+
 void TRAVESSIA_atracar (Navegant *navegant, char *format) {
     char *missatge = NULL;
 
@@ -567,7 +592,7 @@ int TRAVESSIA_gestionarRacio (Navegant *navegant) {
     char *missatge = NULL;
     int final = FINAL_NO;
 
-    if (NAVEGANT_totalProvisions(navegant) <= RACIO_KG) {
+    if (NAVEGANT_totalProvisions(navegant) < RACIO_KG) {
         asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
         UTILS_printF(1, missatge);
         free(missatge);

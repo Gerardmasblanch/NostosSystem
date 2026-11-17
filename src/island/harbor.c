@@ -335,7 +335,7 @@ int HARBOR_atendreDeliver (Vaixell *vaixell, char *dades) {
     free(missatge);
     UTILS_freeTokens(trossos, n_trossos);
 
-    resultat = FITXER_rebre(vaixell->fd, harbor->config->folder, TEXT_FITXER_DELIVERY, "", &path_rebut);
+    resultat = FITXER_rebre(vaixell->fd, harbor->fd_avis, harbor->config->folder, TEXT_FITXER_DELIVERY, "", &path_rebut);
     if (resultat != FITXER_OK) {
         return HARBOR_errorDeliver(vaixell, resultat, TEXT_ERROR_TRANSFERENCIA);
     }
@@ -362,7 +362,7 @@ int HARBOR_atendreDeliver (Vaixell *vaixell, char *dades) {
     UTILS_printF(1, missatge);
     free(missatge);
 
-    resultat = FITXER_enviar(vaixell->fd, path_segellat, nom_fitxer, TEXT_FITXER_SIGNED, 1);
+    resultat = FITXER_enviar(vaixell->fd, harbor->fd_avis, path_segellat, nom_fitxer, TEXT_FITXER_SIGNED, 1);
     free(path_rebut);
     free(path_segellat);
 
@@ -382,7 +382,7 @@ int HARBOR_atendreTrama (Vaixell *vaixell) {
     int flags;
     int continuar = VAIXELL_CONTINUA;
 
-    if (TRAMA_rebreTrama(vaixell->fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(vaixell->fd, vaixell->harbor->fd_avis, &tipus, &flags, &dades) == TRAMA_ERROR) {
         free(dades);
         return VAIXELL_ACABA;
     }

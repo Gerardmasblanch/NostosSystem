@@ -365,7 +365,7 @@ int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge) {
     free(missatge);
     missatge = NULL;
 
-    resultat = FITXER_enviar(client->fd, viatge->file, UTILS_nomFitxer(viatge->file), TEXT_FITXER_OBJECT, 1);
+    resultat = FITXER_enviar(client->fd, servidor->fd_avis, viatge->file, UTILS_nomFitxer(viatge->file), TEXT_FITXER_OBJECT, 1);
 
     if (resultat == FITXER_OK) {
         UTILS_printF(1, MSG_OBJECTE_ENVIAT);
@@ -437,7 +437,7 @@ int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
         missatge = NULL;
     }
 
-    resultat = FITXER_rebre(client->fd, servidor->carpeta, TEXT_FITXER_CLAIM, PREFIX_CLAIM, &path_rebut);
+    resultat = FITXER_rebre(client->fd, servidor->fd_avis, servidor->carpeta, TEXT_FITXER_CLAIM, PREFIX_CLAIM, &path_rebut);
     if (resultat == FITXER_ERROR) {
         return TRAMA_ERROR;
     }
@@ -697,7 +697,7 @@ int VOYAGES_atendreTramaIthaca (ClientIthaca *client) {
     int resultat;
     int continuar = CLIENT_CONTINUA;
 
-    if (TRAMA_rebreTrama(client->fd, &tipus, &flags, &dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(client->fd, client->servidor->fd_avis, &tipus, &flags, &dades) == TRAMA_ERROR) {
         free(dades);
         return CLIENT_ACABA;
     }

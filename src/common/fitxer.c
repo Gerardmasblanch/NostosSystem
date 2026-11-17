@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de les operacions amb fitxers: mida, MD5 i enviament i recepcio de fitxers per trames.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 14/11/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -150,7 +150,7 @@ int FITXER_enviarCapcalera (int fd, char *nom_fitxer, char *etiqueta, int mida, 
     return resultat;
 }
 
-int FITXER_esperarReady (int fd) {
+int FITXER_esperarReady (int fd, int fd_avis) {
     int tipus;
     int flags;
     int mida;
@@ -159,7 +159,7 @@ int FITXER_esperarReady (int fd) {
     int resultat = FITXER_ERROR;
     char *error = NULL;
 
-    if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
+    if (TRAMA_rebreTramaBinaria(fd, fd_avis, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
         return FITXER_ERROR;
     }
@@ -234,7 +234,7 @@ int FITXER_enviarBlocs (int fd, int fd_fitxer, int mida, int es_resposta) {
     return FITXER_OK;
 }
 
-int FITXER_esperarAck (int fd) {
+int FITXER_esperarAck (int fd, int fd_avis) {
     int tipus;
     int flags;
     int mida;
@@ -243,7 +243,7 @@ int FITXER_esperarAck (int fd) {
     int resultat = FITXER_ERROR;
     char *error = NULL;
 
-    if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
+    if (TRAMA_rebreTramaBinaria(fd, fd_avis, &tipus, &flags, &dades, &mida) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
         return FITXER_ERROR;
     }
@@ -287,7 +287,7 @@ void FITXER_enviarNack (int fd, char *motiu) {
     }
 }
 
-int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta) {
+int FITXER_enviar (int fd, int fd_avis, char *path, char *nom_fitxer, char *etiqueta, int es_resposta) {
     int mida;
     char md5[MIDA_MD5 + 1];
     int fd_fitxer;
@@ -311,7 +311,7 @@ int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_
     resultat = FITXER_enviarCapcalera(fd, nom_fitxer, etiqueta, mida, md5, es_resposta);
 
     if (resultat == FITXER_OK) {
-        resultat = FITXER_esperarReady(fd);
+        resultat = FITXER_esperarReady(fd, fd_avis);
     }
 
     if (resultat == FITXER_OK) {
@@ -321,7 +321,7 @@ int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_
     close(fd_fitxer);
 
     if (resultat == FITXER_OK) {
-        resultat = FITXER_esperarAck(fd);
+        resultat = FITXER_esperarAck(fd, fd_avis);
     }
 
     return resultat;
@@ -393,7 +393,7 @@ int FITXER_nomFitxerValid (char *nom) {
     return valid;
 }
 
-char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat) {
+char **FITXER_rebreCapcalera (int fd, int fd_avis, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat) {
     int tipus;
     int flags;
     int mida_dades;
@@ -407,7 +407,7 @@ char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *f
     *mida = 0;
     *flags_dades = FLAG_BINARI;
     *resultat = FITXER_ERROR;
-    if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida_dades) != TRAMA_OK) {
+    if (TRAMA_rebreTramaBinaria(fd, fd_avis, &tipus, &flags, &dades, &mida_dades) != TRAMA_OK) {
         UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
         return NULL;
     }
@@ -497,7 +497,7 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
     return fd_fitxer;
 }
 
-int FITXER_rebreBlocs (int fd, int fd_fitxer, int mida, int flags_dades) {
+int FITXER_rebreBlocs (int fd, int fd_avis, int fd_fitxer, int mida, int flags_dades) {
     int tipus, flags, mida_dades;
     int n_blocs, i;
     int escrits, resultat_write;
@@ -510,7 +510,7 @@ int FITXER_rebreBlocs (int fd, int fd_fitxer, int mida, int flags_dades) {
     }
 
     for (i = 0; i < n_blocs; i++) {
-        if (TRAMA_rebreTramaBinaria(fd, &tipus, &flags, &dades, &mida_dades) != TRAMA_OK) {
+        if (TRAMA_rebreTramaBinaria(fd, fd_avis, &tipus, &flags, &dades, &mida_dades) != TRAMA_OK) {
             UTILS_printF(1, MSG_FITXER_ERROR_REBRE);
             return FITXER_ERROR;
         }
@@ -584,7 +584,7 @@ int FITXER_verificarRecepcio (int fd, char *path, int mida_esperada, char *md5_e
     return resultat;
 }
 
-int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, char **path_rebut) {
+int FITXER_rebre (int fd, int fd_avis, char *carpeta, char *etiqueta_esperada, char *prefix, char **path_rebut) {
     char **camps = NULL;
     char *ruta = NULL;
     int mida;
@@ -594,7 +594,7 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
 
     *path_rebut = NULL;
 
-    camps = FITXER_rebreCapcalera(fd, etiqueta_esperada, &mida, &flags_dades, &resultat);
+    camps = FITXER_rebreCapcalera(fd, fd_avis, etiqueta_esperada, &mida, &flags_dades, &resultat);
     if (camps == NULL) {
         return resultat;
     }
@@ -602,7 +602,7 @@ int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada, char *prefix, 
     fd_fitxer = FITXER_prepararRecepcio(fd, carpeta, prefix, camps[1], &ruta);
 
     if (fd_fitxer >= 0) {
-        resultat = FITXER_rebreBlocs(fd, fd_fitxer, mida, flags_dades);
+        resultat = FITXER_rebreBlocs(fd, fd_avis, fd_fitxer, mida, flags_dades);
         close(fd_fitxer);
 
         if (resultat == FITXER_OK) {

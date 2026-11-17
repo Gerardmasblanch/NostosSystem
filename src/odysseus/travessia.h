@@ -308,7 +308,7 @@ void TRAVESSIA_marxarUbicacio (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: En sortir de l'Odysseus (CTRL+C o final de l'entrada), s'acomiada d'Ithaca (0x05) o de l'illa on esta atracat (0x16), n'espera la resposta sense mirar la pipe d'avis i tanca la connexio.
+* @Finalitat: En sortir de l'Odysseus (CTRL+C o final de l'entrada), s'acomiada d'Ithaca (0x05) o de l'illa on esta atracat o esperant port (0x16), n'espera la resposta sense mirar la pipe d'avis i tanca la connexio.
 * @Parametres:  in/out: navegant = estat del navegant.
 * @Retorn: ----.
 *

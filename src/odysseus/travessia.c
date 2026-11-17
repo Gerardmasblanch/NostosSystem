@@ -554,7 +554,7 @@ void TRAVESSIA_acomiadarSortida (Navegant *navegant) {
 
     if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
         tipus_sortida = TIPUS_SORTIR_ITHACA;
-    } else if (navegant->estat == ESTAT_ATRACAT) {
+    } else if (navegant->estat == ESTAT_ATRACAT || navegant->estat == ESTAT_ESPERANT) {
         tipus_sortida = TIPUS_SORTIR_ILLA;
     }
 

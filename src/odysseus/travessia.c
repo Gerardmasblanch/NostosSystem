@@ -4,7 +4,7 @@
 *            comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -51,7 +51,7 @@ void TRAVESSIA_atendreServidor (Navegant *navegant) {
     int tipus;
     int flags;
 
-    if (TRAMA_rebreTrama(navegant->fd_connexio, &tipus, &flags, &dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(navegant->fd_connexio, navegant->fd_avis, &tipus, &flags, &dades) == TRAMA_ERROR) {
         TRAVESSIA_perdreConnexio(navegant);
         UTILS_printF(1, TEXT_PROMPT);
     } else if (navegant->estat == ESTAT_ESPERANT && tipus == TIPUS_ARRIBADA && flags == FLAG_OK && strcmp(dades, TEXT_ATRACAT) == 0) {
@@ -68,7 +68,7 @@ int TRAVESSIA_rebreResposta (Navegant *navegant, int tipus_esperat, char **dades
     int flags;
     int resultat = RESPOSTA_ERROR;
 
-    if (TRAMA_rebreTrama(navegant->fd_connexio, &tipus, &flags, dades) == TRAMA_ERROR) {
+    if (TRAMA_rebreTrama(navegant->fd_connexio, navegant->fd_avis, &tipus, &flags, dades) == TRAMA_ERROR) {
         TRAVESSIA_perdreConnexio(navegant);
         resultat = RESPOSTA_PERDUDA;
     } else if (tipus == tipus_esperat && flags == FLAG_OK) {
@@ -282,7 +282,7 @@ void TRAVESSIA_rebreObjecte (Navegant *navegant) {
     char *missatge = NULL;
     int resultat;
 
-    resultat = FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_OBJECT, "", &path);
+    resultat = FITXER_rebre(navegant->fd_connexio, navegant->fd_avis, navegant->config.folder, TEXT_FITXER_OBJECT, "", &path);
 
     if (resultat != FITXER_OK) {
         UTILS_printF(1, MSG_ERROR_OBJECTE);
@@ -335,7 +335,7 @@ int TRAVESSIA_transferirLliurament (Navegant *navegant, char **path_segellat) {
 
     *path_segellat = NULL;
 
-    resultat = FITXER_enviar(navegant->fd_connexio, navegant->viatge.file, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_DELIVERY, 0);
+    resultat = FITXER_enviar(navegant->fd_connexio, navegant->fd_avis, navegant->viatge.file, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_DELIVERY, 0);
     if (resultat != FITXER_OK) {
         return resultat;
     }
@@ -348,7 +348,7 @@ int TRAVESSIA_transferirLliurament (Navegant *navegant, char **path_segellat) {
         UTILS_printF(1, MSG_SENSE_MEMORIA);
     }
 
-    resultat = FITXER_rebre(navegant->fd_connexio, navegant->config.folder, TEXT_FITXER_SIGNED, TEXT_PREFIX_SEGELLAT, path_segellat);
+    resultat = FITXER_rebre(navegant->fd_connexio, navegant->fd_avis, navegant->config.folder, TEXT_FITXER_SIGNED, TEXT_PREFIX_SEGELLAT, path_segellat);
     if (resultat == FITXER_OK) {
         UTILS_printF(1, MSG_SEGELLAT_REBUT);
     }
@@ -499,7 +499,7 @@ void TRAVESSIA_ferClaim (Navegant *navegant) {
         return;
     }
 
-    resultat_fitxer = FITXER_enviar(navegant->fd_connexio, navegant->fitxer_segellat, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_CLAIM, 0);
+    resultat_fitxer = FITXER_enviar(navegant->fd_connexio, navegant->fd_avis, navegant->fitxer_segellat, navegant->viatge.file + strlen(navegant->config.folder) + 1, TEXT_FITXER_CLAIM, 0);
     if (resultat_fitxer == FITXER_ERROR) {
         UTILS_printF(1, MSG_ERROR_CLAIM);
         TRAVESSIA_perdreConnexio(navegant);
@@ -546,6 +546,31 @@ void TRAVESSIA_marxarUbicacio (Navegant *navegant) {
     }
 }
 
+void TRAVESSIA_acomiadarSortida (Navegant *navegant) {
+    char *dades = NULL;
+    int tipus;
+    int flags;
+    int tipus_sortida = ERR_CODI;
+
+    if (navegant->estat == ESTAT_CONNECTAT_ITHACA) {
+        tipus_sortida = TIPUS_SORTIR_ITHACA;
+    } else if (navegant->estat == ESTAT_ATRACAT) {
+        tipus_sortida = TIPUS_SORTIR_ILLA;
+    }
+
+    if (tipus_sortida != ERR_CODI && TRAMA_enviarTrama(navegant->fd_connexio, tipus_sortida, FLAG_PETICIO, "") == TRAMA_OK) {
+        TRAMA_rebreTrama(navegant->fd_connexio, ERR_CODI, &tipus, &flags, &dades);
+        free(dades);
+    }
+
+    alarm(0);
+
+    if (navegant->fd_connexio != ERR_CODI) {
+        close(navegant->fd_connexio);
+        navegant->fd_connexio = ERR_CODI;
+    }
+}
+
 void TRAVESSIA_atracar (Navegant *navegant, char *format) {
     char *missatge = NULL;
 
@@ -567,7 +592,7 @@ int TRAVESSIA_gestionarRacio (Navegant *navegant) {
     char *missatge = NULL;
     int final = FINAL_NO;
 
-    if (NAVEGANT_totalProvisions(navegant) <= RACIO_KG) {
+    if (NAVEGANT_totalProvisions(navegant) < RACIO_KG) {
         asprintf(&missatge, MSG_SENSE_PROVISIONS, navegant->config.name);
         UTILS_printF(1, missatge);
         free(missatge);

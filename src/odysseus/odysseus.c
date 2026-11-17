@@ -4,7 +4,7 @@
 *            terminal interactiu de comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -20,12 +20,13 @@
 //Variables globals
 int sortirprogram = 0;
 int racio_pendent = 0;
+int canonada_avis[2];
 
 //Procediments i funcions
 
 /***********************************************
 *
-* @Finalitat: Activar la bandera de sortida en rebre SIGINT.
+* @Finalitat: Activar la bandera de sortida en rebre SIGINT i escriure un byte a la pipe d'avis perque les lectures de trames deixin d'esperar.
 * @Parametres:  in: senyal = identificador de la senyal rebuda.
 * @Retorn: ----.
 *
@@ -33,6 +34,7 @@ int racio_pendent = 0;
 void handleSignal (int senyal) {
     if (senyal == SIGINT) {
         sortirprogram = 1;
+        write(canonada_avis[1], "x", 1);
     }
 }
 
@@ -77,6 +79,13 @@ int main (int argc, char *argv[]) {
 
     NAVEGANT_carregarEstat(&navegant);
 
+    if (pipe(canonada_avis) < 0) {
+        UTILS_printF(1, MSG_ERROR_PIPE);
+        NAVEGANT_alliberarNavegant(&navegant);
+        return -1;
+    }
+    navegant.fd_avis = canonada_avis[0];
+
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGALRM, handleAlarma);
@@ -86,6 +95,7 @@ int main (int argc, char *argv[]) {
     free(missatge);
 
     TRAVESSIA_executarOdysseus(&navegant, &sortirprogram, &racio_pendent);
+    TRAVESSIA_acomiadarSortida(&navegant);
 
     if (navegant.estat == ESTAT_PERDUT || NAVEGANT_senseSortida(&navegant) == SENSE_SORTIDA) {
         NAVEGANT_reiniciarEstat(&navegant);
@@ -94,6 +104,8 @@ int main (int argc, char *argv[]) {
     }
 
     NAVEGANT_alliberarNavegant(&navegant);
+    close(canonada_avis[0]);
+    close(canonada_avis[1]);
 
     if (sortirprogram == 1) {
         UTILS_printF(1, "\n");

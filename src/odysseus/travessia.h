@@ -4,7 +4,7 @@
 *            de les comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -34,6 +34,7 @@
 #define MSG_DESCONEGUDA "Unknown command\n"
 #define MSG_COMANDA_OK  "Command Available in Phase 3\n"
 #define MSG_CONNEXIO_PERDUDA "\nLost connection with %s.\n"
+#define MSG_ERROR_PIPE       "Error: the alert pipe could not be created.\n"
 #define MSG_CONNECTAT      "Connected to %s.\n"
 #define MSG_ERROR_CONNEXIO "Error: could not reach %s.\n"
 #define MSG_ERROR_RESPOSTA "Error: %s.\n"
@@ -304,6 +305,15 @@ void TRAVESSIA_ferClaim (Navegant *navegant);
 *
 ************************************************/
 void TRAVESSIA_marxarUbicacio (Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: En sortir de l'Odysseus (CTRL+C o final de l'entrada), s'acomiada d'Ithaca (0x05) o de l'illa on esta atracat (0x16), n'espera la resposta sense mirar la pipe d'avis i tanca la connexio.
+* @Parametres:  in/out: navegant = estat del navegant.
+* @Retorn: ----.
+*
+************************************************/
+void TRAVESSIA_acomiadarSortida (Navegant *navegant);
 
 /***********************************************
 *

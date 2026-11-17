@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de la gestio dels clients i dels viatges del servidor Ithaca.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 14/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -401,6 +401,29 @@ int VOYAGES_rebutjarClaim (ClientIthaca *client, char *id_text, char *motiu) {
 }
 
 
+int VOYAGES_esObjecteDelViatge (ServidorIthaca *servidor, Voyage *viatge, char *nom_odysseus, char *path_rebut) {
+    char md5_rebut[MIDA_MD5 + 1];
+    char md5_esperat[MIDA_MD5 + 1];
+    char *path_verificacio = NULL;
+    int resultat = 0;
+
+    if (asprintf(&path_verificacio, FORMAT_RUTA_VERIFICACIO, servidor->carpeta, nom_odysseus, UTILS_nomFitxer(viatge->file)) < 0) {
+        return 0;
+    }
+
+    if (SPHRAGIS_sign_with_glyph(viatge->destination, viatge->file, path_verificacio) == SPHRAGIS_OK &&
+        FITXER_calcularMD5(path_verificacio, md5_esperat) == FITXER_OK &&
+        FITXER_calcularMD5(path_rebut, md5_rebut) == FITXER_OK &&
+        strcmp(md5_esperat, md5_rebut) == 0) {
+        resultat = 1;
+    }
+
+    FITXER_esborrar(path_verificacio);
+    free(path_verificacio);
+
+    return resultat;
+}
+
 int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
     ServidorIthaca *servidor = client->servidor;
     Voyage *viatge = NULL;
@@ -452,6 +475,8 @@ int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
         error = TEXT_ITHACA_ERROR_DADES;
     } else if (SPHRAGIS_has_glyph(viatge->destination, path_rebut) != 1) {
         error = TEXT_ITHACA_ERROR_GLIF;
+    } else if (VOYAGES_esObjecteDelViatge(servidor, viatge, client->nom, path_rebut) == 0) {
+        error = TEXT_ITHACA_ERROR_OBJECTE;
     } else {
         pthread_mutex_lock(&servidor->mutex_viatges);
         if (servidor->viatges[index_viatge].estat == VIATGE_ASSIGNAT &&
@@ -463,6 +488,9 @@ int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
         pthread_mutex_unlock(&servidor->mutex_viatges);
     }
 
+    if (error != NULL) {
+        FITXER_esborrar(path_rebut);
+    }
     free(path_rebut);
 
     if (error != NULL) {

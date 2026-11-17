@@ -6,7 +6,7 @@
 *            clients es protegeixen amb un mutex cadascuna.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 14/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -49,6 +49,8 @@
 #define PREFIX_CLAIM "claim_"
 #define FORMAT_CLAIM_OK "OK&%d"
 #define TEXT_ITHACA_ERROR_GLIF "INVALID_GLYPH"
+#define TEXT_ITHACA_ERROR_OBJECTE "INVALID_OBJECT"
+#define FORMAT_RUTA_VERIFICACIO "%s/verify_%s_%s"
 #define TEXT_ITHACA_ERROR_TRANSFERENCIA "TRANSFER_ERROR"
 #define MSG_CLAIM_PETICIO    ">>> %s claims voyage %s.\n"
 #define MSG_CLAIM_REBENT     "\n>>> Receiving stamped %s...\n"
@@ -274,6 +276,19 @@ int VOYAGES_enviarObjecte (ClientIthaca *client, int index_viatge);
 *
 ************************************************/
 int VOYAGES_rebutjarClaim (ClientIthaca *client, char *id_text, char *motiu);
+
+/***********************************************
+*
+* @Finalitat: Comprova que la imatge rebuda en un CLAIM es l'objecte del viatge segellat
+*             per la illa de destinacio: torna a segellar l'original i en compara els MD5.
+* @Parametres:  in: servidor = dades compartides d'Ithaca.
+*               in: viatge = viatge que es reclama.
+*               in: nom_odysseus = nom de l'Odysseus, per al fitxer temporal.
+*               in: path_rebut = ruta de la imatge rebuda.
+* @Retorn: 1 si es l'objecte del viatge, 0 si no.
+*
+************************************************/
+int VOYAGES_esObjecteDelViatge (ServidorIthaca *servidor, Voyage *viatge, char *nom_odysseus, char *path_rebut);
 
 /***********************************************
 *

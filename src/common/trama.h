@@ -3,7 +3,7 @@
 * @Proposit: Enviament i recepcio de trames del protocol i obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -91,38 +91,32 @@ int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mid
 
 /***********************************************
 *
-* @Finalitat: Guarda la pipe d'avis de sortida (CTRL+C) perque les lectures de trames deixin d'esperar quan s'hi escriu. S'ha de cridar un sol cop al main, abans de crear threads. El byte de la pipe no es llegeix mai, aixi tots els select el veuen.
-* @Parametres:  in: fd = extrem de lectura de la pipe d'avis.
-* @Retorn: ----.
-*
-************************************************/
-void TRAMA_establirAvis (int fd);
-
-/***********************************************
-*
-* @Finalitat: Espera fins que el socket te dades o fins que arriba l'avis de sortida. Si el select s'interromp per una senyal (per exemple SIGALRM), torna a esperar.
+* @Finalitat: Espera fins que el socket te dades o fins que arriba l'avis de sortida (CTRL+C). Si el select s'interromp per una senyal (per exemple SIGALRM), torna a esperar. El byte de la pipe d'avis no es llegeix mai, aixi tots els select el veuen.
 * @Parametres:  in: fd = socket d'on es vol llegir.
-* @Retorn: TRAMA_OK si el socket te dades, TRAMA_ERROR si ha arribat l'avis de sortida.
+*               in: fd_avis = extrem de lectura de la pipe d'avis, o ERR_CODI si no n'hi ha.
+* @Retorn: TRAMA_OK si el socket te dades, TRAMA_ERROR si ha arribat l'avis de sortida o el socket no es valid.
 *
 ************************************************/
-int TRAMA_esperarDades (int fd);
+int TRAMA_esperarDades (int fd, int fd_avis);
 
 /***********************************************
 *
 * @Finalitat: Llegeix una trama de 256 bytes amb un sol read i en separa els camps.
 * @Parametres:  in: fd = socket d'on es llegeix.
+*               in: fd_avis = extrem de lectura de la pipe d'avis, o ERR_CODI si no n'hi ha.
 *               out: tipus = camp TYPE rebut.
 *               out: flags = camp FLAGS rebut.
 *               out: dades = text del camp DATA, reservat amb malloc.
 * @Retorn: TRAMA_OK si s'ha rebut sencera, TRAMA_ERROR si no o si arriba l'avis de sortida.
 *
 ************************************************/
-int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
+int TRAMA_rebreTrama (int fd, int fd_avis, int *tipus, int *flags, char **dades);
 
 /***********************************************
 *
 * @Finalitat: Rep una trama i extreu les dades binaries i la seva mida.
 * @Parametres:  in: fd = socket d'on es llegeix.
+*               in: fd_avis = extrem de lectura de la pipe d'avis, o ERR_CODI si no n'hi ha.
 *               out: tipus = camp TYPE rebut.
 *               out: flags = camp FLAGS rebut.
 *               out: dades = bytes rebuts, reservats amb malloc .
@@ -130,7 +124,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades);
 * @Retorn: TRAMA_OK si s'ha rebut correctament, TRAMA_ERROR si no o si arriba l'avis de sortida.
 *
 ************************************************/
-int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida);
+int TRAMA_rebreTramaBinaria (int fd, int fd_avis, int *tipus, int *flags, char **dades, int *mida);
 
 /***********************************************
 *

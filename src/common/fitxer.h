@@ -3,7 +3,7 @@
 * @Proposit: Operacions amb fitxers per a les transferencies del sistema.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 14/11/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -101,6 +101,7 @@ int FITXER_esborrar (char *path);
 *
 * @Finalitat: Envia un fitxer seguint el protocol de transferencia.
 * @Parametres:  in: fd = socket connectat amb el receptor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 *               in: path = ruta local del fitxer que s'envia.
 *               in: nom_fitxer = nom del fitxer comunicat al receptor.
 *               in: etiqueta = OBJECT, DELIVERY, SIGNED o CLAIM.
@@ -112,7 +113,7 @@ int FITXER_esborrar (char *path);
 *          Nomes amb FITXER_ERROR el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket; amb els altres errors el protocol s'ha tancat be.
 *
 ************************************************/
-int FITXER_enviar (int fd, char *path, char *nom_fitxer, char *etiqueta, int es_resposta);
+int FITXER_enviar (int fd, int fd_avis, char *path, char *nom_fitxer, char *etiqueta, int es_resposta);
 
 /***********************************************
 *
@@ -132,12 +133,13 @@ int FITXER_enviarCapcalera (int fd, char *nom_fitxer, char *etiqueta, int mida, 
 *
 * @Finalitat: Espera la resposta READY del receptor d'un fitxer. Si la trama rebuda no es valida i no es un NACK, respon amb un NACK amb el motiu.
 * @Parametres:  in: fd = socket connectat amb el receptor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 * @Retorn: FITXER_OK si el receptor esta preparat;
 *          FITXER_REBUTJAT si rebutja la transferencia;
 *          FITXER_ERROR si falla la recepcio o la resposta no es valida.
 *
 ************************************************/
-int FITXER_esperarReady (int fd);
+int FITXER_esperarReady (int fd, int fd_avis);
 
 /***********************************************
 *
@@ -155,13 +157,14 @@ int FITXER_enviarBlocs (int fd, int fd_fitxer, int mida, int es_resposta);
 *
 * @Finalitat: Espera la confirmacio final d'una transferencia. Si la trama rebuda no es valida i no es un NACK, respon amb un NACK amb el motiu.
 * @Parametres:  in: fd = socket connectat amb el receptor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 * @Retorn: FITXER_OK si el receptor confirma la transferencia;
 *          FITXER_ERROR_MIDA si informa d'una mida incorrecta;
 *          FITXER_ERROR_MD5 si informa d'un MD5 diferent;
 *          FITXER_ERROR si falla la recepcio o la resposta no es valida.
 *
 ************************************************/
-int FITXER_esperarAck (int fd);
+int FITXER_esperarAck (int fd, int fd_avis);
 
 /***********************************************
 *
@@ -177,6 +180,7 @@ void FITXER_enviarNack (int fd, char *motiu);
 *
 * @Finalitat: Rep un fitxer seguint el protocol de transferencia. Si la recepcio falla despres de crear el fitxer de desti, l'esborra perque no quedi un fitxer parcial o corrupte.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 *               in: carpeta = carpeta on es desara el fitxer.
 *               in: etiqueta_esperada = OBJECT, DELIVERY, SIGNED o CLAIM.
 *               in: prefix = text afegit davant del nom del fitxer.
@@ -190,7 +194,7 @@ void FITXER_enviarNack (int fd, char *motiu);
 *          Nomes amb FITXER_ERROR el cridant ha de tancar la connexio, perque poden quedar trames a mitges al socket; amb els altres errors el protocol s'ha tancat be.
 *
 ************************************************/
-int FITXER_rebre (int fd, char *carpeta, char *etiqueta_esperada,  char *prefix, char **path_rebut);
+int FITXER_rebre (int fd, int fd_avis, char *carpeta, char *etiqueta_esperada,  char *prefix, char **path_rebut);
 
 /***********************************************
 *
@@ -218,6 +222,7 @@ int FITXER_nomFitxerValid (char *nom);
 *
 * @Finalitat: Rep i valida la capcalera d'una transferencia. Si no es valida, respon NACK si el tipus no es 0x20, o READY amb 0xC0 si ho es.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 *               in: etiqueta_esperada = etiqueta que s'espera rebre.
 *               out: mida = mida del fitxer en bytes.
 *               out: flags_dades = flags esperats als blocs de dades.
@@ -226,7 +231,7 @@ int FITXER_nomFitxerValid (char *nom);
 *          El cridant l'ha d'alliberar amb UTILS_freeTokens.
 *
 ************************************************/
-char **FITXER_rebreCapcalera (int fd, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat);
+char **FITXER_rebreCapcalera (int fd, int fd_avis, char *etiqueta_esperada, int *mida, int *flags_dades, int *resultat);
 
 /***********************************************
 *
@@ -246,6 +251,7 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
 *
 * @Finalitat: Rep els blocs i els escriu al fitxer de desti.
 * @Parametres:  in: fd = socket connectat amb l'emissor.
+*               in: fd_avis = extrem de lectura de la pipe d'avis de sortida, o ERR_CODI si no n'hi ha.
 *               in: fd_fitxer = fitxer de desti obert per escriure.
 *               in: mida = mida anunciada a la capcalera.
 *               in: flags_dades = flags esperats als blocs.
@@ -253,7 +259,7 @@ int FITXER_prepararRecepcio (int fd, char *carpeta, char *prefix, char *nom_fitx
 *          La comprovacio de la mida final es fa posteriorment.
 *
 ************************************************/
-int FITXER_rebreBlocs (int fd, int fd_fitxer, int mida, int flags_dades);
+int FITXER_rebreBlocs (int fd, int fd_avis, int fd_fitxer, int mida, int flags_dades);
 
 /***********************************************
 *

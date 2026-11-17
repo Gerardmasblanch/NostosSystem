@@ -95,7 +95,6 @@ int main (int argc, char *argv[]) {
         CONFIG_freeIslandConfig(&config);
         return -1;
     }
-    TRAMA_establirAvis(canonada_avis[0]);
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);

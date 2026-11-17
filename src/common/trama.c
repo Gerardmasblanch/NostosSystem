@@ -4,25 +4,22 @@
 *            l'obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
 //Include del fitxer .h del mateix modul
 #include "trama.h"
 
-//Variables del modul: extrem de lectura de la pipe d'avis, nomes s'escriu un cop al main
-static int fd_avis = ERR_CODI;
-
-void TRAMA_establirAvis (int fd) {
-    fd_avis = fd;
-}
-
-int TRAMA_esperarDades (int fd) {
+int TRAMA_esperarDades (int fd, int fd_avis) {
     fd_set set;
     int max_fd;
     int final = 0;
     int resultat = TRAMA_ERROR;
+
+    if (fd < 0) {
+        return TRAMA_ERROR;
+    }
 
     while (final == 0) {
         FD_ZERO(&set);
@@ -104,7 +101,7 @@ int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mid
     return resultat;
 }
 
-int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
+int TRAMA_rebreTrama (int fd, int fd_avis, int *tipus, int *flags, char **dades) {
     unsigned char trama[MIDA_TRAMA];
     int llegits = 0;
     int resultat_read = 1;
@@ -115,7 +112,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
 
     while (llegits < MIDA_TRAMA && resultat_read > 0) {
         resultat_read = ERR_CODI;
-        if (TRAMA_esperarDades(fd) == TRAMA_OK) {
+        if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
             resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
         }
         if (resultat_read > 0) {
@@ -144,7 +141,7 @@ int TRAMA_rebreTrama (int fd, int *tipus, int *flags, char **dades) {
     return resultat;
 }
 
-int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *mida) {
+int TRAMA_rebreTramaBinaria (int fd, int fd_avis, int *tipus, int *flags, char **dades, int *mida) {
     unsigned char trama[MIDA_TRAMA];
     int llegits = 0;
     int resultat_read = 1;
@@ -155,7 +152,7 @@ int TRAMA_rebreTramaBinaria (int fd, int *tipus, int *flags, char **dades, int *
 
     while (llegits < MIDA_TRAMA && resultat_read > 0) {
         resultat_read = ERR_CODI;
-        if (TRAMA_esperarDades(fd) == TRAMA_OK) {
+        if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
             resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
         }
 

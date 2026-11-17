@@ -4,7 +4,7 @@
 *            actual i mapa conegut.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -75,6 +75,7 @@ typedef struct {
     OdysseusConfig config;
     int estat;
     int fd_connexio;
+    int fd_avis;
     char *ubicacio;
     int te_viatge;
     Voyage viatge;

@@ -4,7 +4,7 @@
 *            terminal interactiu de comandes del navegant.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -84,7 +84,7 @@ int main (int argc, char *argv[]) {
         NAVEGANT_alliberarNavegant(&navegant);
         return -1;
     }
-    TRAMA_establirAvis(canonada_avis[0]);
+    navegant.fd_avis = canonada_avis[0];
 
     signal(SIGINT, handleSignal);
     signal(SIGPIPE, SIG_IGN);

@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de l'estat del navegant Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 
@@ -15,6 +15,7 @@
 int NAVEGANT_inicialitzarNavegant (Navegant *navegant) {
     navegant->estat = ESTAT_ITHACA;
     navegant->fd_connexio = ERR_CODI;
+    navegant->fd_avis = ERR_CODI;
     navegant->te_viatge = SENSE_VIATGE;
     navegant->viatge.object = NULL;
     navegant->viatge.file = NULL;

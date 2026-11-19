@@ -65,6 +65,12 @@
 #define N_CAMPS_ESTAT_RECURSOS  2
 #define N_CAMPS_ESTAT_ALIMENT   2
 #define N_CAMPS_ESTAT_VIATGE    7
+#define FORMAT_ESTAT_TEXT       "%s\n"
+#define FORMAT_ESTAT_NOMBRE     "%d\n"
+#define FORMAT_ESTAT_ADRECA     "%s&%s&%d\n"
+#define FORMAT_ESTAT_CONNEXIO   "%s&%s\n"
+#define N_CAMPS_ESTAT_ADRECA    3
+#define N_CAMPS_ESTAT_CONNEXIO  2
 #define MSG_ERROR_GUARDAR_ESTAT "Error: the state could not be saved.\n"
 
 #define TEXT_COMPRA_OK "OK"
@@ -328,7 +334,17 @@ int NAVEGANT_escriureViatge (int fd, Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Desa a <carpeta>/estat.db l'or, la carrega i el viatge actual amb l'objecte i si s'ha lliurat.
+* @Finalitat: Escriu al fitxer d'estat la ubicacio actual, les adreces de les illes conegudes i les connexions del mapa.
+* @Parametres:  in: fd = fitxer d'estat obert per escriptura.
+*               in: navegant = navegant amb la ubicacio, les adreces i el mapa.
+* @Retorn: 0 si s'ha escrit, ERR_CODI si no.
+*
+************************************************/
+int NAVEGANT_escriureRutes (int fd, Navegant *navegant);
+
+/***********************************************
+*
+* @Finalitat: Desa a <carpeta>/estat.db l'or, la carrega, el viatge actual amb l'objecte i si s'ha lliurat, la ubicacio i les rutes descobertes.
 * @Parametres:  in: navegant = navegant amb l'estat a desar.
 * @Retorn: 0 si s'ha desat, ERR_CODI si no.
 *
@@ -367,7 +383,36 @@ void NAVEGANT_carregarViatge (Navegant *navegant, int fd);
 
 /***********************************************
 *
-* @Finalitat: Recupera l'estat desat a <carpeta>/estat.db. Si no existeix, esta buit o no es correcte, es mantenen els valors de la configuracio.
+* @Finalitat: Llegeix la ubicacio del fitxer d'estat. Si era una illa, el navegant hi queda desconnectat, sense ocupar cap placa del port, i s'hi ha de tornar a connectar amb SAIL.
+* @Parametres:  in/out: navegant = navegant a Ithaca.
+*               in: fd = fitxer d'estat obert per lectura.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_carregarUbicacio (Navegant *navegant, int fd);
+
+/***********************************************
+*
+* @Finalitat: Llegeix una linia del fitxer d'estat amb un nombre.
+* @Parametres:  in: fd = fitxer d'estat obert per lectura.
+* @Retorn: El nombre llegit, o ERR_CODI si la linia no existeix o no es numerica.
+*
+************************************************/
+int NAVEGANT_llegirNombre (int fd);
+
+/***********************************************
+*
+* @Finalitat: Llegeix les adreces de les illes conegudes i les connexions del mapa del fitxer d'estat i les afegeix al navegant.
+* @Parametres:  in/out: navegant = navegant amb el mapa inicial.
+*               in: fd = fitxer d'estat obert per lectura.
+* @Retorn: ----.
+*
+************************************************/
+void NAVEGANT_carregarRutes (Navegant *navegant, int fd);
+
+/***********************************************
+*
+* @Finalitat: Recupera l'estat desat a <carpeta>/estat.db, amb la ubicacio i les rutes descobertes. Si no existeix, esta buit o no es correcte, es mantenen els valors de la configuracio.
 * @Parametres:  in/out: navegant = navegant ja inicialitzat.
 * @Retorn: 0 si s'ha recuperat, ERR_CODI si no.
 *
@@ -376,7 +421,7 @@ int NAVEGANT_carregarEstat (Navegant *navegant);
 
 /***********************************************
 *
-* @Finalitat: Comprova si el navegant s'ha quedat sense sortida: menys de 50 d'or, sense menjar, sense lliurament fet i sense estar atracat al desti.
+* @Finalitat: Comprova si el navegant s'ha quedat sense sortida: menys de 50 d'or, sense menjar, sense lliurament fet i sense estar atracat al desti ni desconnectat davant seu.
 * @Parametres:  in: navegant = navegant a comprovar.
 * @Retorn: SENSE_SORTIDA o AMB_SORTIDA.
 *

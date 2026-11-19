@@ -550,6 +550,55 @@ int NAVEGANT_escriureViatge (int fd, Navegant *navegant) {
     return NAVEGANT_escriureLinia(fd, linia);
 }
 
+int NAVEGANT_escriureRutes (int fd, Navegant *navegant) {
+    char *linia = NULL;
+    int n_connexions = 0;
+    int resultat;
+    int i;
+    int j;
+
+    if (asprintf(&linia, FORMAT_ESTAT_TEXT, navegant->ubicacio) < 0) {
+        linia = NULL;
+    }
+    resultat = NAVEGANT_escriureLinia(fd, linia);
+
+    if (resultat == 0) {
+        if (asprintf(&linia, FORMAT_ESTAT_NOMBRE, navegant->n_adreces) < 0) {
+            linia = NULL;
+        }
+        resultat = NAVEGANT_escriureLinia(fd, linia);
+    }
+
+    for (i = 0; i < navegant->n_adreces && resultat == 0; i++) {
+        if (asprintf(&linia, FORMAT_ESTAT_ADRECA, navegant->adreces[i].name, navegant->adreces[i].ip, navegant->adreces[i].port) < 0) {
+            linia = NULL;
+        }
+        resultat = NAVEGANT_escriureLinia(fd, linia);
+    }
+
+    for (i = 0; i < navegant->n_illes; i++) {
+        n_connexions = n_connexions + navegant->mapa[i].known_island_count;
+    }
+
+    if (resultat == 0) {
+        if (asprintf(&linia, FORMAT_ESTAT_NOMBRE, n_connexions) < 0) {
+            linia = NULL;
+        }
+        resultat = NAVEGANT_escriureLinia(fd, linia);
+    }
+
+    for (i = 0; i < navegant->n_illes && resultat == 0; i++) {
+        for (j = 0; j < navegant->mapa[i].known_island_count && resultat == 0; j++) {
+            if (asprintf(&linia, FORMAT_ESTAT_CONNEXIO, navegant->mapa[i].name, navegant->mapa[i].known_islands[j]) < 0) {
+                linia = NULL;
+            }
+            resultat = NAVEGANT_escriureLinia(fd, linia);
+        }
+    }
+
+    return resultat;
+}
+
 int NAVEGANT_guardarEstat (Navegant *navegant) {
     char *ruta = NULL;
     char *linia = NULL;
@@ -582,6 +631,10 @@ int NAVEGANT_guardarEstat (Navegant *navegant) {
 
     if (resultat == 0) {
         resultat = NAVEGANT_escriureViatge(fd, navegant);
+    }
+
+    if (resultat == 0) {
+        resultat = NAVEGANT_escriureRutes(fd, navegant);
     }
     close(fd);
 
@@ -689,6 +742,74 @@ void NAVEGANT_carregarViatge (Navegant *navegant, int fd) {
     free(linia);
 }
 
+void NAVEGANT_carregarUbicacio (Navegant *navegant, int fd) {
+    char *linia = NULL;
+
+    linia = UTILS_readUntil(fd, '\n');
+
+    if (linia != NULL && linia[0] != '\0' && strcasecmp(linia, TEXT_ITHACA) != 0) {
+        if (NAVEGANT_canviarUbicacio(navegant, linia) == 0) {
+            navegant->estat = ESTAT_DESCONNECTAT;
+        }
+    }
+
+    free(linia);
+}
+
+int NAVEGANT_llegirNombre (int fd) {
+    char *linia = NULL;
+    int nombre = ERR_CODI;
+
+    linia = UTILS_readUntil(fd, '\n');
+
+    if (UTILS_esNumeric(linia) == TEXT_NUMERIC) {
+        nombre = atoi(linia);
+    }
+
+    free(linia);
+
+    return nombre;
+}
+
+void NAVEGANT_carregarRutes (Navegant *navegant, int fd) {
+    char *linia = NULL;
+    char **camps = NULL;
+    int n_camps = 0;
+    int n_linies;
+    int correcte = 1;
+    int i;
+
+    n_linies = NAVEGANT_llegirNombre(fd);
+
+    for (i = 0; i < n_linies && correcte == 1; i++) {
+        correcte = 0;
+        linia = UTILS_readUntil(fd, '\n');
+        camps = UTILS_splitString(linia, '&', &n_camps);
+        if (n_camps == N_CAMPS_ESTAT_ADRECA && UTILS_esNumeric(camps[2]) == TEXT_NUMERIC && NAVEGANT_afegirAdreca(navegant, camps[0], camps[1], atoi(camps[2])) == 0) {
+            correcte = 1;
+        }
+        UTILS_freeTokens(camps, n_camps);
+        free(linia);
+    }
+
+    if (correcte == 0) {
+        return;
+    }
+
+    n_linies = NAVEGANT_llegirNombre(fd);
+
+    for (i = 0; i < n_linies && correcte == 1; i++) {
+        correcte = 0;
+        linia = UTILS_readUntil(fd, '\n');
+        camps = UTILS_splitString(linia, '&', &n_camps);
+        if (n_camps == N_CAMPS_ESTAT_CONNEXIO && NAVEGANT_afegirRuta(navegant, camps[0], camps[1]) == 0) {
+            correcte = 1;
+        }
+        UTILS_freeTokens(camps, n_camps);
+        free(linia);
+    }
+}
+
 int NAVEGANT_carregarEstat (Navegant *navegant) {
     char *ruta = NULL;
     char *linia = NULL;
@@ -713,6 +834,8 @@ int NAVEGANT_carregarEstat (Navegant *navegant) {
     if (n_camps == N_CAMPS_ESTAT_RECURSOS && UTILS_esNumeric(camps[0]) == TEXT_NUMERIC && UTILS_esNumeric(camps[1]) == TEXT_NUMERIC && NAVEGANT_carregarAliments(navegant, fd, atoi(camps[1])) == 0) {
         navegant->config.gold = atoi(camps[0]);
         NAVEGANT_carregarViatge(navegant, fd);
+        NAVEGANT_carregarUbicacio(navegant, fd);
+        NAVEGANT_carregarRutes(navegant, fd);
         resultat = 0;
     }
 
@@ -726,7 +849,7 @@ int NAVEGANT_carregarEstat (Navegant *navegant) {
 int NAVEGANT_senseSortida (Navegant *navegant) {
     int resultat = AMB_SORTIDA;
 
-    if (navegant->config.gold < OR_MINIM_SORTIDA && NAVEGANT_totalProvisions(navegant) == 0 && navegant->viatge_lliurat != VIATGE_LLIURAT && (navegant->te_viatge != AMB_VIATGE || navegant->estat != ESTAT_ATRACAT || strcasecmp(navegant->ubicacio, navegant->viatge.destination) != 0)) {
+    if (navegant->config.gold < OR_MINIM_SORTIDA && NAVEGANT_totalProvisions(navegant) == 0 && navegant->viatge_lliurat != VIATGE_LLIURAT && (navegant->te_viatge != AMB_VIATGE || (navegant->estat != ESTAT_ATRACAT && navegant->estat != ESTAT_DESCONNECTAT) || strcasecmp(navegant->ubicacio, navegant->viatge.destination) != 0)) {
         resultat = SENSE_SORTIDA;
     }
 

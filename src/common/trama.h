@@ -29,6 +29,9 @@
 #define MIDA_TRAMA 256
 #define MIDA_DADES 253
 
+#define PAUSA_ENVIAR_US 1000
+#define PAUSA_REBRE_US  2000
+
 #define POS_TIPUS 0
 #define POS_FLAGS 1
 #define POS_MIDA  2

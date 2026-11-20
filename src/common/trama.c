@@ -62,6 +62,7 @@ int TRAMA_enviarTrama (int fd, int tipus, int flags, char *dades) {
     memcpy(&trama[POS_DADES], dades, mida_dades);
 
     escrits = write(fd, trama, MIDA_TRAMA);
+    usleep(PAUSA_ENVIAR_US);
     if (escrits == MIDA_TRAMA) {
         resultat = TRAMA_OK;
     }
@@ -93,6 +94,7 @@ int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mid
     }
 
     escrits = write(fd, trama, MIDA_TRAMA);
+    usleep(PAUSA_ENVIAR_US);
 
     if (escrits == MIDA_TRAMA) {
         resultat = TRAMA_OK;
@@ -103,21 +105,15 @@ int TRAMA_enviarTramaBinaria (int fd, int tipus, int flags, char *dades, int mid
 
 int TRAMA_rebreTrama (int fd, int fd_avis, int *tipus, int *flags, char **dades) {
     unsigned char trama[MIDA_TRAMA];
-    int llegits = 0;
-    int resultat_read = 1;
+    int llegits = ERR_CODI;
     int mida_dades;
     int resultat = TRAMA_ERROR;
 
     *dades = NULL;
 
-    while (llegits < MIDA_TRAMA && resultat_read > 0) {
-        resultat_read = ERR_CODI;
-        if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
-            resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
-        }
-        if (resultat_read > 0) {
-            llegits = llegits + resultat_read;
-        }
+    if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
+        llegits = read(fd, trama, MIDA_TRAMA);
+        usleep(PAUSA_REBRE_US);
     }
 
     if (llegits == MIDA_TRAMA) {
@@ -143,22 +139,15 @@ int TRAMA_rebreTrama (int fd, int fd_avis, int *tipus, int *flags, char **dades)
 
 int TRAMA_rebreTramaBinaria (int fd, int fd_avis, int *tipus, int *flags, char **dades, int *mida) {
     unsigned char trama[MIDA_TRAMA];
-    int llegits = 0;
-    int resultat_read = 1;
+    int llegits = ERR_CODI;
     int mida_dades;
 
     *dades = NULL;
     *mida = 0;
 
-    while (llegits < MIDA_TRAMA && resultat_read > 0) {
-        resultat_read = ERR_CODI;
-        if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
-            resultat_read = read(fd, &trama[llegits], MIDA_TRAMA - llegits);
-        }
-
-        if (resultat_read > 0) {
-            llegits = llegits + resultat_read;
-        }
+    if (TRAMA_esperarDades(fd, fd_avis) == TRAMA_OK) {
+        llegits = read(fd, trama, MIDA_TRAMA);
+        usleep(PAUSA_REBRE_US);
     }
 
     if (llegits != MIDA_TRAMA) {

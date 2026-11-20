@@ -401,25 +401,17 @@ int VOYAGES_rebutjarClaim (ClientIthaca *client, char *id_text, char *motiu) {
 }
 
 
-int VOYAGES_esObjecteDelViatge (ServidorIthaca *servidor, Voyage *viatge, char *nom_odysseus, char *path_rebut) {
+int VOYAGES_esObjecteDelViatge (Voyage *viatge, char *path_rebut) {
     char md5_rebut[MIDA_MD5 + 1];
     char md5_esperat[MIDA_MD5 + 1];
-    char *path_verificacio = NULL;
     int resultat = 0;
 
-    if (asprintf(&path_verificacio, FORMAT_RUTA_VERIFICACIO, servidor->carpeta, nom_odysseus, UTILS_nomFitxer(viatge->file)) < 0) {
-        return 0;
-    }
-
-    if (SPHRAGIS_sign_with_glyph(viatge->destination, viatge->file, path_verificacio) == SPHRAGIS_OK &&
-        FITXER_calcularMD5(path_verificacio, md5_esperat) == FITXER_OK &&
-        FITXER_calcularMD5(path_rebut, md5_rebut) == FITXER_OK &&
-        strcmp(md5_esperat, md5_rebut) == 0) {
+    if (FITXER_calcularMD5(path_rebut, md5_rebut) == FITXER_OK &&
+        SPHRAGIS_sign_with_glyph(viatge->destination, viatge->file, path_rebut) == SPHRAGIS_OK &&
+        FITXER_calcularMD5(path_rebut, md5_esperat) == FITXER_OK &&
+        strcmp(md5_rebut, md5_esperat) == 0) {
         resultat = 1;
     }
-
-    FITXER_esborrar(path_verificacio);
-    free(path_verificacio);
 
     return resultat;
 }
@@ -475,7 +467,7 @@ int VOYAGES_atendreClaim (ClientIthaca *client, char *dades) {
         error = TEXT_ITHACA_ERROR_DADES;
     } else if (SPHRAGIS_has_glyph(viatge->destination, path_rebut) != 1) {
         error = TEXT_ITHACA_ERROR_GLIF;
-    } else if (VOYAGES_esObjecteDelViatge(servidor, viatge, client->nom, path_rebut) == 0) {
+    } else if (VOYAGES_esObjecteDelViatge(viatge, path_rebut) == 0) {
         error = TEXT_ITHACA_ERROR_OBJECTE;
     } else {
         pthread_mutex_lock(&servidor->mutex_viatges);

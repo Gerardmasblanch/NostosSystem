@@ -2,6 +2,17 @@ THE NOSTOS SYSTEM - FASE 3
 Grup 1: Arnau Ricart (arnau.ricart) i Gerard Mas (gerard.mb)
 
 
+FASE 3
+
+- Ithaca i les illes atenen cada client en un thread i protegeixen les dades
+  compartides amb mutex.
+- Les imatges es transfereixen amb trames binaries i es comproven amb la mida
+  i l'MD5.
+- Amb DELIVER l'illa de desti segella la imatge i amb CLAIM Ithaca la comprova
+  i paga la recompensa.
+- CTRL+C tanca els servidors de manera controlada amb una pipe d'avis.
+
+
 ESTRUCTURA
 
     src/common     moduls compartits pels tres processos
@@ -65,6 +76,30 @@ COMANDES ODYSSEUS
     CLAIM
 
 
+EXEMPLE DE PARTIDA
+
+    CONNECT ITHACA
+    LIST VOYAGES
+    ACCEPT 1
+    SAIL <primera illa>
+    LIST MARKET
+    BUY <producte> <quantitat>
+    BUY MAP 1
+    SAIL <illa desti>
+    DELIVER
+    CONNECT ITHACA
+    CLAIM
+
+
+FITXERS GENERATS
+
+- L'Odysseus guarda a la seva carpeta la imatge rebuda, la segellada
+  (signed_) i el seu estat (estat.db).
+- L'illa de desti guarda la imatge entregada i la segellada.
+- Ithaca guarda a objects la imatge del CLAIM (claim_).
+- Els fitxers incomplets o rebutjats s'esborren.
+
+
 OBSERVACIONS
 
 - MAP necessita un terminal d'almenys 80 columnes.
@@ -74,3 +109,5 @@ OBSERVACIONS
   comencar amb els valors del seu fitxer de configuracio.
 - Si es tanca un servidor amb clients connectats, el port queda ocupat uns
   60 segons (TIME_WAIT). Tancar primer els Odysseus i despres els servidors.
+- Cada BUY i SELL reescriu el stock.db de l'illa. Per tornar a comencar de
+  zero cal restaurar els stock.db originals i esborrar els estat.db.

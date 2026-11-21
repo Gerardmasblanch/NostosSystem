@@ -4,7 +4,7 @@
 *            d'espera. Cada vaixell s'atén en un thread propi.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 15/11/2026
+* @Data ultima modificacio: 17/11/2026
 *
 ************************************************/
 

@@ -3,7 +3,7 @@
 * @Proposit: Gestionar les comandes introduides per l'usuari a l'Odysseus.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 25/09/2026
-* @Data ultima modificacio: 25/09/2026
+* @Data ultima modificacio: 14/11/2026
 *
 ************************************************/
 

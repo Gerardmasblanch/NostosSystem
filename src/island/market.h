@@ -4,7 +4,7 @@
 *            del mapa local.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 29/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 

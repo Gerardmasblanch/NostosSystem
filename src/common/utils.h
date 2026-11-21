@@ -3,7 +3,7 @@
 * @Proposit: Funcions auxiliars comunes als tres processos.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 04/10/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 

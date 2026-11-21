@@ -3,7 +3,7 @@
 * @Proposit: Implementacio de la gestio dels clients i dels viatges del servidor Ithaca.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 17/11/2026
+* @Data ultima modificacio: 20/11/2026
 *
 ************************************************/
 

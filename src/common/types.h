@@ -3,7 +3,7 @@
 * @Proposit: Tipus propis compartits pels tres processos.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 24/09/2026
+* @Data ultima modificacio: 14/11/2026
 *
 ************************************************/
 

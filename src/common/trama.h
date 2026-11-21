@@ -3,7 +3,7 @@
 * @Proposit: Enviament i recepcio de trames del protocol i obertura de sockets.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 29/10/2026
-* @Data ultima modificacio: 17/11/2026
+* @Data ultima modificacio: 20/11/2026
 *
 ************************************************/
 

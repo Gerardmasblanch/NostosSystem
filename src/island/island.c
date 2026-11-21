@@ -3,7 +3,7 @@
 * @Proposit: Proces Island representa una illa amb el seu port i el seu comerç.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 25/09/2026
+* @Data ultima modificacio: 14/11/2026
 *
 ************************************************/
 

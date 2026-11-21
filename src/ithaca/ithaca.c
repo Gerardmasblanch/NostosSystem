@@ -3,7 +3,7 @@
 * @Proposit: Proces Ithaca, servidor de viatges, que gestiona els encarrecs dels Odysseus i els envia a les illes.
 * @Autor/s: Arnau Ricart i Gerard Mas
 * @Data creacio: 24/09/2026
-* @Data ultima modificacio: 24/09/2026
+* @Data ultima modificacio: 15/11/2026
 *
 ************************************************/
 
